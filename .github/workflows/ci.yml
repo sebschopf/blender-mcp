@@ -48,7 +48,9 @@ jobs:
 
       - name: Run tests (pytest)
         env:
-          PYTHONPATH: src
+          # Ensure both the package `src` and repository root are on sys.path
+          # so top-level modules like `addon.py` can be imported during tests.
+          PYTHONPATH: 'src:.'
         run: |
           pytest -q --junitxml=pytest-report.xml
 
