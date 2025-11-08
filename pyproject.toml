@@ -1,32 +1,59 @@
-[project]
+[tool.poetry]
 name = "blender-mcp"
-version = "1.2"
-description = "Blender integration through the Model Context Protocol"
+version = "1.2.0"
+description = "Blender integration through the Model Context Protocol (MCP)"
 readme = "README.md"
-requires-python = ">=3.10"
-authors = [
-    {name = "Your Name", email = "your.email@example.com"}
-]
-license = {text = "MIT"}
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
-dependencies = [
-    "mcp[cli]>=1.3.0",
-]
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
 
-[project.scripts]
+[[tool.poetry.packages]]
+include = "blender_mcp"
+from = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+mcp = {extras = ["cli"], version = ">=1.3.0"}
+requests = "^2.32.5"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.8"
+ruff = "^0.12"
+black = "^24.3"
+isort = "^5.13"
+pytest = "^8.0"
+# pre-commit 4.x may not be available in older Poetry repos/environments; pin to 3.x for broader compatibility.
+pre-commit = "^3.4"
+types-requests = "^2.31.0"
+
+[tool.poetry.scripts]
 blender-mcp = "blender_mcp.server:main"
 
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+strict = false
+
+[tool.ruff]
+line-length = 120
+# Exclude archival snapshots and top-level import-blockers to avoid tooling noise
+exclude = ["docs/archive/**", "copy_addon.py", "copy_server.py"]
+# `select` and `extend-ignore` are configured in the new `tool.lint.ruff`
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+
+[tool.lint.ruff]
+select = ["E", "F", "I", "C", "R"]
+extend-ignore = ["E203", "E402", "E741"]
+
+[tool.poetry.urls]
+Homepage = "https://github.com/ahujasid/blender-mcp"
+"Bug Tracker" = "https://github.com/ahujasid/blender-mcp/issues"
+
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-
-[project.urls]
-"Homepage" = "https://github.com/yourusername/blender-mcp"
-"Bug Tracker" = "https://github.com/yourusername/blender-mcp/issues"
+requires = ["poetry-core>=1.5.0"]
+build-backend = "poetry.core.masonry.api"

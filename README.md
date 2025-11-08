@@ -1,3 +1,57 @@
+# blender-mcp
+
+Petit projet d'intégration Blender ↔ MCP (Model Context Protocol).
+
+But: centraliser les téléchargements, construire des matériaux/textures testables, et garder `addon.py` comme glue minimale pour Blender.
+
+Structure principale
+- `addon.py` : glue / point d'entrée Blender. Doit rester léger ; les opérations lourdes sont lazy-importées.
+- `src/blender_mcp/` : package principal (helpers testables et code métier)
+    - `downloaders.py` — téléchargements centralisés
+    - `materials.py` — construction de spec de matériaux (pure) + wrapper Blender
+    - `node_helpers.py` — petits helpers pour câbler les nodes (défensifs, testables)
+    - `texture_helpers.py` — helpers pour charger/configurer images
+    - `server.py` — serveur MCP / glue
+
+Exécution des tests (terminal)
+1. Active ton environnement Python (venv/conda) si nécessaire :
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+# ou conda activate <env>
+```
+
+2. Installer les dépendances de dev (si besoin) :
+
+```powershell
+python -m pip install -U pytest
+```
+
+3. Lancer les tests :
+
+```powershell
+#$ depuis la racine du repo
+$env:PYTHONPATH = 'src'; python -m pytest -q
+```
+
+Configuration VS Code
+- Un fichier `.vscode/settings.json` a été ajouté pour activer la découverte pytest dans l'IDE.
+- Un `pytest.ini` est présent pour uniformiser la découverte des tests.
+
+Notes d'implémentation
+- Les helpers qui touchent `bpy` sont importés paresseusement (lazy import) pour éviter d'importer `bpy` lors d'une exécution hors-Blender.
+- Les fonctions de `node_helpers` sont défensives : elles acceptent soit des objets réels de Blender, soit des containers mockables utilisés dans les tests.
+- Pendant la refactorisation, j'ai préféré conserver des fallbacks inline dans `addon.py` pour garantir que l'addon continue de fonctionner directement dans Blender même si l'un des helpers échoue.
+
+Que faire ensuite
+- Continuer la délivrance : réduire encore `addon.py` pour qu'il fasse uniquement l'enregistrement et le lazy-import du serveur.
+- Ajouter une petite CI GitHub Actions qui lance `pytest`, `ruff`, `mypy` sur les PRs.
+
+Si tu veux que je pousse une branche ou crée un PR, dis-le et je prépare la branche + message de PR.
+
+---
+Fait par l'outil de refactorisation — instructions et notes en français pour usage local.
+
 
 
 # BlenderMCP - Blender Model Context Protocol Integration
@@ -177,6 +231,20 @@ _Prerequisites_: Make sure you have [Visual Studio Code](https://code.visualstud
 4. Click "Connect to Claude"
 5. Make sure the MCP server is running in your terminal
 
+If you prefer not to run a terminal each time, see `start-server.ps1` in the repository root — it will launch `blender-mcp` in a detached PowerShell process and write logs to `blender-mcp.log`.
+
+Alternatively you can expose an HTTP adapter (included as `src/blender_mcp/asgi.py`) and run it with uvicorn:
+
+```powershell
+# install the extras once
+pip install "uvicorn[standard]" fastapi
+
+# run the ASGI adapter (will start the MCP server in background)
+uvicorn blender_mcp.asgi:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Then use `http://127.0.0.1:8000/health` to verify the adapter and Blender connection.
+
 ### Using with Claude
 
 Once the config file has been set on Claude, and the addon is running on Blender, you will see a hammer icon with tools for the Blender MCP.
@@ -238,6 +306,28 @@ The system uses a simple JSON-based protocol over TCP sockets:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Notes for contributors and maintainers (important)
+
+- Optional google-genai integration: The project supports calling Gemini via the
+    google-genai SDK, but this feature is intentionally optional. The import is
+    guarded and the function `call_gemini_api` will raise a clear RuntimeError if
+    the `google-genai` package is not installed. This keeps the core package
+    usable in CI and by contributors who don't need this feature.
+
+- Type stubs: We use `types-requests` in development to provide type hints for
+    `requests`. Install dev dependencies (or at least `types-requests`) to get a
+    clean `mypy` run locally.
+
+- Lazy imports & casting: Modules that touch Blender (`bpy`) are imported
+    lazily so the package can be imported outside Blender (for tests/CI). Some
+    dynamic results returned by the Blender runtime are narrowed with
+    `typing.cast(...)` to satisfy static typing while preserving runtime
+    flexibility.
+
+- If you're enabling the google-genai feature, set `GEMINI_API_KEY` and install
+    `google-genai` in your environment. The README and `AUDIT.md` include a short
+    checklist for safely enabling this feature.
 
 ## Disclaimer
 
