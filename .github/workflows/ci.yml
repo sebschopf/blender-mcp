@@ -35,7 +35,8 @@ jobs:
           python -m pip install --upgrade pip
           # Pin dev tooling versions for CI stability. Update these when bumping CI images.
           # Install ruff, mypy and pytest plus common third-party type stubs required by mypy
-          pip install ruff==0.12.4 mypy==1.11.0 pytest==7.4.2 types-requests types-urllib3
+          # Also install runtime deps needed by tests (requests)
+          pip install ruff==0.12.4 mypy==1.11.0 pytest==7.4.2 types-requests types-urllib3 requests
 
       - name: Lint (ruff)
         run: |
