@@ -10,7 +10,21 @@ from typing import Any, Callable, Dict, TypeVar, cast
 try:
     from mcp.server.fastmcp import Context
 except Exception:  # pragma: no cover - fallback for test environments
-    class Context:  # type: ignore
+    # Provide a minimal generic Context fallback so test environments and
+    # static analyzers can subscript it (e.g. Context[Any, Any, Any]).
+    from typing import Generic, TypeVar
+
+    _C1 = TypeVar("_C1")
+    _C2 = TypeVar("_C2")
+    _C3 = TypeVar("_C3")
+
+    class Context(Generic[_C1, _C2, _C3]):  # type: ignore
+        """Lightweight generic shim used only when the real MCP Context
+        type cannot be imported (tests / CI).
+
+        It's intentionally empty; callers only need it to be subscriptable
+        and to appear as a valid type in annotations.
+        """
         pass
 
 
