@@ -1,0 +1,9 @@
+# Ruff configuration for the project
+line-length = 120
+
+[lint]
+# Move linter-specific settings into the `lint` table as newer Ruff versions
+# expect. The previous top-level keys (select, extend-ignore) are deprecated
+# and will warn; placing them under [lint] keeps behavior the same.
+select = ["E", "F", "I", "C", "R"]
+extend-ignore = ["E203", "E402", "E741"]
