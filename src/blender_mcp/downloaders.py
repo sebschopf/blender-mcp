@@ -13,7 +13,11 @@ from typing import Any, Mapping, Optional
 
 import requests
 import time
+import logging
 from requests.exceptions import RequestException, HTTPError
+from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 def download_bytes(
@@ -23,6 +27,7 @@ def download_bytes(
     *,
     max_retries: int = 3,
     backoff_factor: float = 0.5,
+    session: Optional[requests.sessions.Session] = None,
 ) -> bytes:
     """Download raw bytes from a URL with simple retry/backoff.
 
@@ -37,7 +42,10 @@ def download_bytes(
     last_exc: Exception | None = None
     while attempt <= max_retries:
         try:
-            resp = requests.get(url, timeout=timeout, headers=headers)
+            if session is not None:
+                resp = session.get(url, timeout=timeout, headers=headers)
+            else:
+                resp = requests.get(url, timeout=timeout, headers=headers)
             # raise_for_status will raise HTTPError for 4xx/5xx
             resp.raise_for_status()
             return resp.content
@@ -63,6 +71,12 @@ def download_bytes(
 
         # Sleep with exponential backoff before retrying
         sleep_for = backoff_factor * (2 ** attempt)
+        logger.debug(
+            "download_bytes: attempt %s failed, sleeping %s seconds before retry (%s)",
+            attempt,
+            sleep_for,
+            last_exc,
+        )
         try:
             time.sleep(sleep_for)
         except Exception:
