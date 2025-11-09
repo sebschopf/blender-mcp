@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import socket
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from .reassembler import ChunkedJSONReassembler
 
@@ -96,9 +96,15 @@ class BlenderConnectionNetwork:
             assert self.sock is not None
             self.sock.sendall(data)
             resp = self.receive_full_response()
-            if isinstance(resp, dict) and resp.get("status") == "error":
-                raise RuntimeError(resp.get("message", "error from peer"))
-            return resp.get("result", resp) if isinstance(resp, dict) else resp
+            # Narrow the type for Pylance/mypy: we expect a mapping-like response
+            # for the typical request/response flow. Use a typed cast so `.get`
+            # overloads are resolved and static analyzers stop complaining.
+            if isinstance(resp, dict):
+                r = cast(Dict[str, Any], resp)
+                if r.get("status") == "error":
+                    raise RuntimeError(r.get("message", "error from peer"))
+                return r.get("result", resp)
+            return resp
         except Exception:
             self.sock = None
             logger.exception("send_command failed")
