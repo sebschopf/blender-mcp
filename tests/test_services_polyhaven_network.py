@@ -46,3 +46,21 @@ def test_download_asset_uses_downloader(monkeypatch, tmp_path):
 
     result = polyhaven.download_asset(download_url="http://example.com/test.zip")
     assert "temp_dir" in result
+
+
+def test_search_assets_network_invalid_json(monkeypatch):
+    # Simulate a 200 response whose json() raises ValueError
+    class BadJSONResp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            raise ValueError("invalid json")
+
+    def fake_get(url, params=None, timeout=None):
+        return BadJSONResp()
+
+    monkeypatch.setattr(polyhaven.requests, "get", fake_get)
+    res = polyhaven.search_assets_network(asset_type="all")
+    assert isinstance(res, dict)
+    assert "error" in res and "Invalid JSON" in res["error"]

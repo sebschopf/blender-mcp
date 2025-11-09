@@ -194,7 +194,7 @@ def download_asset_message(result: Dict[str, Any], asset_type: str) -> str:
     return f"Failed to download asset: {result.get('message', 'Unknown error')}"
 
 
-def fetch_categories(api_base: str = "https://polyhaven.com/api", asset_type: str = "hdris") -> Dict[str, Any]:
+def fetch_categories(api_base: str = "https://api.polyhaven.com", asset_type: str = "hdris") -> Dict[str, Any]:
     url = f"{api_base}/list"
     params = {"type": asset_type}
     resp = requests.get(url, params=params, timeout=15)
@@ -205,7 +205,7 @@ def fetch_categories(api_base: str = "https://polyhaven.com/api", asset_type: st
 
 
 def search_assets_network(
-    api_base: str = "https://polyhaven.com/api",
+    api_base: str = "https://api.polyhaven.com",
     asset_type: str = "all",
     categories: Optional[str] = None,
     page: int = 1,
