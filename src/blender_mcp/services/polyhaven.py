@@ -194,10 +194,23 @@ def download_asset_message(result: Dict[str, Any], asset_type: str) -> str:
     return f"Failed to download asset: {result.get('message', 'Unknown error')}"
 
 
-def fetch_categories(api_base: str = "https://api.polyhaven.com", asset_type: str = "hdris") -> Dict[str, Any]:
+def fetch_categories(
+    api_base: str = "https://api.polyhaven.com",
+    asset_type: str = "hdris",
+    session: Optional[requests.sessions.Session] = None,
+) -> Dict[str, Any]:
+    """Fetch categories from PolyHaven API.
+
+    If a `session` is provided, it will be used for the request (useful for
+    connection reuse in long-running processes or for test injection). If no
+    session is provided, `requests.get` is used for backward compatibility.
+    """
     url = f"{api_base}/list"
     params = {"type": asset_type}
-    resp = requests.get(url, params=params, timeout=15)
+    if session is not None:
+        resp = session.get(url, params=params, timeout=15)
+    else:
+        resp = requests.get(url, params=params, timeout=15)
     resp.raise_for_status()
     data = resp.json()
     categories = data.get("categories") or {}
@@ -210,12 +223,21 @@ def search_assets_network(
     categories: Optional[str] = None,
     page: int = 1,
     per_page: int = 50,
+    session: Optional[requests.sessions.Session] = None,
 ) -> Dict[str, Any]:
+    """Search PolyHaven assets via network API.
+
+    Accepts optional `session` for connection reuse. Returns parsed JSON or
+    a dict with an "error" key on JSON parse failure.
+    """
     url = f"{api_base}/search"
     params: Dict[str, Any] = {"type": asset_type, "page": page, "per_page": per_page}
     if categories:
         params["categories"] = categories
-    resp = requests.get(url, params=params, timeout=20)
+    if session is not None:
+        resp = session.get(url, params=params, timeout=20)
+    else:
+        resp = requests.get(url, params=params, timeout=20)
     resp.raise_for_status()
     try:
         return resp.json()
