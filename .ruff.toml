@@ -2,7 +2,7 @@
 line-length = 120
 
 # Exclude long/complex helper scripts and docs from strict linting for now.
-exclude = ["docs", "scripts"]
+exclude = ["docs", "scripts", "tools"]
 
 [lint]
 # Lint selection — keep important categories
