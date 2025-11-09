@@ -20,6 +20,25 @@ from .types import DispatcherResult
 logger = logging.getLogger(__name__)
 
 
+# Backwards-compatible simple exception types used by some tests/modules
+class HandlerNotFound(Exception):
+    """Raised when a dispatch target cannot be found."""
+
+
+class HandlerError(Exception):
+    """Wraps exceptions raised by handlers.
+
+    Attributes:
+        name: the handler name that raised
+        original: the original exception instance
+    """
+
+    def __init__(self, name: str, original: Exception) -> None:
+        super().__init__(f"Handler '{name}' raised {original!r}")
+        self.name = name
+        self.original = original
+
+
 Handler = Callable[[Dict[str, Any]], Any]
 
 
@@ -58,7 +77,13 @@ class Dispatcher:
             logger.debug("no handler for %s", name)
             return None
         logger.debug("dispatching handler %s with params=%s", name, params)
-        return fn(params or {})
+        try:
+            return fn(params or {})
+        except Exception as exc:
+            # wrap in HandlerError for compatibility with code that expects
+            # handler exceptions to be wrapped
+            logger.exception("handler %s raised", name)
+            raise HandlerError(name, exc) from exc
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""

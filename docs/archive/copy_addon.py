@@ -32,22 +32,14 @@ raise ImportError(
 )
 # Code created by Siddharth Ahuja: www.github.com/ahujasid © 2025
 
-import io
 import json
-import os
-import shutil
 import socket
-import tempfile
 import threading
 import time
 import traceback
-import zipfile
-from contextlib import redirect_stdout, suppress
 
 import bpy
-import mathutils
 import requests
-from bpy.props import IntProperty
 
 bl_info = {
     "name": "Blender MCP",

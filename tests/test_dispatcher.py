@@ -1,13 +1,55 @@
+import builtins
 import pytest
 
-from blender_mcp.dispatcher import CommandDispatcher
-from blender_mcp.dispatcher import register_default_handlers as register_default_handlers_cmd
+from blender_mcp.dispatcher import (
+    Dispatcher,
+    HandlerError,
+    CommandDispatcher,
+    register_default_handlers as register_default_handlers_cmd,
+)
 from blender_mcp.server_shim import BlenderMCPServer
-from blender_mcp.simple_dispatcher import Dispatcher, register_default_handlers
+from blender_mcp.simple_dispatcher import (
+    Dispatcher as SimpleDispatcher,
+    register_default_handlers as simple_register_default_handlers,
+)
+import blender_mcp.dispatcher as dispatcher
+from blender_mcp.config import BridgeConfig
+from blender_mcp.dispatcher import run_bridge
 
 
-def test_dispatcher_register_and_dispatch():
+def test_register_and_dispatch():
     d = Dispatcher()
+
+    def add(params):
+        return params.get("a", 0) + params.get("b", 0)
+
+    d.register("add", add, overwrite=True)
+
+    handlers = d.list_handlers()
+    assert "add" in handlers
+    assert d.dispatch("add", {"a": 2, "b": 3}) == 5
+
+
+def test_unknown_handler_returns_none():
+    d = Dispatcher()
+    # The Dispatcher.dispatch returns None when a handler is missing
+    assert d.dispatch("does-not-exist") is None
+
+
+def test_handler_exception_wrapped():
+    d = Dispatcher()
+
+    def fail(params):
+        raise ValueError("boom")
+
+    d.register("bad", fail, overwrite=True)
+    with pytest.raises(HandlerError) as excinfo:
+        d.dispatch("bad", {})
+
+    assert isinstance(excinfo.value.original, ValueError)
+    assert "bad" in str(excinfo.value)
+def test_dispatcher_register_and_dispatch():
+    d = SimpleDispatcher()
     assert d.list_handlers() == []
 
     d.register("t1", lambda params: {"r": params.get("x", 0)})
@@ -17,8 +59,8 @@ def test_dispatcher_register_and_dispatch():
 
 
 def test_register_default_handlers_and_server_integration():
-    d = Dispatcher()
-    register_default_handlers(d)
+    d = SimpleDispatcher()
+    simple_register_default_handlers(d)
     assert "add_primitive" in d.list_handlers()
 
     s = BlenderMCPServer()
@@ -29,7 +71,7 @@ def test_register_default_handlers_and_server_integration():
     assert resp["result"]["primitive"] == "sphere"
 
 
-def test_register_and_dispatch():
+def test_register_and_dispatch_commanddispatcher():
     disp = CommandDispatcher()
 
     def handler(params, config):
@@ -59,13 +101,6 @@ def test_register_default_handlers():
     # ensure core names are registered
     assert "add_primitive" in disp.list_handlers()
     assert "create_dice" in disp.list_handlers()
-import builtins
-
-import blender_mcp.dispatcher as dispatcher
-from blender_mcp.config import BridgeConfig
-from blender_mcp.dispatcher import run_bridge
-
-
 def test_run_bridge_calls_primitive_handler(monkeypatch):
     cfg = BridgeConfig()
 

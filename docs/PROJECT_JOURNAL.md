@@ -158,3 +158,16 @@ YYYY-MM-DD | auteur
 	- Ruff is now clean on `src/` and `tests/`. Mypy reports no issues for `src/`.
 	- Next: optionally refactor `get_object_info` to reduce complexity (remove the temporary noqa), and clean nested/duplicated tests in `tests/test_hyper3d.py` which contains duplicated test definitions that should be normalized.
 
+
+	---
+
+	2025-11-09 | sebas
+	- Action: Consolidation du dispatcher et harmonisation des shims
+	- Fichiers: src/blender_mcp/dispatcher.py, src/blender_mcp/simple_dispatcher.py (ré-export)
+	- Tests: `pytest -q` (suite complète) -> OK (tous les tests locaux sont passés)
+	- Statut: done
+	- Notes: `simple_dispatcher` a été remplacé par une façade minimale qui ré-exporte `Dispatcher`
+		et `register_default_handlers` depuis `dispatcher.py` afin d'avoir une source de vérité unique
+		tout en conservant les chemins d'import existants. La façade pourra être supprimée ultérieurement
+		lorsque la maintenance sera prête à accept er ce changement breaking.
+
