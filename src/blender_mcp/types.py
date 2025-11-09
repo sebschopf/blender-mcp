@@ -10,6 +10,7 @@ class ToolCommand(TypedDict, total=False):
     - {"tool": "execute_script", "params": {...}}
     - {"clarify": ["which object?"]}
     """
+
     tool: NotRequired[str]
     params: NotRequired[Dict[str, Any]]
     clarify: NotRequired[List[str]]
@@ -21,6 +22,7 @@ class DispatcherResult(TypedDict, total=False):
     - success path: {"status":"success","result":...}
     - error path:   {"status":"error","message":...}
     """
+
     status: NotRequired[str]
     result: NotRequired[Any]
     message: NotRequired[str]
@@ -28,6 +30,7 @@ class DispatcherResult(TypedDict, total=False):
 
 class ToolInfo(TypedDict, total=False):
     """Small TypedDict describing a tool entry returned by /tools endpoints."""
+
     name: NotRequired[str]
     tool: NotRequired[str]
     signature: NotRequired[str]

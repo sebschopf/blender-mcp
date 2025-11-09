@@ -4,6 +4,7 @@ This module keeps codegen pure (no bpy import at module import time) so it can b
 unit-tested. It returns the Python source as a string which can then be sent to the
 MCP `execute_blender_code` tool.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -69,6 +70,8 @@ def append_save_blend(code: str, output_dir: str | None = None) -> str:
     code += (
         "\n# Auto-save from bridge\n"
         "import bpy\n"
-        + "bpy.ops.wm.save_mainfile(filepath=r'" + save_path_escaped + "')\n"
+        + "bpy.ops.wm.save_mainfile(filepath=r'"
+        + save_path_escaped
+        + "')\n"
     )
     return code

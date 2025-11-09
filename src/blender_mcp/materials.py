@@ -9,6 +9,7 @@ set of texture maps (color, roughness, metallic, normal, displacement...).
 create the material using `bpy` when available; it's not covered by unit
 tests here to avoid needing Blender in CI.
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence, Union
@@ -102,7 +103,9 @@ def build_material_spec(
         nid = add_tex_node("displacement", mapping[key])
         nodes.append(displacement_node("displacement_node"))
         links.append(make_link(nid, "Color", "displacement_node", "Height"))
-        links.append(make_link("displacement_node", "Displacement", "output", "Displacement"))
+        links.append(
+            make_link("displacement_node", "Displacement", "output", "Displacement")
+        )
 
     spec: Dict[str, Any] = {
         "name": material_name,
@@ -130,8 +133,16 @@ def _build_spec_from_keys(keys: Sequence[str]) -> Dict[str, Any]:
     # Consolidate mapping rules to reduce branching/complexity
     rules = [
         ("base_color", ("color", "diffuse", "albedo"), lambda k: k),
-        ("roughness", ("roughness", "rough", "arm"), lambda k: "arm.g" if k == "arm" else k),
-        ("metallic", ("metallic", "metal", "arm"), lambda k: "arm.b" if k == "arm" else k),
+        (
+            "roughness",
+            ("roughness", "rough", "arm"),
+            lambda k: "arm.g" if k == "arm" else k,
+        ),
+        (
+            "metallic",
+            ("metallic", "metal", "arm"),
+            lambda k: "arm.b" if k == "arm" else k,
+        ),
         ("normal", ("normal", "nor"), lambda k: k),
         ("displacement", ("displacement", "disp", "height"), lambda k: k),
     ]
@@ -145,7 +156,9 @@ def _build_spec_from_keys(keys: Sequence[str]) -> Dict[str, Any]:
     return spec
 
 
-def create_material_in_blender(images_map: Dict[str, str], material_name: str) -> Optional[str]:
+def create_material_in_blender(
+    images_map: Dict[str, str], material_name: str
+) -> Optional[str]:
     """Create the material in Blender if `bpy` is importable.
 
     Returns the created material name or None if bpy is not available.
@@ -169,7 +182,9 @@ def create_material_in_blender(images_map: Dict[str, str], material_name: str) -
     spec = build_material_spec(images_map, material_name)
     node_objs = {}
     for n in spec["nodes"]:
-        node = nodes.new(type=n["type"]) if hasattr(nodes, "new") else nodes.new(n["type"])
+        node = (
+            nodes.new(type=n["type"]) if hasattr(nodes, "new") else nodes.new(n["type"])
+        )
         # Some node types don't expose an 'image' attribute; set name and optionally image
         try:
             node.name = n["id"]
@@ -177,7 +192,9 @@ def create_material_in_blender(images_map: Dict[str, str], material_name: str) -
             pass
         if "image" in n and hasattr(node, "image"):
             try:
-                node.image = bpy.data.images.get(n["image"]) or bpy.data.images.load(n["image"])
+                node.image = bpy.data.images.get(n["image"]) or bpy.data.images.load(
+                    n["image"]
+                )
             except Exception:
                 # Image loading may fail in tests or if path invalid; ignore
                 pass
@@ -188,7 +205,10 @@ def create_material_in_blender(images_map: Dict[str, str], material_name: str) -
         try:
             from_node = node_objs[link["from_node"]]
             to_node = node_objs[link["to_node"]]
-            links.new(from_node.outputs[link["from_socket"]], to_node.inputs[link["to_socket"]])
+            links.new(
+                from_node.outputs[link["from_socket"]],
+                to_node.inputs[link["to_socket"]],
+            )
         except Exception:
             pass
 

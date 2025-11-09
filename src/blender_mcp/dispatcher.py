@@ -8,6 +8,7 @@ performance. Key features:
 - dispatch_with_timeout (ThreadPoolExecutor)
 - dispatch_command: adapter that accepts a dict {"type","params"}
 """
+
 from __future__ import annotations
 
 import logging
@@ -85,14 +86,18 @@ class Dispatcher:
             logger.exception("handler %s raised", name)
             raise HandlerError(name, exc) from exc
 
-    def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    def dispatch_strict(
+        self, name: str, params: Optional[Dict[str, Any]] = None
+    ) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
         if name not in self._handlers:
             logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
 
-    def dispatch_with_timeout(self, name: str, params: Optional[Dict[str, Any]] = None, timeout: float = 5.0) -> Any:
+    def dispatch_with_timeout(
+        self, name: str, params: Optional[Dict[str, Any]] = None, timeout: float = 5.0
+    ) -> Any:
         """Call handler with a timeout (seconds). Raises TimeoutError on timeout."""
         if name not in self._handlers:
             raise KeyError(name)
@@ -103,7 +108,9 @@ class Dispatcher:
                 return fut.result(timeout=timeout)
             except FutTimeout as e:
                 logger.error("handler %s timed out after %s", name, timeout)
-                raise TimeoutError(f"handler {name} timed out after {timeout} seconds") from e
+                raise TimeoutError(
+                    f"handler {name} timed out after {timeout} seconds"
+                ) from e
 
     def dispatch_command(self, command: Dict[str, Any]) -> DispatcherResult:
         """Adapter to accept command dicts and return normalized responses.
@@ -148,6 +155,7 @@ def register_default_handlers(dispatcher: Dispatcher) -> None:
         dispatcher.register("add_primitive", add_primitive, overwrite=True)  # type: ignore[arg-type]
     except TypeError:
         dispatcher.register("add_primitive", add_primitive)
+
     # also register a small convenience helper expected by some tests
     def create_dice(params: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": True, "primitive": "dice", "sides": params.get("sides", 6)}
@@ -193,7 +201,12 @@ class _CommandDispatcherCompat:
     def list_handlers(self) -> List[str]:
         return sorted(self._handlers.keys())
 
-    def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None, config: Optional[Any] = None) -> Any:
+    def dispatch(
+        self,
+        name: str,
+        params: Optional[Dict[str, Any]] = None,
+        config: Optional[Any] = None,
+    ) -> Any:
         if name not in self._handlers:
             raise KeyError(name)
         handler = self._handlers[name]
@@ -224,7 +237,12 @@ def call_mcp_tool(tool: str, params: Dict[str, Any]):
     raise NotImplementedError("call_mcp_tool should be provided by environment/tests")
 
 
-def run_bridge(user_req: str, config: Any, dispatcher: _CommandDispatcherCompat, use_api: bool = False) -> None:
+def run_bridge(
+    user_req: str,
+    config: Any,
+    dispatcher: _CommandDispatcherCompat,
+    use_api: bool = False,
+) -> None:
     """Run the Gemini->tool bridging flow.
 
     This function asks Gemini (via `call_gemini_cli`) to map a user

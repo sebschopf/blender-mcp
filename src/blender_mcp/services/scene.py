@@ -5,6 +5,7 @@ package in CI or outside Blender. The function returns a dictionary with
 lightweight, JSON-serializable scene information useful for tests and
 clients.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -15,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 def _obj_to_dict(obj: Any) -> Dict[str, Any]:
-    return {"name": getattr(obj, "name", "<unknown>"), "type": getattr(obj, "type", "<unknown>")}
+    return {
+        "name": getattr(obj, "name", "<unknown>"),
+        "type": getattr(obj, "type", "<unknown>"),
+    }
 
 
 def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
@@ -51,7 +55,12 @@ def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
             if ac is not None:
                 active_cam = getattr(ac, "name", None)
 
-        return {"status": "success", "scene_name": scene_name, "objects": objects, "active_camera": active_cam}
+        return {
+            "status": "success",
+            "scene_name": scene_name,
+            "objects": objects,
+            "active_camera": active_cam,
+        }
     except Exception as e:
         logger.exception("unexpected error in get_scene_info")
         return {"status": "error", "message": str(e)}

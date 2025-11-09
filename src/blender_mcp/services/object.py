@@ -3,6 +3,7 @@
 Pattern: lazy import of `bpy` so the module is safe to import in CI.
 The function returns a JSON-serializable dict with basic object properties.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -77,7 +78,10 @@ def _extract_location(obj: object) -> Optional[list[float]]:
 
 
 def _collect_info(obj: object) -> Dict[str, Any]:
-    info: Dict[str, Any] = {"name": getattr(obj, "name", None), "type": getattr(obj, "type", None)}
+    info: Dict[str, Any] = {
+        "name": getattr(obj, "name", None),
+        "type": getattr(obj, "type", None),
+    }
     location = _extract_location(obj)
     if location is not None:
         info["location"] = location

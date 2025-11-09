@@ -17,7 +17,9 @@ from .endpoints import register_builtin_endpoints
 logger = logging.getLogger(__name__)
 
 
-def _process_bbox(bbox: Optional[list[float] | tuple[float, float, float]]) -> Optional[list[int]]:
+def _process_bbox(
+    bbox: Optional[list[float] | tuple[float, float, float]],
+) -> Optional[list[int]]:
     if bbox is None:
         return None
     if not isinstance(bbox, (list, tuple)) or len(bbox) != 3:

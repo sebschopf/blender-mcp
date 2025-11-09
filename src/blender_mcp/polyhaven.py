@@ -3,6 +3,7 @@
 These helpers keep network & parsing logic separate from Blender-specific
 code so we can unit-test the behaviour without Blender.
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, Optional

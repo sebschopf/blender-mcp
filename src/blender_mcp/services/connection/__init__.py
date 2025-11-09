@@ -5,11 +5,11 @@ implementations from the package-level internal module. The split into
 modules improves SOLID structure while keeping a stable public API.
 """
 
-from .reassembler import ChunkedJSONReassembler
-from .framing import LengthPrefixedReassembler
-from .socket_conn import SocketBlenderConnection
-from .network import BlenderConnectionNetwork
 from .facade import BlenderConnection
+from .framing import LengthPrefixedReassembler
+from .network import BlenderConnectionNetwork
+from .reassembler import ChunkedJSONReassembler
+from .socket_conn import SocketBlenderConnection
 
 __all__ = [
     "ChunkedJSONReassembler",

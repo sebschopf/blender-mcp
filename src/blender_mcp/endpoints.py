@@ -6,14 +6,14 @@ ported. Handlers are simple callables that accept a `params` dict and
 return JSON-serializable results (the services already follow this
 convention).
 """
+
 from __future__ import annotations
 
-from typing import Callable, Any, Dict
+from typing import Any, Callable, Dict
 
 from .services.execute import execute_blender_code
 from .services.scene import get_scene_info
 from .services.screenshot import get_viewport_screenshot
-
 
 # Typing aliases for endpoint handlers
 # Handlers accept a JSON-like parameter mapping (or None) and return any

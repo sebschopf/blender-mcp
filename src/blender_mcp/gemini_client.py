@@ -2,6 +2,7 @@
 
 This module is self-contained so tests can mock network/subprocess calls.
 """
+
 from __future__ import annotations
 
 import json
@@ -110,7 +111,9 @@ def get_local_tool_catalog() -> str:
         return ""
 
     # reuse the `tools` list declared above
-    for m in re.finditer(r"def\s+(\w+)\s*\(([^)]*)\)\s*:\s*(?:\"\"\"([\s\S]*?)\"\"\"|)", txt):
+    for m in re.finditer(
+        r"def\s+(\w+)\s*\(([^)]*)\)\s*:\s*(?:\"\"\"([\s\S]*?)\"\"\"|)", txt
+    ):
         name = m.group(1)
         sig = m.group(2).strip()
         doc = (m.group(3) or "").strip().split("\n")[0] if m.group(3) else ""
@@ -166,7 +169,11 @@ def call_gemini_cli(user_request: str) -> ToolCommand:
         if isinstance(inner_raw, dict):
             return cast(ToolCommand, inner_raw)
         return inner_raw
-    print("Could not find a tool JSON in Gemini CLI output. Raw output:\n", out, file=sys.stderr)
+    print(
+        "Could not find a tool JSON in Gemini CLI output. Raw output:\n",
+        out,
+        file=sys.stderr,
+    )
     raise SystemExit(1)
 
 
@@ -187,7 +194,9 @@ def _run_gemini_subprocess(cmd: list[str], prompt: str) -> str:
     if not resolved and os.name == "nt":
         appdata = os.environ.get("APPDATA")
         if appdata:
-            candidate = os.path.join(appdata, "npm", exe if exe.lower().endswith(".cmd") else exe + ".cmd")
+            candidate = os.path.join(
+                appdata, "npm", exe if exe.lower().endswith(".cmd") else exe + ".cmd"
+            )
             if os.path.exists(candidate):
                 resolved = candidate
     if resolved:
@@ -202,7 +211,12 @@ def _run_gemini_subprocess(cmd: list[str], prompt: str) -> str:
         raise SystemExit(1)
 
     try:
-        proc = subprocess.run(cmd, input=prompt.encode("utf-8"), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.run(
+            cmd,
+            input=prompt.encode("utf-8"),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
     except FileNotFoundError as e:
         print(f"Failed to launch gemini command: {e}")
         raise
@@ -261,7 +275,9 @@ def call_gemini_api(user_request: str) -> ToolCommand:
         genai = importlib.import_module("google.genai")
     except Exception:
         # Be explicit: this feature is optional and requires the google-genai SDK.
-        raise RuntimeError("google-genai library not available. Install with: pip install google-genai")
+        raise RuntimeError(
+            "google-genai library not available. Install with: pip install google-genai"
+        )
 
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -278,5 +294,9 @@ def call_gemini_api(user_request: str) -> ToolCommand:
     found = _extract_tool_from_genai_response(resp, text)
     if found is not None:
         return found
-    print("Could not extract tool JSON from Gemini API response. Response snapshot:", resp, file=sys.stderr)
+    print(
+        "Could not extract tool JSON from Gemini API response. Response snapshot:",
+        resp,
+        file=sys.stderr,
+    )
     raise SystemExit(1)

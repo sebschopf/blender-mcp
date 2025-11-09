@@ -3,6 +3,7 @@
 These are pure helpers that centralize network I/O and parsing so they can
 be unit-tested independently of the Blender addon.
 """
+
 from __future__ import annotations
 
 import json
@@ -27,7 +28,9 @@ def get_sketchfab_status(api_key: Optional[str]) -> Dict[str, Any]:
 
     headers = {"Authorization": f"Token {api_key}"}
     try:
-        resp = requests.get("https://api.sketchfab.com/v3/me", headers=headers, timeout=10)
+        resp = requests.get(
+            "https://api.sketchfab.com/v3/me", headers=headers, timeout=10
+        )
         if resp.status_code == 200:
             data = resp.json()
             username = data.get("username", "Unknown user")
@@ -59,7 +62,12 @@ def search_models(
 
     # requests expects params values to be strings or sequences; coerce to strings to satisfy type checkers
     params_cast = {k: str(v) for k, v in params.items() if v is not None}
-    resp = requests.get("https://api.sketchfab.com/v3/search", headers=headers, params=params_cast, timeout=30)
+    resp = requests.get(
+        "https://api.sketchfab.com/v3/search",
+        headers=headers,
+        params=params_cast,
+        timeout=30,
+    )
     if resp.status_code == 401:
         return {"error": "Authentication failed (401)"}
     if resp.status_code != 200:

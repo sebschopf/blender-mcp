@@ -3,6 +3,7 @@
 These helpers are intentionally small and raise on HTTP errors so callers
 can handle/report them. They make it easier to mock network calls in tests.
 """
+
 from __future__ import annotations
 
 import io
@@ -13,7 +14,11 @@ from typing import Any, Mapping, Optional
 import requests
 
 
-def download_bytes(url: str, timeout: Optional[float] = 60.0, headers: Optional[Mapping[str, Any]] = None) -> bytes:
+def download_bytes(
+    url: str,
+    timeout: Optional[float] = 60.0,
+    headers: Optional[Mapping[str, Any]] = None,
+) -> bytes:
     """Download raw bytes from a URL. Raises an exception on HTTP error."""
     resp = requests.get(url, timeout=timeout, headers=headers)
     resp.raise_for_status()

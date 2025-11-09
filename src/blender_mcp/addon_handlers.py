@@ -7,6 +7,7 @@ They intentionally re-declare a small set of constants (headers, keys)
 so they don't rely on importing the top-level `addon.py` (avoids circular
 imports).
 """
+
 from __future__ import annotations
 
 import io
@@ -170,7 +171,9 @@ def execute_code(code: str):
 def get_polyhaven_categories(asset_type: str):
     try:
         if asset_type not in ["hdris", "textures", "models", "all"]:
-            return {"error": f"Invalid asset type: {asset_type}. Must be one of: hdris, textures, models, all"}
+            return {
+                "error": f"Invalid asset type: {asset_type}. Must be one of: hdris, textures, models, all"
+            }
 
         try:
             from blender_mcp.polyhaven import fetch_categories  # type: ignore
@@ -182,14 +185,21 @@ def get_polyhaven_categories(asset_type: str):
                 from blender_mcp.downloaders import download_bytes  # type: ignore
 
                 data = download_bytes(
-                    f"https://api.polyhaven.com/categories/{asset_type}", timeout=10, headers=REQ_HEADERS
+                    f"https://api.polyhaven.com/categories/{asset_type}",
+                    timeout=10,
+                    headers=REQ_HEADERS,
                 )
                 return {"categories": json.loads(data.decode("utf-8"))}
             except Exception:
-                response = requests.get(f"https://api.polyhaven.com/categories/{asset_type}", headers=REQ_HEADERS)
+                response = requests.get(
+                    f"https://api.polyhaven.com/categories/{asset_type}",
+                    headers=REQ_HEADERS,
+                )
                 if response.status_code == 200:
                     return {"categories": response.json()}
-                return {"error": f"API request failed with status code {response.status_code}"}
+                return {
+                    "error": f"API request failed with status code {response.status_code}"
+                }
     except Exception as e:
         return {"error": str(e)}
 
@@ -199,7 +209,9 @@ def search_polyhaven_assets(asset_type=None, categories=None):
         params = {}
         if asset_type and asset_type != "all":
             if asset_type not in ["hdris", "textures", "models"]:
-                return {"error": f"Invalid asset type: {asset_type}. Must be one of: hdris, textures, models, all"}
+                return {
+                    "error": f"Invalid asset type: {asset_type}. Must be one of: hdris, textures, models, all"
+                }
             params["type"] = asset_type
 
         if categories:
@@ -220,11 +232,17 @@ def search_polyhaven_assets(asset_type=None, categories=None):
                 data = download_bytes(full_url, timeout=10, headers=REQ_HEADERS)
                 assets = json.loads(data.decode("utf-8"))
             except Exception:
-                response = requests.get("https://api.polyhaven.com/assets", params=params, headers=REQ_HEADERS)
+                response = requests.get(
+                    "https://api.polyhaven.com/assets",
+                    params=params,
+                    headers=REQ_HEADERS,
+                )
                 if response.status_code == 200:
                     assets = response.json()
                 else:
-                    return {"error": f"API request failed with status code {response.status_code}"}
+                    return {
+                        "error": f"API request failed with status code {response.status_code}"
+                    }
 
         limited_assets = {}
         for i, (key, value) in enumerate(assets.items()):
@@ -232,7 +250,11 @@ def search_polyhaven_assets(asset_type=None, categories=None):
                 break
             limited_assets[key] = value
 
-        return {"assets": limited_assets, "total_count": len(assets), "returned_count": len(limited_assets)}
+        return {
+            "assets": limited_assets,
+            "total_count": len(assets),
+            "returned_count": len(limited_assets),
+        }
     except Exception as e:
         return {"error": str(e)}
 
@@ -246,13 +268,21 @@ def download_polyhaven_asset(asset_id, asset_type, resolution="1k", file_format=
         try:
             from blender_mcp.downloaders import download_bytes  # type: ignore
 
-            data = download_bytes(f"https://api.polyhaven.com/files/{asset_id}", timeout=10, headers=REQ_HEADERS)
+            data = download_bytes(
+                f"https://api.polyhaven.com/files/{asset_id}",
+                timeout=10,
+                headers=REQ_HEADERS,
+            )
             files_data = json.loads(data.decode("utf-8"))
         except Exception:
             try:
-                files_response = requests.get(f"https://api.polyhaven.com/files/{asset_id}", headers=REQ_HEADERS)
+                files_response = requests.get(
+                    f"https://api.polyhaven.com/files/{asset_id}", headers=REQ_HEADERS
+                )
                 if files_response.status_code != 200:
-                    return {"error": f"Failed to get asset files: {files_response.status_code}"}
+                    return {
+                        "error": f"Failed to get asset files: {files_response.status_code}"
+                    }
                 files_data = files_response.json()
             except Exception as e:
                 return {"error": str(e)}
@@ -277,7 +307,9 @@ def set_texture(object_name, texture_id):
         texture_images = _collect_texture_images(texture_id)
 
         if not texture_images:
-            return {"error": f"No texture images found for: {texture_id}. Please download the texture first."}
+            return {
+                "error": f"No texture images found for: {texture_id}. Please download the texture first."
+            }
 
         images_map_names = {k: img.name for k, img in texture_images.items()}
         mat_name = _try_create_material(images_map_names, texture_id, object_name)
@@ -328,11 +360,15 @@ def _collect_texture_images(texture_id: str):
     return texture_images
 
 
-def _try_create_material(images_map_names: dict, texture_id: str, object_name: str) -> str | None:
+def _try_create_material(
+    images_map_names: dict, texture_id: str, object_name: str
+) -> str | None:
     """Attempt to create a material using the project helper; return name or None."""
     try:
         from blender_mcp.materials import create_material_in_blender  # type: ignore
 
-        return create_material_in_blender(images_map_names, f"{texture_id}_material_{object_name}")
+        return create_material_in_blender(
+            images_map_names, f"{texture_id}_material_{object_name}"
+        )
     except Exception:
         return None

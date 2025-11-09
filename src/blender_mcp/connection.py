@@ -6,11 +6,11 @@ continue to work during and after the refactor.
 """
 
 from .services.connection import (
+    BlenderConnection,
+    BlenderConnectionNetwork,
     ChunkedJSONReassembler,
     LengthPrefixedReassembler,
     SocketBlenderConnection,
-    BlenderConnectionNetwork,
-    BlenderConnection,
 )
 
 __all__ = [

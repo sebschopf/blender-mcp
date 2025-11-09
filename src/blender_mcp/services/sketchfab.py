@@ -4,6 +4,7 @@ This module exposes small wrappers around the existing `blender_mcp.sketchfab`
 helpers so `integrations` can prefer server-side network calls when a
 Sketchfab API key is available.
 """
+
 from typing import Any, Dict, Optional
 
 from .. import sketchfab as _sketchfab

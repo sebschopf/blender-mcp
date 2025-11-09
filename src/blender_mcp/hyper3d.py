@@ -3,6 +3,7 @@
 These helpers centralize network requests and downloading so tests can mock
 network I/O without importing the Blender addon.
 """
+
 from __future__ import annotations
 
 import json
@@ -34,7 +35,9 @@ def create_rodin_job_main_site(
         files.append(("bbox_condition", (None, json.dumps(bbox_condition))))
 
     headers = {"Authorization": f"Bearer {api_key}"}
-    resp = requests.post("https://hyperhuman.deemos.com/api/v2/rodin", headers=headers, files=files)
+    resp = requests.post(
+        "https://hyperhuman.deemos.com/api/v2/rodin", headers=headers, files=files
+    )
     return resp.json()
 
 
@@ -53,11 +56,15 @@ def create_rodin_job_fal_ai(
         req_data["bbox_condition"] = bbox_condition
 
     headers = {"Authorization": f"Key {api_key}", "Content-Type": "application/json"}
-    resp = requests.post("https://queue.fal.run/fal-ai/hyper3d/rodin", headers=headers, json=req_data)
+    resp = requests.post(
+        "https://queue.fal.run/fal-ai/hyper3d/rodin", headers=headers, json=req_data
+    )
     return resp.json()
 
 
-def poll_rodin_job_status_main_site(api_key: str, subscription_key: str) -> Dict[str, Any]:
+def poll_rodin_job_status_main_site(
+    api_key: str, subscription_key: str
+) -> Dict[str, Any]:
     resp = requests.post(
         "https://hyperhuman.deemos.com/api/v2/status",
         headers={"Authorization": f"Bearer {api_key}"},
@@ -75,7 +82,9 @@ def poll_rodin_job_status_fal_ai(api_key: str, request_id: str) -> Dict[str, Any
     return resp.json()
 
 
-def import_generated_asset_main_site(api_key: str, task_uuid: str, name: str) -> Dict[str, Any]:
+def import_generated_asset_main_site(
+    api_key: str, task_uuid: str, name: str
+) -> Dict[str, Any]:
     resp = requests.post(
         "https://hyperhuman.deemos.com/api/v2/download",
         headers={"Authorization": f"Bearer {api_key}"},
@@ -90,7 +99,9 @@ def import_generated_asset_main_site(api_key: str, task_uuid: str, name: str) ->
             try:
                 # Prefer centralized downloader
                 content = downloaders.download_bytes(url, timeout=120)
-                tf = tempfile.NamedTemporaryFile(delete=False, prefix=task_uuid, suffix=".glb")
+                tf = tempfile.NamedTemporaryFile(
+                    delete=False, prefix=task_uuid, suffix=".glb"
+                )
                 tf.write(content)
                 tf.close()
                 temp_file_path = tf.name
@@ -98,7 +109,9 @@ def import_generated_asset_main_site(api_key: str, task_uuid: str, name: str) ->
                 # Fallback to streaming requests
                 r = requests.get(url, stream=True)
                 r.raise_for_status()
-                tf = tempfile.NamedTemporaryFile(delete=False, prefix=task_uuid, suffix=".glb")
+                tf = tempfile.NamedTemporaryFile(
+                    delete=False, prefix=task_uuid, suffix=".glb"
+                )
                 for chunk in r.iter_content(chunk_size=8192):
                     tf.write(chunk)
                 tf.close()
@@ -112,7 +125,9 @@ def import_generated_asset_main_site(api_key: str, task_uuid: str, name: str) ->
     return {"succeed": True, "temp_file": temp_file_path, "name": name}
 
 
-def import_generated_asset_fal_ai(api_key: str, request_id: str, name: str) -> Dict[str, Any]:
+def import_generated_asset_fal_ai(
+    api_key: str, request_id: str, name: str
+) -> Dict[str, Any]:
     url = f"https://queue.fal.run/fal-ai/hyper3d/requests/{request_id}"
     headers = {"Authorization": f"Key {api_key}"}
     resp = requests.get(url, headers=headers)

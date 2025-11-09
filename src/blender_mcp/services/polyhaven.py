@@ -4,6 +4,7 @@ These functions accept plain data structures (dicts/lists) returned by the
 download/import layer and produce user-friendly strings. They do not perform
 network I/O or interact with Blender directly.
 """
+
 from typing import Any, Dict, Optional
 
 import requests
@@ -19,7 +20,9 @@ def format_categories_output(categories: Dict[str, int], asset_type: str) -> str
     return formatted
 
 
-def format_search_assets(result: Dict[str, Any], categories: Optional[str] = None) -> str:
+def format_search_assets(
+    result: Dict[str, Any], categories: Optional[str] = None
+) -> str:
     assets = result.get("assets", {})
     total_count = result.get("total_count", 0)
     returned_count = result.get("returned_count", 0)
@@ -35,7 +38,9 @@ def format_search_assets(result: Dict[str, Any], categories: Optional[str] = Non
 
     for asset_id, asset_data in sorted_assets:
         formatted += f"- {asset_data.get('name', asset_id)} (ID: {asset_id})\n"
-        formatted += f"  Type: {['HDRI', 'Texture', 'Model'][asset_data.get('type', 0)]}\n"
+        formatted += (
+            f"  Type: {['HDRI', 'Texture', 'Model'][asset_data.get('type', 0)]}\n"
+        )
         formatted += f"  Categories: {', '.join(asset_data.get('categories', []))}\n"
         formatted += f"  Downloads: {asset_data.get('download_count', 'Unknown')}\n\n"
 
@@ -57,7 +62,9 @@ def download_asset_message(result: Dict[str, Any], asset_type: str) -> str:
     return f"Failed to download asset: {result.get('message', 'Unknown error')}"
 
 
-def fetch_categories(api_base: str = "https://polyhaven.com/api", asset_type: str = "hdris") -> Dict[str, Any]:
+def fetch_categories(
+    api_base: str = "https://polyhaven.com/api", asset_type: str = "hdris"
+) -> Dict[str, Any]:
     """Fetch categories for an asset type from PolyHaven API.
 
     Returns a dict with key 'categories' mapping name->count on success, or
