@@ -13,6 +13,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from ..connection import BlenderConnectionNetwork
+from ..dispatcher import Dispatcher
 
 logger = logging.getLogger(__name__)
 
@@ -61,3 +62,17 @@ def send_command_over_network(host: str, port: int, command_type: str, params: O
 
 
 __all__ = ["execute_blender_code", "send_command_over_network"]
+
+
+def register_handlers(dispatcher: Dispatcher) -> None:
+    """Register service handlers on a Dispatcher instance.
+
+    This helper makes it easy to wire services into the dispatcher used by
+    the running server or tests. It attempts to call `register(...,
+    overwrite=True)` for idempotence and falls back if the older
+    Dispatcher signature does not accept `overwrite`.
+    """
+    try:
+        dispatcher.register("execute_blender_code", execute_blender_code, overwrite=True)  # type: ignore[arg-type]
+    except TypeError:
+        dispatcher.register("execute_blender_code", execute_blender_code)
