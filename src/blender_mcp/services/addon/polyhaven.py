@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 import requests
 
-from ..addon.constants import REQ_HEADERS
+from .constants import REQ_HEADERS
 
 
 def get_polyhaven_categories(asset_type: str) -> Dict[str, Any]:

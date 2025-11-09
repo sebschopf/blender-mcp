@@ -36,6 +36,8 @@ def _normalize_objects(addon_objects: Any) -> list[Dict[str, Any]]:
     return out
 
 
+
+
 def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """Canonical service-facing get_scene_info.
 
@@ -70,6 +72,34 @@ def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
 
         return _fallback_get_scene_info(bpy)
 
+    # Build canonical response for successful addon_result
+    try:
+        scene_name = addon_result.get("name") if isinstance(addon_result, dict) else None
+        objects = _normalize_objects(addon_result.get("objects") if isinstance(addon_result, dict) else None)
+
+        # active camera: try to read from bpy (best-effort, non-fatal)
+        active_cam = None
+        try:
+            bpy = importlib.import_module("bpy")
+            scene = getattr(bpy, "context", None)
+            if scene is not None and hasattr(scene, "scene"):
+                ac = getattr(scene.scene, "camera", None)
+                if ac is not None:
+                    active_cam = getattr(ac, "name", None)
+        except Exception:
+            # not running inside Blender; active_cam remains None
+            pass
+
+        return {
+            "status": "success",
+            "scene_name": scene_name,
+            "objects": objects,
+            "active_camera": active_cam,
+        }
+    except Exception as e:
+        logger.exception("unexpected error normalizing addon scene info")
+        return {"status": "error", "message": str(e)}
+
 
 def _fallback_get_scene_info(bpy) -> Dict[str, Any]:
     """Backward-compatible extraction when the addon helper fails.
@@ -102,33 +132,6 @@ def _fallback_get_scene_info(bpy) -> Dict[str, Any]:
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-    # Build canonical response
-    try:
-        scene_name = addon_result.get("name") if isinstance(addon_result, dict) else None
-        objects = _normalize_objects(addon_result.get("objects") if isinstance(addon_result, dict) else None)
-
-        # active camera: try to read from bpy (best-effort, non-fatal)
-        active_cam = None
-        try:
-            bpy = importlib.import_module("bpy")
-            scene = getattr(bpy, "context", None)
-            if scene is not None and hasattr(scene, "scene"):
-                ac = getattr(scene.scene, "camera", None)
-                if ac is not None:
-                    active_cam = getattr(ac, "name", None)
-        except Exception:
-            # not running inside Blender; active_cam remains None
-            pass
-
-        return {
-            "status": "success",
-            "scene_name": scene_name,
-            "objects": objects,
-            "active_camera": active_cam,
-        }
-    except Exception as e:
-        logger.exception("unexpected error normalizing addon scene info")
-        return {"status": "error", "message": str(e)}
 
 
 __all__ = ["get_scene_info"]
