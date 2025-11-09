@@ -8,12 +8,22 @@ convention).
 """
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, Any, Dict
 
-from . import services
+from .services.execute import execute_blender_code
+from .services.scene import get_scene_info
+from .services.screenshot import get_viewport_screenshot
 
 
-def register_builtin_endpoints(register: Callable[[str, Callable], None]) -> None:
+# Typing aliases for endpoint handlers
+# Handlers accept a JSON-like parameter mapping (or None) and return any
+# JSON-serializable result. Keeping this broad is pragmatic: services
+# currently accept plain dicts constructed from parsed JSON RPC params.
+Params = Dict[str, Any]
+Handler = Callable[[Params], Any]
+
+
+def register_builtin_endpoints(register: Callable[[str, Handler], None]) -> None:
     """Register a set of builtin endpoints using the provided `register` function.
 
     The `register` callable is expected to accept (name, fn) like
@@ -21,14 +31,14 @@ def register_builtin_endpoints(register: Callable[[str, Callable], None]) -> Non
     """
 
     # thin wrappers in case we need to adapt params in future
-    def _execute(params):
-        return services.execute_blender_code(params)
+    def _execute(params: Params) -> Any:
+        return execute_blender_code(params)
 
-    def _scene(params):
-        return services.get_scene_info(params)
+    def _scene(params: Params) -> Any:
+        return get_scene_info(params)
 
-    def _screenshot(params):
-        return services.get_viewport_screenshot(params)
+    def _screenshot(params: Params) -> Any:
+        return get_viewport_screenshot(params)
 
     register("execute_blender_code", _execute)
     register("get_scene_info", _scene)
