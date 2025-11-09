@@ -57,9 +57,6 @@ YYYY-MM-DD | auteur
 	- `python -m mypy src` (pass)
 	- `PYTHONPATH=<repo>;<repo>/src python -m pytest tests/test_object_service.py -q` (object service tests passed)
 - Statut: done
-- Notes:
-	- `get_object_info` now delegates parsing, importing, object lookup, location extraction, and info collection to small helpers. Complexity is reduced and the function is easier to test.
-	- All checks (ruff/mypy/pytest) passed for the active code after this refactor.
 
 ---
 
@@ -69,15 +66,29 @@ YYYY-MM-DD | auteur
 	- src/blender_mcp/services/object.py (enhanced `_extract_location` to support attribute-style, mapping-like and iterable locations)
 	- tests/test_object_location.py (new tests covering attribute-style, sequence, short sequence, mapping-like and unparseable locations)
 - Fichiers modifiés:
-	- src/blender_mcp/services/object.py (tightened iterable case to require exactly 3 components)
 	- tests/test_object_location.py (updated expectations for short sequence — now rejected)
 	- tests/test_object_location_extra.py (new tests: Decimal, array.array, non-numeric values)
 - Commands run:
-	- `python -m ruff check src tests` (pass)
-	- `python -m mypy src` (pass)
 	- `PYTHONPATH=<repo>;<repo>/src python -m pytest tests/test_object_location.py -q` (new tests passed)
 - Statut: done
 - Notes:
+
+---
+
+2025-11-08 | sebas
+- Action: CI: make pytest artifact names unique per matrix job to avoid 409 Conflict on upload
+- Fichiers modifiés: .github/workflows/ci.yml
+- Commands run / CI evidence:
+  - Edited workflow to change the upload-artifact `name` from `pytest-report` to `pytest-report-${{ matrix.python-version }}`.
+  - Pushed change to fork branch `feature/port-refactor-2025-11-08` and opened PR -> created PR-run (id 19200390347).
+  - Observed `main` run (id 19200170606) previously produced a 409 Conflict at the Upload pytest report step because multiple matrix jobs attempted to upload an artifact with the same name.
+  - Confirmed PR-run `19200390347` used unique artifact names (`pytest-report-3.11` and `pytest-report-3.12`) and uploaded successfully (no 409 in the PR-run logs).
+- Statut: done (fix applied on feature branch and PR-run validated)
+- Notes:
+  - The change prevents name collisions across parallel matrix jobs by including `${{ matrix.python-version }}` in artifact names.
+  - Next step: merge the PR into `main` (or request review/merge) so the fix is propagated to `main` runs; after merging, monitor a `main` run to verify no 409 reappears.
+
+````
 	- `_extract_location` is now more forgiving and supports more Blender-like location shapes. Tests cover edge cases and confirm behavior.
 	- All checks passed after the change. If you prefer stricter behavior (e.g., require exactly 3 components), I can tighten the function and update tests accordingly.
 
