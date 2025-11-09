@@ -10,6 +10,14 @@ from .framing import LengthPrefixedReassembler
 from .network import BlenderConnectionNetwork
 from .reassembler import ChunkedJSONReassembler
 from .socket_conn import SocketBlenderConnection
+# Re-export canonical runtime accessor from consolidated implementation
+try:
+    # Prefer the canonical implementation in src/blender_mcp/connection_core.py
+    from ...connection_core import get_blender_connection  # type: ignore
+except Exception:
+    # Fallback: leave get_blender_connection unavailable; callers may import
+    # via the public tools shim which performs lazy resolution.
+    get_blender_connection = None  # type: ignore
 
 __all__ = [
     "ChunkedJSONReassembler",
@@ -17,4 +25,5 @@ __all__ = [
     "SocketBlenderConnection",
     "BlenderConnectionNetwork",
     "BlenderConnection",
+    "get_blender_connection",
 ]
