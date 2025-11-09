@@ -1,3 +1,15 @@
+"""Blender UI for the BlenderMCP add-on.
+
+This module defines the Blender UI panel and operators used by the
+add-on. It intentionally keeps behavior minimal: operators only toggle UI
+state and inform users how to start/stop the external MCP server.
+
+Design notes:
+- Keep imports of `bpy` at module level because Blender requires it for
+    register/unregister when running inside Blender. Tests run with a mocked
+    `bpy` module.
+"""
+
 import bpy
 from bpy.props import IntProperty
 
@@ -94,6 +106,53 @@ class BLENDERMCP_OT_StopServer(bpy.types.Operator):
 
 
 def register():
+    """Register blender UI classes and properties.
+
+    Properties are registered on `bpy.types.Scene` so they persist with the
+    Blender file. Keeping property registration in a single helper makes it
+    easier to audit and test.
+    """
+
+    _register_scene_properties()
+
+    for cls in (
+        BLENDERMCP_PT_Panel,
+        BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey,
+        BLENDERMCP_OT_StartServer,
+        BLENDERMCP_OT_StopServer,
+    ):
+        bpy.utils.register_class(cls)
+
+    print("BlenderMCP addon registered")
+
+
+def unregister():
+    """Unregister UI classes and remove Scene properties.
+
+    We avoid stopping external processes here; the UI does not manage server
+    lifecycle. Just clean up classes and properties so Blender does not keep
+    stale references.
+    """
+
+    for cls in (
+        BLENDERMCP_PT_Panel,
+        BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey,
+        BLENDERMCP_OT_StartServer,
+        BLENDERMCP_OT_StopServer,
+    ):
+        try:
+            bpy.utils.unregister_class(cls)
+        except Exception:
+            # Best effort unregister; ignore if class wasn't registered.
+            pass
+
+    _unregister_scene_properties()
+
+    print("BlenderMCP addon unregistered")
+
+
+def _register_scene_properties() -> None:
+    """Register scene-level properties used by the addon."""
     bpy.types.Scene.blendermcp_port = IntProperty(
         name="Port",
         description="Port for the BlenderMCP server",
@@ -148,32 +207,28 @@ def register():
         default="",
     )
 
-    bpy.utils.register_class(BLENDERMCP_PT_Panel)
-    bpy.utils.register_class(BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey)
-    bpy.utils.register_class(BLENDERMCP_OT_StartServer)
-    bpy.utils.register_class(BLENDERMCP_OT_StopServer)
 
-    print("BlenderMCP addon registered")
+def _unregister_scene_properties() -> None:
+    """Remove scene-level properties previously registered.
 
-
-def unregister():
-    # Stop the server if it's running
-    if hasattr(bpy.types, "blendermcp_server") and bpy.types.blendermcp_server:
-        bpy.types.blendermcp_server.stop()
-        del bpy.types.blendermcp_server
-
-    bpy.utils.unregister_class(BLENDERMCP_PT_Panel)
-    bpy.utils.unregister_class(BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey)
-    bpy.utils.unregister_class(BLENDERMCP_OT_StartServer)
-    bpy.utils.unregister_class(BLENDERMCP_OT_StopServer)
-
-    del bpy.types.Scene.blendermcp_port
-    del bpy.types.Scene.blendermcp_server_running
-    del bpy.types.Scene.blendermcp_use_polyhaven
-    del bpy.types.Scene.blendermcp_use_hyper3d
-    del bpy.types.Scene.blendermcp_hyper3d_mode
-    del bpy.types.Scene.blendermcp_hyper3d_api_key
-    del bpy.types.Scene.blendermcp_use_sketchfab
-    del bpy.types.Scene.blendermcp_sketchfab_api_key
-
-    print("BlenderMCP addon unregistered")
+    Unregistering is best-effort: missing attributes are ignored to avoid
+    raising during unregister cleanup.
+    """
+    for name in (
+        "blendermcp_port",
+        "blendermcp_server_running",
+        "blendermcp_use_polyhaven",
+        "blendermcp_use_hyper3d",
+        "blendermcp_hyper3d_mode",
+        "blendermcp_hyper3d_api_key",
+        "blendermcp_use_sketchfab",
+        "blendermcp_sketchfab_api_key",
+    ):
+        try:
+            delattr(bpy.types.Scene, name)
+        except Exception:
+            # Ignore missing attributes
+            try:
+                delattr(bpy.context.scene, name)
+            except Exception:
+                pass
