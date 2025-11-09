@@ -57,5 +57,7 @@ jobs:
       - name: Upload pytest report
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-report
+          # Include the matrix python-version so artifact names are unique
+          # across parallel matrix jobs and avoid 409 Conflict errors.
+          name: pytest-report-${{ matrix.python-version }}
           path: pytest-report.xml
