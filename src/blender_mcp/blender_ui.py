@@ -67,20 +67,12 @@ class BLENDERMCP_OT_StartServer(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-
-        # Create a new server instance
-        if (
-            not hasattr(bpy.types, "blendermcp_server")
-            or not bpy.types.blendermcp_server
-        ):
-            from blender_mcp.server import BlenderMCPServer
-
-            bpy.types.blendermcp_server = BlenderMCPServer(port=scene.blendermcp_port)
-
-        # Start the server
-        bpy.types.blendermcp_server.start()
+        # Do not start background processes from the addon UI.
+        # Starting the MCP server is an external operation (use start-server.ps1
+        # or run `blender-mcp` in a terminal). Here we only set the UI flag so
+        # users can indicate that they've started the server externally.
         scene.blendermcp_server_running = True
-
+        self.report({"INFO"}, "Marked server as running — start the MCP server externally.")
         return {"FINISHED"}
 
 
@@ -92,14 +84,12 @@ class BLENDERMCP_OT_StopServer(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-
-        # Stop the server if it exists
-        if hasattr(bpy.types, "blendermcp_server") and bpy.types.blendermcp_server:
-            bpy.types.blendermcp_server.stop()
-            del bpy.types.blendermcp_server
-
+        # Do not stop external processes from the addon UI. Just clear the UI flag.
+        # If a server was started inside Blender by other means, it should be
+        # stopped by that process. This avoids the addon terminating processes
+        # unexpectedly during refactor/migration.
         scene.blendermcp_server_running = False
-
+        self.report({"INFO"}, "Marked server as stopped — stop the MCP server externally if running.")
         return {"FINISHED"}
 
 

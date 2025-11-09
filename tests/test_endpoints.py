@@ -15,6 +15,7 @@ def test_endpoints_registered_and_callable(monkeypatch):
     assert "execute_blender_code" in names
     assert "get_scene_info" in names
     assert "get_viewport_screenshot" in names
+    assert "ping" in names
 
     # mock bpy for scene and screenshot
     fake_bpy = types.SimpleNamespace()
@@ -41,6 +42,11 @@ def test_endpoints_registered_and_callable(monkeypatch):
         # call screenshot endpoint
         resp_shot = d.dispatch_command({"type": "get_viewport_screenshot"})
         assert resp_shot["status"] == "success"
+
+        # call ping endpoint with params
+        resp_ping = d.dispatch_command({"type": "ping", "params": {"msg": "hello"}})
+        assert resp_ping["status"] == "success"
+        assert resp_ping["result"]["ping"] == "hello"
 
     finally:
         del sys.modules["bpy"]

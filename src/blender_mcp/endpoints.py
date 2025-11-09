@@ -56,5 +56,15 @@ def register_builtin_endpoints(register: Callable[[str, Handler], None]) -> None
     register("get_scene_info", _scene)
     register("get_viewport_screenshot", _screenshot)
 
+    # small example endpoint useful for health checks and tests
+    def _ping(params: Params) -> Dict[str, Any]:
+        # echo an optional message provided by callers
+        msg = None
+        if isinstance(params, dict):
+            msg = params.get("msg")
+        return {"ok": True, "ping": msg or "pong"}
+
+    register("ping", _ping)
+
 
 __all__ = ["register_builtin_endpoints"]
