@@ -1,20 +1,25 @@
 import builtins
+
 import pytest
 
+import blender_mcp.dispatcher as dispatcher
+from blender_mcp.config import BridgeConfig
 from blender_mcp.dispatcher import (
+    CommandDispatcher,
     Dispatcher,
     HandlerError,
-    CommandDispatcher,
+    run_bridge,
+)
+from blender_mcp.dispatcher import (
     register_default_handlers as register_default_handlers_cmd,
 )
 from blender_mcp.server_shim import BlenderMCPServer
 from blender_mcp.simple_dispatcher import (
     Dispatcher as SimpleDispatcher,
+)
+from blender_mcp.simple_dispatcher import (
     register_default_handlers as simple_register_default_handlers,
 )
-import blender_mcp.dispatcher as dispatcher
-from blender_mcp.config import BridgeConfig
-from blender_mcp.dispatcher import run_bridge
 
 
 def test_register_and_dispatch():

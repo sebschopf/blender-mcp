@@ -1,19 +1,11 @@
 # Ruff configuration for the project
 line-length = 120
 
-[lint]
-# Move linter-specific settings into the `lint` table as newer Ruff versions
-# expect. The previous top-level keys (select, extend-ignore) are deprecated
-# and will warn; placing them under [lint] keeps behavior the same.
-# Ruff configuration for the project
-line-length = 120
-
 # Exclude long/complex helper scripts and docs from strict linting for now.
 exclude = ["docs", "scripts"]
 
 [lint]
-# Move linter-specific settings into the `lint` table as newer Ruff versions
-# expect. The previous top-level keys (select, extend-ignore) are deprecated
-# and will warn; placing them under [lint] keeps behavior the same.
+# Lint selection — keep important categories
 select = ["E", "F", "I", "C", "R"]
+# Tolerate a few style rules that aren't critical for this repo
 extend-ignore = ["E203", "E402", "E741"]
