@@ -12,48 +12,66 @@ import importlib
 import logging
 from typing import Any, Dict
 
+from .addon.scene import get_scene_info as _addon_get_scene_info
+
 logger = logging.getLogger(__name__)
 
 
-def _obj_to_dict(obj: Any) -> Dict[str, Any]:
-    return {
-        "name": getattr(obj, "name", "<unknown>"),
-        "type": getattr(obj, "type", "<unknown>"),
-    }
+def _normalize_objects(addon_objects: Any) -> list[Dict[str, Any]]:
+    """Normalize the addon 'objects' into the lightweight list of {name,type}.
+
+    The addon implementation may return richer per-object dicts
+    (including location). For the service contract we only expose name
+    and type to keep the response compact and stable.
+    """
+    out: list[Dict[str, Any]] = []
+    if not isinstance(addon_objects, list):
+        return out
+    for o in addon_objects:
+        if isinstance(o, dict):
+            out.append({"name": o.get("name"), "type": o.get("type")})
+        else:
+            # fallback: best-effort stringification
+            out.append({"name": str(o), "type": None})
+    return out
 
 
 def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
-    """Return simple scene information.
+    """Canonical service-facing get_scene_info.
 
-    - scene_name
-    - objects: list of {name,type}
-    - active_camera: name or None
-
-    If `bpy` is not importable, returns an error dict.
+    Delegates the extraction work to the addon implementation
+    (`services.addon.scene.get_scene_info`) which may import `bpy` and
+    return detailed data. This function normalizes that output to the
+    standard service schema: {"status":"success", ...} or
+    {"status":"error","message":...}.
     """
     try:
-        bpy = importlib.import_module("bpy")
-    except Exception:
-        logger.debug("bpy not available when calling get_scene_info")
-        return {"status": "error", "message": "Blender (bpy) not available"}
+        addon_result = _addon_get_scene_info()
+    except Exception as e:
+        logger.exception("addon scene extraction failed")
+        return {"status": "error", "message": str(e)}
 
+    # If the addon returned an error dict, normalize it
+    if isinstance(addon_result, dict) and "error" in addon_result:
+        return {"status": "error", "message": addon_result.get("error")}
+
+    # Build canonical response
     try:
-        scene = getattr(bpy, "context", None)
-        scene_name = getattr(getattr(scene, "scene", None), "name", None)
+        scene_name = addon_result.get("name") if isinstance(addon_result, dict) else None
+        objects = _normalize_objects(addon_result.get("objects") if isinstance(addon_result, dict) else None)
 
-        # gather objects from bpy.data.objects if available
-        data = getattr(bpy, "data", None)
-        objects = []
-        if data is not None and hasattr(data, "objects"):
-            for o in data.objects:
-                objects.append(_obj_to_dict(o))
-
-        # active camera if available
+        # active camera: try to read from bpy (best-effort, non-fatal)
         active_cam = None
-        if scene is not None and hasattr(scene, "scene"):
-            ac = getattr(scene.scene, "camera", None)
-            if ac is not None:
-                active_cam = getattr(ac, "name", None)
+        try:
+            bpy = importlib.import_module("bpy")
+            scene = getattr(bpy, "context", None)
+            if scene is not None and hasattr(scene, "scene"):
+                ac = getattr(scene.scene, "camera", None)
+                if ac is not None:
+                    active_cam = getattr(ac, "name", None)
+        except Exception:
+            # not running inside Blender; active_cam remains None
+            pass
 
         return {
             "status": "success",
@@ -62,7 +80,7 @@ def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
             "active_camera": active_cam,
         }
     except Exception as e:
-        logger.exception("unexpected error in get_scene_info")
+        logger.exception("unexpected error normalizing addon scene info")
         return {"status": "error", "message": str(e)}
 
 
