@@ -11,9 +11,8 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict
 
+from .addon_handlers import get_scene_info, get_viewport_screenshot
 from .services.execute import execute_blender_code
-from .services.scene import get_scene_info
-from .services.screenshot import get_viewport_screenshot
 
 # Typing aliases for endpoint handlers
 # Handlers accept a JSON-like parameter mapping (or None) and return any
@@ -35,10 +34,23 @@ def register_builtin_endpoints(register: Callable[[str, Handler], None]) -> None
         return execute_blender_code(params)
 
     def _scene(params: Params) -> Any:
-        return get_scene_info(params)
+        # delegate to the compatibility façade (no params expected by the
+        # refactored implementation) — keep the endpoint signature stable.
+        return get_scene_info()
 
     def _screenshot(params: Params) -> Any:
-        return get_viewport_screenshot(params)
+        # The refactored get_viewport_screenshot accepts explicit args.
+        # Map the incoming params dict to the new signature for backward
+        # compatibility.
+        if isinstance(params, dict):
+            max_size = int(params.get("max_size", 800))
+            filepath = params.get("filepath")
+            fmt = params.get("format", "png")
+        else:
+            max_size = 800
+            filepath = None
+            fmt = "png"
+        return get_viewport_screenshot(max_size=max_size, filepath=filepath, format=fmt)
 
     register("execute_blender_code", _execute)
     register("get_scene_info", _scene)
