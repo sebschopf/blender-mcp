@@ -68,30 +68,39 @@ def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
         except Exception:
             return {"status": "error", "message": msg}
 
-        try:
-            scene = getattr(bpy, "context", None)
-            scene_name = getattr(getattr(scene, "scene", None), "name", None)
+        return _fallback_get_scene_info(bpy)
 
-            data = getattr(bpy, "data", None)
-            objects = []
-            if data is not None and hasattr(data, "objects"):
-                for o in data.objects:
-                    objects.append({"name": getattr(o, "name", None), "type": getattr(o, "type", None)})
 
-            active_cam = None
-            if scene is not None and hasattr(scene, "scene"):
-                ac = getattr(scene.scene, "camera", None)
-                if ac is not None:
-                    active_cam = getattr(ac, "name", None)
+def _fallback_get_scene_info(bpy) -> Dict[str, Any]:
+    """Backward-compatible extraction when the addon helper fails.
 
-            return {
-                "status": "success",
-                "scene_name": scene_name,
-                "objects": objects,
-                "active_camera": active_cam,
-            }
-        except Exception:
-            return {"status": "error", "message": msg}
+    Mirrors previous behavior: prefer `bpy.data.objects` for object list
+    and read `bpy.context.scene` for scene metadata.
+    """
+    try:
+        scene = getattr(bpy, "context", None)
+        scene_name = getattr(getattr(scene, "scene", None), "name", None)
+
+        data = getattr(bpy, "data", None)
+        objects = []
+        if data is not None and hasattr(data, "objects"):
+            for o in data.objects:
+                objects.append({"name": getattr(o, "name", None), "type": getattr(o, "type", None)})
+
+        active_cam = None
+        if scene is not None and hasattr(scene, "scene"):
+            ac = getattr(scene.scene, "camera", None)
+            if ac is not None:
+                active_cam = getattr(ac, "name", None)
+
+        return {
+            "status": "success",
+            "scene_name": scene_name,
+            "objects": objects,
+            "active_camera": active_cam,
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
     # Build canonical response
     try:
