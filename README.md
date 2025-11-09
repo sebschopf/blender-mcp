@@ -233,6 +233,17 @@ _Prerequisites_: Make sure you have [Visual Studio Code](https://code.visualstud
 
 If you prefer not to run a terminal each time, see `start-server.ps1` in the repository root — it will launch `blender-mcp` in a detached PowerShell process and write logs to `blender-mcp.log`.
 
+Important note about the Add-on UI
+----------------------------------
+The Blender add-on UI no longer starts or stops the MCP server process directly. During the ongoing refactor we intentionally limited the add-on to a minimal, import-safe surface so it only toggles a UI flag (`blendermcp_server_running`) and informs users how to start/stop the server externally.
+
+Recommended ways to run the MCP server:
+- Use the provided PowerShell helper: `start-server.ps1` (Windows)
+- Run the CLI entrypoint in a terminal: `blender-mcp` (after installing the package or using `poetry run`) 
+- For HTTP/ASGI usage: run `uvicorn src.blender_mcp.asgi:app` (install `uvicorn[standard]` first)
+
+This reduces accidental process management from within Blender and keeps the addon import-safe for CI and tests.
+
 Alternatively you can expose an HTTP adapter (included as `src/blender_mcp/asgi.py`) and run it with uvicorn:
 
 ```powershell
