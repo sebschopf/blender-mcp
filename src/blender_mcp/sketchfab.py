@@ -13,11 +13,18 @@ import requests
 
 from . import downloaders  # type: ignore
 
+# Base endpoints can be overridden in tests by passing a session that wraps
+# the desired base URL. Keeping them as module constants makes the helpers
+# easier to test and adapt in the future.
+SKETCHFAB_API_BASE = "https://api.sketchfab.com/v3"
+SKETCHFAB_SEARCH_ENDPOINT = f"{SKETCHFAB_API_BASE}/search"
+SKETCHFAB_ME_ENDPOINT = f"{SKETCHFAB_API_BASE}/me"
+
 REQ_HEADERS = requests.utils.default_headers()
 REQ_HEADERS.update({"User-Agent": "blender-mcp"})
 
 
-def get_sketchfab_status(api_key: Optional[str]) -> Dict[str, Any]:
+def get_sketchfab_status(api_key: Optional[str], session: Optional[requests.Session] = None) -> Dict[str, Any]:
     """Return a small status dict for the provided API key.
 
     This mirrors the behaviour previously embedded in the addon but is
@@ -28,9 +35,8 @@ def get_sketchfab_status(api_key: Optional[str]) -> Dict[str, Any]:
 
     headers = {"Authorization": f"Token {api_key}"}
     try:
-        resp = requests.get(
-            "https://api.sketchfab.com/v3/me", headers=headers, timeout=10
-        )
+        getter = session.get if session is not None else requests.get
+        resp = getter(SKETCHFAB_ME_ENDPOINT, headers=headers, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
             username = data.get("username", "Unknown user")
@@ -48,6 +54,7 @@ def search_models(
     categories: Optional[str] = None,
     count: int = 20,
     downloadable: bool = True,
+    session: Optional[requests.Session] = None,
 ) -> Dict[str, Any]:
     headers = {"Authorization": f"Token {api_key}"}
     params = {
@@ -62,11 +69,9 @@ def search_models(
 
     # requests expects params values to be strings or sequences; coerce to strings to satisfy type checkers
     params_cast = {k: str(v) for k, v in params.items() if v is not None}
-    resp = requests.get(
-        "https://api.sketchfab.com/v3/search",
-        headers=headers,
-        params=params_cast,
-        timeout=30,
+    getter = session.get if session is not None else requests.get
+    resp = getter(
+        SKETCHFAB_SEARCH_ENDPOINT, headers=headers, params=params_cast, timeout=30
     )
     if resp.status_code == 401:
         return {"error": "Authentication failed (401)"}
@@ -81,7 +86,7 @@ def search_models(
     return data
 
 
-def download_model(api_key: str, uid: str) -> Dict[str, Any]:
+def download_model(api_key: str, uid: str, session: Optional[requests.Session] = None) -> Dict[str, Any]:
     """Download a model by uid and extract it into a temp dir.
 
     Returns a dict with either 'error' or 'temp_dir' (path to extracted files).
@@ -89,7 +94,8 @@ def download_model(api_key: str, uid: str) -> Dict[str, Any]:
     headers = {"Authorization": f"Token {api_key}"}
     download_endpoint = f"https://api.sketchfab.com/v3/models/{uid}/download"
 
-    resp = requests.get(download_endpoint, headers=headers, timeout=30)
+    getter = session.get if session is not None else requests.get
+    resp = getter(download_endpoint, headers=headers, timeout=30)
     if resp.status_code == 401:
         return {"error": "Authentication failed (401)"}
     if resp.status_code != 200:
