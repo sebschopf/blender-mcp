@@ -13,6 +13,14 @@ from typing import Any, Dict, List, Optional, cast
 
 from .reassembler import ChunkedJSONReassembler
 
+# If available, prefer the canonical connection implementation for runtime
+# compatibility. This lets higher-level services reuse the same connection
+# logic while tests can still exercise the socket-level helpers.
+try:
+    from ...connection_core import BlenderConnection as CoreBlenderConnection  # type: ignore
+except Exception:
+    CoreBlenderConnection = None  # type: ignore
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,8 +35,24 @@ class BlenderConnectionNetwork:
         self.host = host
         self.port = port
         self.sock: Optional[socket.socket] = None
+        # runtime-held core connection (when available); intentionally
+        # un-annotated to avoid static-analysis issues when CoreBlenderConnection
+        # isn't importable in some environments (tests/mock setups).
+        self._core = None
 
     def connect(self) -> bool:
+        # If a core connection implementation is available, use it.
+        if CoreBlenderConnection is not None:
+            if self._core is not None:
+                return True
+            try:
+                self._core = CoreBlenderConnection(self.host, self.port)
+                return True
+            except Exception:
+                logger.exception("CoreBlenderConnection failed to init for %s:%s", self.host, self.port)
+                self._core = None
+                return False
+
         if self.sock:
             return True
         try:
@@ -43,6 +67,15 @@ class BlenderConnectionNetwork:
             return False
 
     def disconnect(self) -> None:
+        if self._core is not None:
+            try:
+                self._core.disconnect()
+            except Exception:
+                logger.exception("Error while disconnecting core connection")
+            finally:
+                self._core = None
+            return
+
         if self.sock:
             try:
                 self.sock.close()
@@ -54,6 +87,10 @@ class BlenderConnectionNetwork:
     def receive_full_response(
         self, buffer_size: int = 8192, timeout: float = 15.0
     ) -> Any:
+        if self._core is not None:
+            # delegate to core implementation which handles full-response
+            return self._core._receive_full_response(buffer_size=buffer_size)  # type: ignore[attr-defined]
+
         if not self.sock:
             raise ConnectionError("Not connected")
         re = ChunkedJSONReassembler()
@@ -88,6 +125,10 @@ class BlenderConnectionNetwork:
     def send_command(
         self, command_type: str, params: Optional[Dict[str, Any]] = None
     ) -> Any:
+        # Prefer core implementation if available
+        if self._core is not None:
+            return self._core.send_command(command_type, params)
+
         if not self.sock and not self.connect():
             raise ConnectionError("Not connected")
         cmd: Dict[str, Any] = {"type": command_type, "params": params or {}}

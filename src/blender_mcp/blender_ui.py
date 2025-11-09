@@ -12,6 +12,11 @@ Design notes:
 
 import bpy
 from bpy.props import IntProperty
+from typing import Optional
+
+# Holds the live process object when the adapter starts an external server
+# during a Blender session. Kept module-level so operators can stop it later.
+_server_proc: Optional[object] = None
 
 RODIN_FREE_TRIAL_KEY = (
     "k9TcfFoEhNd9cCPP2guHAHHHkctZHIRhZDywZ1euGUXwihbYLpOjQhofby80NJez"
@@ -79,13 +84,28 @@ class BLENDERMCP_OT_StartServer(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        # Do not start background processes from the addon UI.
-        # Starting the MCP server is an external operation (use start-server.ps1
-        # or run `blender-mcp` in a terminal). Here we only set the UI flag so
-        # users can indicate that they've started the server externally.
-        scene.blendermcp_server_running = True
-        self.report({"INFO"}, "Marked server as running — start the MCP server externally.")
-        return {"FINISHED"}
+        global _server_proc
+        # Attempt to start an external server process using the adapter.
+        # Import lazily so the module remains import-safe in tests and
+        # non-Blender environments.
+        try:
+            from . import embedded_server_adapter as adapter
+
+            proc = adapter.start_server_process()
+            _server_proc = proc
+            # store pid in the scene for visibility
+            try:
+                scene.blendermcp_server_pid = getattr(proc, "pid", 0)
+            except Exception:
+                scene.blendermcp_server_pid = 0
+            scene.blendermcp_server_running = True
+            self.report({"INFO"}, "Started external MCP server (or launched helper script)")
+            return {"FINISHED"}
+        except Exception as e:
+            # If starting fails, fall back to marking as not-running and inform the user.
+            scene.blendermcp_server_running = False
+            self.report({"ERROR"}, f"Failed to start external MCP server: {e}")
+            return {"CANCELLED"}
 
 
 # Operator to stop the server
@@ -96,13 +116,22 @@ class BLENDERMCP_OT_StopServer(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        # Do not stop external processes from the addon UI. Just clear the UI flag.
-        # If a server was started inside Blender by other means, it should be
-        # stopped by that process. This avoids the addon terminating processes
-        # unexpectedly during refactor/migration.
-        scene.blendermcp_server_running = False
-        self.report({"INFO"}, "Marked server as stopped — stop the MCP server externally if running.")
-        return {"FINISHED"}
+        global _server_proc
+        # Attempt to stop an external server previously started via the adapter.
+        try:
+            from . import embedded_server_adapter as adapter
+
+            if _server_proc is not None:
+                adapter.stop_server_process(_server_proc)
+                _server_proc = None
+            scene.blendermcp_server_pid = 0
+            scene.blendermcp_server_running = False
+            self.report({"INFO"}, "Stopped external MCP server (if it was started by the addon)")
+            return {"FINISHED"}
+        except Exception as e:
+            scene.blendermcp_server_running = False
+            self.report({"ERROR"}, f"Failed to stop external MCP server: {e}")
+            return {"CANCELLED"}
 
 
 def register():
@@ -159,6 +188,10 @@ def _register_scene_properties() -> None:
         default=9876,
         min=1024,
         max=65535,
+    )
+
+    bpy.types.Scene.blendermcp_server_pid = IntProperty(
+        name="Server PID", description="PID of external MCP server", default=0
     )
 
     bpy.types.Scene.blendermcp_server_running = bpy.props.BoolProperty(
