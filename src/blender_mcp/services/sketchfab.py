@@ -8,10 +8,12 @@ Sketchfab API key is available.
 from typing import Any, Dict, Optional
 
 from .. import sketchfab as _sketchfab
+from ..http import get_session
 
 
 def get_sketchfab_status(api_key: Optional[str]) -> Dict[str, Any]:
-    return _sketchfab.get_sketchfab_status(api_key)
+    # server-side usage should prefer a shared session
+    return _sketchfab.get_sketchfab_status(api_key, session=get_session())
 
 
 def search_models(
@@ -22,9 +24,14 @@ def search_models(
     downloadable: bool = True,
 ) -> Dict[str, Any]:
     return _sketchfab.search_models(
-        api_key, query, categories=categories, count=count, downloadable=downloadable
+        api_key,
+        query,
+        categories=categories,
+        count=count,
+        downloadable=downloadable,
+        session=get_session(),
     )
 
 
 def download_model(api_key: str, uid: str) -> Dict[str, Any]:
-    return _sketchfab.download_model(api_key, uid)
+    return _sketchfab.download_model(api_key, uid, session=get_session())

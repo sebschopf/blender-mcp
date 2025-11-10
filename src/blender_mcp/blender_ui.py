@@ -14,6 +14,34 @@ import bpy
 from bpy.props import IntProperty
 from typing import Optional
 
+# Addon preferences: register this so users can control whether the UI may start
+# an external server process. We defensively pick a base class so importing
+# the module during tests (with a minimal fake `bpy`) does not crash.
+try:
+    _AddonPrefsBase = bpy.types.AddonPreferences
+except Exception:
+    _AddonPrefsBase = object
+
+
+class BLENDERMCP_AddonPreferences(_AddonPrefsBase):
+    bl_idname = "blender_mcp"
+
+    allow_ui_start_server = bpy.props.BoolProperty(
+        name="Allow UI to start external MCP server",
+        description="If enabled, the Start button in the addon UI may launch an external MCP process",
+        default=True,
+    )
+
+    def draw(self, context):
+        # When running inside Blender this will show in User Preferences.
+        try:
+            layout = self.layout
+            layout.label(text="BlenderMCP preferences")
+            layout.prop(self, "allow_ui_start_server")
+        except Exception:
+            # In tests the layout may not exist; ignore draw-time errors.
+            pass
+
 # Holds the live process object when the adapter starts an external server
 # during a Blender session. Kept module-level so operators can stop it later.
 _server_proc: Optional[object] = None
@@ -85,6 +113,44 @@ class BLENDERMCP_OT_StartServer(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         global _server_proc
+        # Check Addon preferences: only start if allowed. Use the live `bpy`
+        # from sys.modules if present so tests that swap `sys.modules['bpy']`
+        # are respected even if this module was imported earlier.
+        try:
+            import sys
+
+            bpy_mod = sys.modules.get("bpy", bpy)
+
+            # Prefer preferences attached to the active context (Blender UI path).
+            # In tests the minimal fake installs `bpy.preferences`, so fall back to
+            # that if `bpy.context.preferences` is not present.
+            prefs_container = None
+            if getattr(bpy_mod, "context", None) is not None and getattr(bpy_mod.context, "preferences", None) is not None:
+                prefs_container = bpy_mod.context.preferences
+            elif getattr(bpy_mod, "preferences", None) is not None:
+                prefs_container = bpy_mod.preferences
+
+            allow = True
+            if prefs_container is not None:
+                addons_map = getattr(prefs_container, "addons", {})
+                # Prefer explicit addon key 'blender_mcp'
+                prefs_obj = None
+                if isinstance(addons_map, dict):
+                    prefs_obj = addons_map.get("blender_mcp")
+                else:
+                    # fallback: try attribute access
+                    prefs_obj = getattr(addons_map, "blender_mcp", None)
+                if prefs_obj is not None:
+                    prefs = getattr(prefs_obj, "preferences", None)
+                    if prefs is not None:
+                        allow = bool(getattr(prefs, "allow_ui_start_server", False))
+        except Exception:
+            allow = True
+
+        if not allow:
+            self.report({"ERROR"}, "Addon preferences forbid starting server from the UI")
+            return {"CANCELLED"}
+
         # Attempt to start an external server process using the adapter.
         # Import lazily so the module remains import-safe in tests and
         # non-Blender environments.
@@ -149,6 +215,7 @@ def register():
         BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey,
         BLENDERMCP_OT_StartServer,
         BLENDERMCP_OT_StopServer,
+        BLENDERMCP_AddonPreferences,
     ):
         bpy.utils.register_class(cls)
 
@@ -168,6 +235,7 @@ def unregister():
         BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey,
         BLENDERMCP_OT_StartServer,
         BLENDERMCP_OT_StopServer,
+        BLENDERMCP_AddonPreferences,
     ):
         try:
             bpy.utils.unregister_class(cls)

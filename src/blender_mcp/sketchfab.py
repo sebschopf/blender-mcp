@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 import requests
 
 from . import downloaders  # type: ignore
+from .http import get_session
 
 # Base endpoints can be overridden in tests by passing a session that wraps
 # the desired base URL. Keeping them as module constants makes the helpers
@@ -35,7 +36,7 @@ def get_sketchfab_status(api_key: Optional[str], session: Optional[requests.Sess
 
     headers = {"Authorization": f"Token {api_key}"}
     try:
-        getter = session.get if session is not None else requests.get
+        getter = session.get if session is not None else get_session().get
         resp = getter(SKETCHFAB_ME_ENDPOINT, headers=headers, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
@@ -69,10 +70,8 @@ def search_models(
 
     # requests expects params values to be strings or sequences; coerce to strings to satisfy type checkers
     params_cast = {k: str(v) for k, v in params.items() if v is not None}
-    getter = session.get if session is not None else requests.get
-    resp = getter(
-        SKETCHFAB_SEARCH_ENDPOINT, headers=headers, params=params_cast, timeout=30
-    )
+    getter = session.get if session is not None else get_session().get
+    resp = getter(SKETCHFAB_SEARCH_ENDPOINT, headers=headers, params=params_cast, timeout=30)
     if resp.status_code == 401:
         return {"error": "Authentication failed (401)"}
     if resp.status_code != 200:
@@ -94,7 +93,7 @@ def download_model(api_key: str, uid: str, session: Optional[requests.Session] =
     headers = {"Authorization": f"Token {api_key}"}
     download_endpoint = f"https://api.sketchfab.com/v3/models/{uid}/download"
 
-    getter = session.get if session is not None else requests.get
+    getter = session.get if session is not None else get_session().get
     resp = getter(download_endpoint, headers=headers, timeout=30)
     if resp.status_code == 401:
         return {"error": "Authentication failed (401)"}

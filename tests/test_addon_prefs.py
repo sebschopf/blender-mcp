@@ -3,7 +3,7 @@ import sys
 import types
 
 
-def make_fake_bpy():
+def make_fake_bpy(allow_pref: bool):
     fake = types.ModuleType("bpy")
 
     # minimal props helpers returning defaults or simple callables
@@ -29,13 +29,13 @@ def make_fake_bpy():
     # minimal types with Operator and Panel base classes
     class Operator:
         def report(self, level, message):
-            # mimic Blender operator reporting
             return None
 
     class Panel:
         pass
 
-    fake.types = types.SimpleNamespace(Operator=Operator, Panel=Panel)
+    # Provide AddonPreferences base on types if tests expect it
+    fake.types = types.SimpleNamespace(Operator=Operator, Panel=Panel, AddonPreferences=object)
 
     # utils no-ops
     fake.utils = types.SimpleNamespace(register_class=lambda cls: None, unregister_class=lambda cls: None)
@@ -56,16 +56,15 @@ def make_fake_bpy():
 
     # minimal preferences with addon prefs map used by the UI
     fake_pref = types.SimpleNamespace()
-    fake_pref.addons = {"blender_mcp": types.SimpleNamespace(preferences=types.SimpleNamespace(allow_ui_start_server=True))}
+    fake_pref.addons = {"blender_mcp": types.SimpleNamespace(preferences=types.SimpleNamespace(allow_ui_start_server=allow_pref))}
     fake.preferences = fake_pref
 
     return fake
 
 
-def test_start_stop_server_ui(monkeypatch):
-    fake = make_fake_bpy()
-    # ensure submodules like bpy.props are importable when blender_ui
-    # does `from bpy.props import IntProperty`
+def test_start_server_respects_pref(monkeypatch):
+    # Test when preference allows starting
+    fake = make_fake_bpy(True)
     sys.modules["bpy"] = fake
     props_mod = types.SimpleNamespace(
         IntProperty=lambda **kw: kw.get("default", 0),
@@ -74,8 +73,8 @@ def test_start_stop_server_ui(monkeypatch):
         StringProperty=lambda **kw: kw.get("default", ""),
     )
     sys.modules["bpy.props"] = props_mod
+
     try:
-        # monkeypatch the adapter to avoid launching real processes
         class DummyProc:
             pid = 4242
 
@@ -85,13 +84,10 @@ def test_start_stop_server_ui(monkeypatch):
         def fake_stop(p):
             return None
 
-        # import the module under test after installing fake bpy
         mod = importlib.import_module("blender_mcp.blender_ui")
-        # patch the adapter module in its package location
         monkeypatch.setattr("blender_mcp.embedded_server_adapter.start_server_process", fake_start)
         monkeypatch.setattr("blender_mcp.embedded_server_adapter.stop_server_process", fake_stop)
 
-        # Create operator instances and call execute with a fake context
         start_op = mod.BLENDERMCP_OT_StartServer()
         res = start_op.execute(fake.context)
         assert res == {"FINISHED"}
@@ -103,6 +99,48 @@ def test_start_stop_server_ui(monkeypatch):
         assert res2 == {"FINISHED"}
         assert fake.context.scene.blendermcp_server_running is False
         assert fake.context.scene.blendermcp_server_pid == 0
+    finally:
+        del sys.modules["bpy"]
+        del sys.modules["bpy.props"]
+
+
+def test_start_server_blocked_by_pref(monkeypatch):
+    # Test when preference forbids starting
+    fake = make_fake_bpy(False)
+    sys.modules["bpy"] = fake
+    props_mod = types.SimpleNamespace(
+        IntProperty=lambda **kw: kw.get("default", 0),
+        BoolProperty=lambda **kw: kw.get("default", False),
+        EnumProperty=lambda **kw: kw.get("default", ""),
+        StringProperty=lambda **kw: kw.get("default", ""),
+    )
+    sys.modules["bpy.props"] = props_mod
+
+    try:
+        # Ensure adapter would succeed if invoked (but it should not be invoked)
+        called = {"start": False}
+
+        class DummyProc:
+            pid = 4242
+
+        def fake_start():
+            called["start"] = True
+            return DummyProc()
+
+        def fake_stop(p):
+            return None
+
+        mod = importlib.import_module("blender_mcp.blender_ui")
+        monkeypatch.setattr("blender_mcp.embedded_server_adapter.start_server_process", fake_start)
+        monkeypatch.setattr("blender_mcp.embedded_server_adapter.stop_server_process", fake_stop)
+
+        start_op = mod.BLENDERMCP_OT_StartServer()
+        res = start_op.execute(fake.context)
+        # When blocked, operator returns CANCELLED and does not call adapter
+        assert res == {"CANCELLED"}
+        assert fake.context.scene.blendermcp_server_running is False
+        assert fake.context.scene.blendermcp_server_pid == 0
+        assert called["start"] is False
     finally:
         del sys.modules["bpy"]
         del sys.modules["bpy.props"]

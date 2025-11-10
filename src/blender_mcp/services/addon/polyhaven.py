@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import requests
 
 from .constants import REQ_HEADERS
+from ...http import get_session
 
 
-def get_polyhaven_categories(asset_type: str) -> Dict[str, Any]:
+def get_polyhaven_categories(asset_type: str, session: Optional[requests.Session] = None) -> Dict[str, Any]:
     try:
         if asset_type not in ["hdris", "textures", "models", "all"]:
             return {
@@ -33,10 +34,8 @@ def get_polyhaven_categories(asset_type: str) -> Dict[str, Any]:
                 )
                 return {"categories": json.loads(data.decode("utf-8"))}
             except Exception:
-                response = requests.get(
-                    f"https://api.polyhaven.com/categories/{asset_type}",
-                    headers=REQ_HEADERS,
-                )
+                getter = session.get if session is not None else get_session().get
+                response = getter(f"https://api.polyhaven.com/categories/{asset_type}", headers=REQ_HEADERS)
                 if response.status_code == 200:
                     return {"categories": response.json()}
                 return {"error": f"API request failed with status code {response.status_code}"}
@@ -44,7 +43,7 @@ def get_polyhaven_categories(asset_type: str) -> Dict[str, Any]:
         return {"error": str(e)}
 
 
-def search_polyhaven_assets(asset_type=None, categories=None) -> Dict[str, Any]:
+def search_polyhaven_assets(asset_type=None, categories=None, session: Optional[requests.Session] = None) -> Dict[str, Any]:
     try:
         params = {}
         if asset_type and asset_type != "all":
@@ -72,11 +71,8 @@ def search_polyhaven_assets(asset_type=None, categories=None) -> Dict[str, Any]:
                 data = download_bytes(full_url, timeout=10, headers=REQ_HEADERS)
                 assets = json.loads(data.decode("utf-8"))
             except Exception:
-                response = requests.get(
-                    "https://api.polyhaven.com/assets",
-                    params=params,
-                    headers=REQ_HEADERS,
-                )
+                getter = session.get if session is not None else get_session().get
+                response = getter("https://api.polyhaven.com/assets", params=params, headers=REQ_HEADERS)
                 if response.status_code == 200:
                     assets = response.json()
                 else:
@@ -97,7 +93,7 @@ def search_polyhaven_assets(asset_type=None, categories=None) -> Dict[str, Any]:
         return {"error": str(e)}
 
 
-def download_polyhaven_asset(asset_id, asset_type, resolution="1k", file_format=None) -> Dict[str, Any]:
+def download_polyhaven_asset(asset_id, asset_type, resolution="1k", file_format=None, session: Optional[requests.Session] = None) -> Dict[str, Any]:
     try:
         from blender_mcp.polyhaven import fetch_files_data  # type: ignore
 
@@ -114,9 +110,8 @@ def download_polyhaven_asset(asset_id, asset_type, resolution="1k", file_format=
             files_data = json.loads(data.decode("utf-8"))
         except Exception:
             try:
-                files_response = requests.get(
-                    f"https://api.polyhaven.com/files/{asset_id}", headers=REQ_HEADERS
-                )
+                getter = session.get if session is not None else get_session().get
+                files_response = getter(f"https://api.polyhaven.com/files/{asset_id}", headers=REQ_HEADERS)
                 if files_response.status_code != 200:
                     return {"error": f"Failed to get asset files: {files_response.status_code}"}
                 files_data = files_response.json()
