@@ -19,7 +19,7 @@ Motivation
 
 Ce que j'ai modifié
 -------------------
-- Suppression du fichier `src/blender_mcp/blender_ui.py` (monolithique).
+- Suppression du fichier `src/blender_mcp/blender_ui.py` (monolithique). Une copie archivée a été conservée dans `src/blender_mcp/archive/blender_ui.py`.
 - Ajout du package `src/blender_mcp/blender_ui/` avec les modules listés ci-dessus.
 - Correctif minime dans `src/blender_mcp/services/execute.py` : rétablissement de
   l'exécution lorsque `bpy` est disponible (les logs d'audit et le mode dry-run ont été
@@ -39,6 +39,7 @@ Notes de migration / compatibilité
   `BLENDERMCP_OT_StartServer`, etc.) pour rester compatible avec les imports
   existants (`importlib.import_module('blender_mcp.blender_ui')`).
 - `addon.py` reste inchangé — il appelle `blender_mcp.blender_ui.register()` via une importation paresseuse.
+  `src/blender_mcp/addon_handlers.py` a été déplacé sous `src/blender_mcp/blender_ui/addon_handlers.py` ; le module top‑level a été remplacé par une mince façade qui réexporte les symboles pour préserver la compatibilité des importations externes.
 
 Propositions / étapes suivantes
 ------------------------------
