@@ -137,6 +137,43 @@ def register() -> None:
     print("BlenderMCP addon registered (package façade)")
 
 
+def __getattr__(name: str):
+    """Lazy attribute loader for legacy module-level symbols.
+
+    This avoids importing `bpy` at package import time while still
+    exposing the historical names when callers request them (tests often
+    import the package and then access these attributes).
+    """
+    legacy_names = {
+        "BLENDERMCP_PT_Panel",
+        "BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey",
+        "BLENDERMCP_OT_StartServer",
+        "BLENDERMCP_OT_StopServer",
+        "BLENDERMCP_OT_ApplyRemoteExecSetting",
+    }
+    if name in legacy_names:
+        _load_submodules()
+        # search in known submodules
+        for mod in (_panel, _operators):
+            if mod is None:
+                continue
+            if hasattr(mod, name):
+                return getattr(mod, name)
+    raise AttributeError(f"module {__name__} has no attribute {name}")
+
+
+def __dir__():
+    base = set(globals().keys())
+    base.update([
+        "BLENDERMCP_PT_Panel",
+        "BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey",
+        "BLENDERMCP_OT_StartServer",
+        "BLENDERMCP_OT_StopServer",
+        "BLENDERMCP_OT_ApplyRemoteExecSetting",
+    ])
+    return sorted(base)
+
+
 def unregister() -> None:
     """Unregister UI classes and scene properties."""
     _load_submodules()
