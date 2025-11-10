@@ -1,17 +1,14 @@
-"""Compatibility façade for legacy addon handlers.
+"""UI-facing addon handlers (compat façade).
 
-This module preserves the public API of the original `addon_handlers.py`
-but delegates the implementation to smaller, SRP-focused modules under
-`blender_mcp.services.addon`.
-
-The façade keeps the same function names and signatures so existing
-callers don't need to change when we refactor internals.
+This module preserves the public API of the legacy `blender_mcp.addon_handlers`
+but lives under the `blender_ui` package to group UI-related façades. It
+delegates to `blender_mcp.services.addon` implementations.
 """
 
 from __future__ import annotations
 
-# Re-export public helpers from the new SOLID modules
-from .services.addon import (
+# Re-export public helpers from the SOLID split modules
+from ..services.addon import (
     _collect_texture_images,
     _get_aabb,
     _try_create_material,
@@ -26,7 +23,7 @@ from .services.addon import (
 )
 
 # Export constants from a shared module so implementations can import them
-from .services.addon.constants import REQ_HEADERS, RODIN_FREE_TRIAL_KEY
+from ..services.addon.constants import REQ_HEADERS, RODIN_FREE_TRIAL_KEY
 
 __all__ = [
     "REQ_HEADERS",

@@ -1,7 +1,10 @@
-from typing import Optional, Dict, Any, cast
+from __future__ import annotations
+
+from typing import Optional, Dict, Any, cast, Any as _Any, Mapping
 import requests
 
 from blender_mcp.downloaders import download_bytes
+from blender_mcp import downloaders
 
 
 class FakeResp:
@@ -14,7 +17,7 @@ class FakeResp:
             raise Exception("HTTP")
 
 
-class FakeSession:
+class FakeSession1:
     def __init__(self, resp: FakeResp) -> None:
         self._resp = resp
 
@@ -23,15 +26,10 @@ class FakeSession:
 
 
 def test_download_bytes_injected_session() -> None:
-    fake = FakeSession(FakeResp(b"hello", status=200))
+    fake = FakeSession1(FakeResp(b"hello", status=200))
     # cast to requests.Session for type-checker friendliness in tests
     data = download_bytes("https://example.com/file", session=cast(requests.Session, fake))
     assert data == b"hello"
-from __future__ import annotations
-
-from typing import Any, Mapping, Optional
-
-from blender_mcp import downloaders
 
 
 class _FakeResp:
@@ -44,7 +42,7 @@ class _FakeResp:
             raise Exception(f"HTTP {self.status_code}")
 
 
-class FakeSession:
+class FakeSession2:
     def __init__(self):
         self.calls = []
 
@@ -54,7 +52,7 @@ class FakeSession:
 
 
 def test_download_bytes_uses_injected_session():
-    sess = FakeSession()
+    sess = FakeSession2()
     data = downloaders.download_bytes("https://example.org/file", session=sess)
     assert data == b"data-bytes"
     assert len(sess.calls) == 1

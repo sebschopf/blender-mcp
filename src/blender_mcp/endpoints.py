@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict
 
-from .addon_handlers import get_scene_info, get_viewport_screenshot
+from .services.addon import get_scene_info, get_viewport_screenshot
 from .services.execute import execute_blender_code
 
 # Typing aliases for endpoint handlers
