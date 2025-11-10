@@ -70,3 +70,60 @@ result = {'value': 42}
 2025-11-10 21:07:10,107 ERROR bpy not available; cannot execute code
 2025-11-10 21:07:10,110 INFO execute_blender_code request: len=11 code=result = 42
 2025-11-10 21:07:10,110 INFO execute_blender_code succeeded: result=42
+2025-11-10 21:16:08,235 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-10 21:16:08,235 ERROR bpy not available; cannot execute code
+2025-11-10 21:16:08,236 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-10 21:16:08,237 INFO execute_blender_code succeeded: result='ok'
+2025-11-10 21:16:08,238 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-10 21:16:08,239 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-10 21:16:08,296 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-10 21:16:08,297 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-10 21:16:08,297 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-10 21:16:08,298 ERROR bpy not available; cannot execute code
+2025-11-10 21:16:08,299 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-10 21:16:08,299 INFO execute_blender_code succeeded: result=42
+2025-11-10 21:49:28,514 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-10 21:49:28,516 ERROR bpy not available; cannot execute code
+2025-11-10 21:49:28,518 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-10 21:49:28,518 INFO execute_blender_code succeeded: result='ok'
+2025-11-10 21:49:28,520 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-10 21:49:28,521 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-10 21:49:28,611 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-10 21:49:28,612 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-10 21:49:28,613 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-10 21:49:28,614 ERROR bpy not available; cannot execute code
+2025-11-10 21:49:28,617 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-10 21:49:28,618 INFO execute_blender_code succeeded: result=42
+2025-11-10 21:54:18,599 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-10 21:54:18,600 ERROR bpy not available; cannot execute code
+2025-11-10 21:54:18,602 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-10 21:54:18,603 INFO execute_blender_code succeeded: result='ok'
+2025-11-10 21:54:18,605 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-10 21:54:18,607 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-10 21:54:18,680 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-10 21:54:18,680 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-10 21:54:18,681 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-10 21:54:18,682 ERROR bpy not available; cannot execute code
+2025-11-10 21:54:18,684 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-10 21:54:18,685 INFO execute_blender_code succeeded: result=42
