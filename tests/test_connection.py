@@ -1,7 +1,62 @@
+import json
+import socket
+import struct
+
 import pytest
 
 from blender_mcp.connection import BlenderConnection, ChunkedJSONReassembler
 
+
+def pack_frame(obj: object) -> bytes:
+    payload = json.dumps(obj, separators=(",", ":")).encode("utf-8")
+    return struct.pack(">I", len(payload)) + payload
+
+
+def test_reassembles_fragmented_message():
+    a, b = socket.socketpair()
+    try:
+        conn = BlenderConnection(a)
+
+        data = {"msg": "hello", "n": 1}
+        frame = pack_frame(data)
+
+        # send header in two fragments then payload
+        b.sendall(frame[:2])
+        b.sendall(frame[2:6])
+        b.sendall(frame[6:])
+
+        got = conn.receive(timeout=1.0)
+        assert got == data
+    finally:
+        a.close()
+        b.close()
+
+
+def test_multiple_messages_back_to_back():
+    a, b = socket.socketpair()
+    try:
+        conn = BlenderConnection(a)
+
+        one = {"x": 1}
+        two = {"y": 2}
+        b.sendall(pack_frame(one) + pack_frame(two))
+
+        assert conn.receive(timeout=1.0) == one
+        assert conn.receive(timeout=1.0) == two
+    finally:
+        a.close()
+        b.close()
+
+
+def test_receive_timeout_raises():
+    a, b = socket.socketpair()
+    try:
+        conn = BlenderConnection(a)
+        with pytest.raises(TimeoutError):
+            conn.receive(timeout=0.01)
+    finally:
+        a.close()
+        b.close()
 
 def test_reassembler_single_message():
     r = ChunkedJSONReassembler()
@@ -49,7 +104,6 @@ def test_reassembler_bad_json_raises():
     r.feed(b'{bad json}\n')
     with pytest.raises(ValueError):
         r.pop_messages()
-import socket
 
 
 def test_connect_handles_exception(monkeypatch):

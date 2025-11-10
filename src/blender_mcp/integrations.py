@@ -62,9 +62,7 @@ def get_polyhaven_categories(
         except Exception:
             blender = get_blender_connection()
             if not _polyhaven_enabled:
-                return (
-                    "PolyHaven integration is disabled. Select it in the sidebar in BlenderMCP, then run it again."
-                )
+                return "PolyHaven integration is disabled. Select it in the sidebar in BlenderMCP, then run it again."
             result = blender.send_command(
                 "get_polyhaven_categories", {"asset_type": asset_type}
             )
@@ -148,7 +146,10 @@ def _server_download_asset(
 ) -> Optional[Dict[str, Any]]:
     try:
         return download_asset(
-            asset_id=asset_id, asset_type=asset_type, resolution=resolution, file_format=file_format
+            asset_id=asset_id,
+            asset_type=asset_type,
+            resolution=resolution,
+            file_format=file_format,
         )
     except Exception:
         return None
@@ -285,10 +286,10 @@ def get_sketchfab_status(ctx: Context[Any, Any, Any]) -> str:
         enabled = result.get("enabled", False)
         message = result.get("message", "")
         if enabled:
-                message += (
-                    "Sketchfab is strong for realistic models and offers "
-                    "a wider variety of models than PolyHaven."
-                )
+            message += (
+                "Sketchfab is strong for realistic models and offers "
+                "a wider variety of models than PolyHaven."
+            )
         return message
     except Exception as e:
         logger.error(f"Error checking Sketchfab status: {str(e)}")

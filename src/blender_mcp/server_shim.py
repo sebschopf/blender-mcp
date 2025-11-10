@@ -4,6 +4,7 @@ This is a small alternative to `server.py` used while the main module is
 being refactored. It intentionally keeps the surface area tiny and
 import-safe.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,7 +16,9 @@ from .simple_dispatcher import Dispatcher, register_default_handlers
 logger = logging.getLogger(__name__)
 
 
-def _process_bbox(bbox: Optional[list[float] | tuple[float, float, float]]) -> Optional[list[int]]:
+def _process_bbox(
+    bbox: Optional[list[float] | tuple[float, float, float]],
+) -> Optional[list[int]]:
     if bbox is None:
         return None
     if not isinstance(bbox, (list, tuple)) or len(bbox) != 3:

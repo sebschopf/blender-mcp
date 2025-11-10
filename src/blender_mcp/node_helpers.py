@@ -3,6 +3,7 @@
 These helpers encapsulate small wiring tasks. They are defensive so tests
 can exercise logic using simple mock containers instead of requiring Blender.
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, Tuple
@@ -36,8 +37,15 @@ def displacement_node(node_id: str = "displacement_node") -> Dict[str, Any]:
     return {"id": node_id, "type": "ShaderNodeDisplacement"}
 
 
-def make_link(from_node: str, from_socket: str, to_node: str, to_socket: str) -> Dict[str, Any]:
-    return {"from_node": from_node, "from_socket": from_socket, "to_node": to_node, "to_socket": to_socket}
+def make_link(
+    from_node: str, from_socket: str, to_node: str, to_socket: str
+) -> Dict[str, Any]:
+    return {
+        "from_node": from_node,
+        "from_socket": from_socket,
+        "to_node": to_node,
+        "to_socket": to_socket,
+    }
 
 
 def _is_blender_nodes(nodes: Any) -> bool:
@@ -51,11 +59,20 @@ def _append_mock_ao_links(
     base_id = getattr(base_node, "id", getattr(base_node, "name", str(base_node)))
     mix_id = getattr(mix_node, "id", getattr(mix_node, "name", str(mix_node)))
     ao_id = getattr(ao_node, "id", getattr(ao_node, "name", str(ao_node)))
-    principled_id = getattr(principled, "id", getattr(principled, "name", str(principled)))
-    links.append({"from": base_id, "from_socket": "Color", "to": mix_id, "to_socket": 1})
+    principled_id = getattr(
+        principled, "id", getattr(principled, "name", str(principled))
+    )
+    links.append(
+        {"from": base_id, "from_socket": "Color", "to": mix_id, "to_socket": 1}
+    )
     links.append({"from": ao_id, "from_socket": "R", "to": mix_id, "to_socket": 2})
     links.append(
-        {"from": mix_id, "from_socket": "Color", "to": principled_id, "to_socket": "Base Color"}
+        {
+            "from": mix_id,
+            "from_socket": "Color",
+            "to": principled_id,
+            "to_socket": "Base Color",
+        }
     )
 
 
@@ -119,8 +136,7 @@ def create_displacement_for(
     location: Tuple[int, int] = (300, -200),
     scale: float = 0.1,
 ) -> Any:
-    """Create a Displacement node, wire texture to Height and connect to output.
-    """
+    """Create a Displacement node, wire texture to Height and connect to output."""
     if _is_blender_nodes(nodes):
         disp = nodes.new(type="ShaderNodeDisplacement")
         try:
@@ -164,7 +180,9 @@ def create_displacement_for(
     return d
 
 
-def create_separate_rgb(nodes: Any, links: Any, tex_node: Any, location: Tuple[int, int] = (-200, -100)) -> Any:
+def create_separate_rgb(
+    nodes: Any, links: Any, tex_node: Any, location: Tuple[int, int] = (-200, -100)
+) -> Any:
     """Create a SeparateRGB node and wire the given texture node to it."""
     if _is_blender_nodes(nodes):
         sep = nodes.new(type="ShaderNodeSeparateRGB")
@@ -207,9 +225,13 @@ def create_ao_mix(
 ) -> Any:
     """Create a MixRGB Multiply node to combine base color with AO."""
     if _is_blender_nodes(nodes):
-        return _create_ao_mix_blender(nodes, links, base_node, ao_node, principled, location, fac)
+        return _create_ao_mix_blender(
+            nodes, links, base_node, ao_node, principled, location, fac
+        )
 
-    return _create_ao_mix_mock(nodes, links, base_node, ao_node, principled, location, fac)
+    return _create_ao_mix_mock(
+        nodes, links, base_node, ao_node, principled, location, fac
+    )
 
 
 def _create_ao_mix_blender(
@@ -279,8 +301,22 @@ def _create_ao_mix_mock(
     node_id = f"mix_{len(created)}"
     m = {"id": node_id, "type": "MixRGB", "location": location, "fac": fac}
     created.append(m)
-    links.append({"from": base_node.get("id", "base"), "from_socket": "Color", "to": node_id, "to_socket": 1})
-    links.append({"from": ao_node.get("id", "ao"), "from_socket": "R", "to": node_id, "to_socket": 2})
+    links.append(
+        {
+            "from": base_node.get("id", "base"),
+            "from_socket": "Color",
+            "to": node_id,
+            "to_socket": 1,
+        }
+    )
+    links.append(
+        {
+            "from": ao_node.get("id", "ao"),
+            "from_socket": "R",
+            "to": node_id,
+            "to_socket": 2,
+        }
+    )
     links.append(
         {
             "from": node_id,
@@ -290,4 +326,3 @@ def _create_ao_mix_mock(
         }
     )
     return m
-
