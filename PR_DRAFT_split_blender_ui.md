@@ -48,6 +48,33 @@ Propositions / étapes suivantes
    ou configuration (et adapter/simplifier les tests en conséquence).
 3. Poursuivre la migration d'autres helpers UI si nécessaire (petits modules, tests, commits atomiques).
 
+Notes de migration détaillées
+---------------------------
+Voici un tableau rapide des chemins d'importation historiques et de leurs nouveaux emplacements
+pour faciliter la mise à jour des intégrations :
+
+- Ancien monolithe : `src/blender_mcp/blender_ui.py` → Nouveau package : `src/blender_mcp/blender_ui/`
+  - `BLENDERMCP_PT_Panel` → `blender_mcp.blender_ui.panel.BLENDERMCP_PT_Panel` (façade exposée au même nom)
+  - `BLENDERMCP_OT_StartServer` → `blender_mcp.blender_ui.operators.BLENDERMCP_OT_StartServer`
+  - `BLENDERMCP_OT_StopServer` → `blender_mcp.blender_ui.operators.BLENDERMCP_OT_StopServer`
+  - `BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey` → `blender_mcp.blender_ui.operators.BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey`
+  - `BLENDERMCP_OT_ApplyRemoteExecSetting` → `blender_mcp.blender_ui.operators.BLENDERMCP_OT_ApplyRemoteExecSetting`
+  - Propriétés de scène (ex. `blendermcp_port`) → enregistrées via `blender_mcp.blender_ui.props` (façade gère l'enregistrement)
+
+- `blender_mcp.addon_handlers` → déplacé vers `blender_mcp.blender_ui.addon_handlers` ; le module top‑level
+  `blender_mcp.addon_handlers` reste une façade qui réexporte les symboles pour compatibilité.
+
+Conseil de migration rapide pour les intégrateurs:
+
+- Si vous aviez des imports explicites depuis l'ancien module, vous pouvez soit continuer à importer
+  depuis `blender_mcp.blender_ui` (la façade fournit les mêmes noms), soit migrer vers les chemins
+  explicites ci‑dessus (`blender_mcp.blender_ui.operators`, `blender_mcp.blender_ui.panel`, etc.).
+
+Test ajouté
+-----------
+- `tests/test_blender_ui_facade.py` vérifie qu'en injectant un faux `bpy` la façade expose bien
+  les noms historiques (prévention des régressions d'import).
+
 Fichiers principaux modifiés/créés
 ---------------------------------
 - src/blender_mcp/blender_ui/__init__.py
