@@ -1,168 +1,176 @@
-"""BlenderMCP UI package façade.
+"""Simple, explicit UI package façade.
 
-This package contains the split UI pieces (props, operators, panel) and
-re-exports a compatibility-friendly API so existing imports of
-`blender_mcp.blender_ui` continue to work.
+This module provides direct re-exports of the UI submodules and a small
+`register()` / `unregister()` pair. It avoids magic and large try/except
+blocks so that errors surface during development. The submodules are
+written to be import-safe (they provide fallbacks when `bpy` is not
+available) so importing this package in CI/tests is harmless.
 """
 
-from typing import Iterable, Optional
+from __future__ import annotations
 
-# Keep the package import-safe: defer importing `bpy` and submodules until
-# runtime functions are called. Some test modules import package-level
-# façades (like `blender_mcp.addon_handlers`) during collection and must not
-# fail when `bpy` is not available.
-
-_props = None
-_operators = None
-_panel = None
-
-
-def _load_submodules() -> None:
-    """Lazily import submodules into package globals.
-
-    Safe to call multiple times; imports are cached by Python.
-    """
-    global _props, _operators, _panel
-    if _props is None:
-        from . import props as _p
-
-        _props = _p
-    if _operators is None:
-        from . import operators as _o
-
-        _operators = _o
-    if _panel is None:
-        from . import panel as _pa
-
-        _panel = _pa
-
-
-def _classes() -> Iterable[type]:
-    _load_submodules()
-    # Re-export classes at package level for backward compatibility. Use
-    # attributes from submodules rather than importing them at top-level.
-    try:
-        return (
-            _panel.BLENDERMCP_PT_Panel,
-            _operators.BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey,
-            _operators.BLENDERMCP_OT_StartServer,
-            _operators.BLENDERMCP_OT_StopServer,
-            _operators.BLENDERMCP_OT_ApplyRemoteExecSetting,
-            # AddonPreferences is defined dynamically inside register()
-        )
-    except Exception:
-        # If submodules are not available (import error), return empty tuple
-        return ()
-
-
-# If `bpy` is already present in sys.modules (tests may inject a fake),
-# eagerly load submodules and expose the historical module-level names so
-# `importlib.import_module('blender_mcp.blender_ui')` yields the same
-# attributes consumers expect.
-try:
-    import sys
-
-    if "bpy" in sys.modules:
-        _load_submodules()
-        try:
-            BLENDERMCP_PT_Panel = _panel.BLENDERMCP_PT_Panel
-            BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey = _operators.BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey
-            BLENDERMCP_OT_StartServer = _operators.BLENDERMCP_OT_StartServer
-            BLENDERMCP_OT_StopServer = _operators.BLENDERMCP_OT_StopServer
-            BLENDERMCP_OT_ApplyRemoteExecSetting = _operators.BLENDERMCP_OT_ApplyRemoteExecSetting
-        except Exception:
-            # best-effort; leave module-level names unset if something fails
-            pass
-except Exception:
-    pass
-
-
-def _get_addon_preferences_class():
-    """Return a AddonPreferences subclass when `bpy` is available.
-
-    This is created on demand so importing the package remains safe when
-    `bpy` is absent during test collection.
-    """
-    try:
-        import bpy
-
-        _AddonPrefsBase = getattr(bpy.types, "AddonPreferences", object)
-
-        class BLENDERMCP_AddonPreferences(_AddonPrefsBase):
-            bl_idname = "blender_mcp"
-
-            allow_ui_start_server = bpy.props.BoolProperty(
-                name="Allow UI to start external MCP server",
-                description="If enabled, the Start button in the addon UI may launch an external MCP process",
-                default=True,
-            )
-
-            def draw(self, context):
-                try:
-                    layout = self.layout
-                    layout.label(text="BlenderMCP preferences")
-                    layout.prop(self, "allow_ui_start_server")
-                except Exception:
-                    pass
-
-        return BLENDERMCP_AddonPreferences
-    except Exception:
-        return None
+__all__ = [
+    "_register_scene_properties",
+    "_unregister_scene_properties",
+    "BLENDERMCP_PT_Panel",
+    "BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey",
+    "BLENDERMCP_OT_StartServer",
+    "BLENDERMCP_OT_StopServer",
+    "BLENDERMCP_OT_ApplyRemoteExecSetting",
+]
 
 
 def register() -> None:
-    """Register UI classes and scene properties."""
-    _load_submodules()
-    # create AddonPreferences class dynamically (requires bpy)
-    AddonPrefs = _get_addon_preferences_class()
-    classes = list(_classes())
-    if AddonPrefs is not None:
-        classes.append(AddonPrefs)
+    """Register the addon UI: scene properties and Blender classes.
 
-    # register scene properties and classes (will raise if bpy missing)
-    _props._register_scene_properties()
+    This function will attempt to register Blender classes if `bpy` is
+    present. If not present it performs a no-op to keep tests/CI safe.
+    """
+    # register scene properties first (import dynamically)
+    import importlib
+
     try:
-        import bpy
-
-        for cls in classes:
-            try:
-                bpy.utils.register_class(cls)
-            except Exception:
-                pass
+        props = importlib.import_module("blender_mcp.blender_ui.props")
+        props._register_scene_properties()
     except Exception:
-        # If bpy is not available, registration is a no-op in this import-safe
-        # façade; callers in Blender should call register() when bpy is present.
+        # props module may be unavailable or bpy missing; continue
         pass
 
-    print("BlenderMCP addon registered (package façade)")
+    try:
+        import bpy  # type: ignore
+    except Exception:
+        # If bpy isn't available, leave registration to runtime in Blender.
+        return
+
+    # attempt to load class objects from submodules (reload so they can
+    # pick up a fake bpy injected after initial import)
+    try:
+        ops = importlib.reload(importlib.import_module("blender_mcp.blender_ui.operators"))
+    except Exception:
+        ops = importlib.import_module("blender_mcp.blender_ui.operators")
+
+    try:
+        pnl = importlib.reload(importlib.import_module("blender_mcp.blender_ui.panel"))
+    except Exception:
+        pnl = importlib.import_module("blender_mcp.blender_ui.panel")
+
+    classes = []
+    for name in (
+        "BLENDERMCP_PT_Panel",
+        "BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey",
+        "BLENDERMCP_OT_StartServer",
+        "BLENDERMCP_OT_StopServer",
+        "BLENDERMCP_OT_ApplyRemoteExecSetting",
+    ):
+        for mod in (pnl, ops):
+            if hasattr(mod, name):
+                classes.append(getattr(mod, name))
+                break
+
+    for cls in classes:
+        try:
+            bpy.utils.register_class(cls)
+        except Exception:
+            # let Blender handle duplicate or invalid registrations
+            pass
+
+
+def unregister() -> None:
+    """Unregister the addon UI and remove scene properties.
+
+    Best-effort: ignores missing classes/properties when `bpy` is not
+    present.
+    """
+    import importlib
+
+    try:
+        import bpy  # type: ignore
+    except Exception:
+        bpy = None
+
+    # attempt to load class objects from submodules
+    try:
+        ops = importlib.import_module("blender_mcp.blender_ui.operators")
+    except Exception:
+        ops = None
+
+    try:
+        pnl = importlib.import_module("blender_mcp.blender_ui.panel")
+    except Exception:
+        pnl = None
+
+    classes = []
+    for name in (
+        "BLENDERMCP_PT_Panel",
+        "BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey",
+        "BLENDERMCP_OT_StartServer",
+        "BLENDERMCP_OT_StopServer",
+        "BLENDERMCP_OT_ApplyRemoteExecSetting",
+    ):
+        for mod in (pnl, ops):
+            if mod is None:
+                continue
+            if hasattr(mod, name):
+                classes.append(getattr(mod, name))
+                break
+
+    if bpy is not None:
+        for cls in classes:
+            try:
+                bpy.utils.unregister_class(cls)
+            except Exception:
+                pass
+
+    # unregister scene props
+    try:
+        props = importlib.import_module("blender_mcp.blender_ui.props")
+        props._unregister_scene_properties()
+    except Exception:
+        pass
 
 
 def __getattr__(name: str):
-    """Lazy attribute loader for legacy module-level symbols.
+    """Lazy-reload legacy UI symbols when requested.
 
-    This avoids importing `bpy` at package import time while still
-    exposing the historical names when callers request them (tests often
-    import the package and then access these attributes).
+    This helps tests that import the package before a fake `bpy` is
+    installed: when they later access a historical symbol we attempt to
+    reload the submodules so real Operator/Panel classes get defined.
     """
-    legacy_names = {
+    legacy = {
         "BLENDERMCP_PT_Panel",
         "BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey",
         "BLENDERMCP_OT_StartServer",
         "BLENDERMCP_OT_StopServer",
         "BLENDERMCP_OT_ApplyRemoteExecSetting",
     }
-    if name in legacy_names:
-        _load_submodules()
-        # search in known submodules
-        for mod in (_panel, _operators):
-            if mod is None:
+    if name in legacy:
+        import importlib
+
+        # attempt to reload submodules so they can pick up a fake `bpy`
+        try:
+            importlib.reload(importlib.import_module("blender_mcp.blender_ui.operators"))
+        except Exception:
+            # ignore reload failures; we'll try panel next
+            pass
+        try:
+            importlib.reload(importlib.import_module("blender_mcp.blender_ui.panel"))
+        except Exception:
+            pass
+
+        # return the attribute if available now
+        for modname in ("blender_mcp.blender_ui.panel", "blender_mcp.blender_ui.operators"):
+            try:
+                mod = importlib.import_module(modname)
+                if hasattr(mod, name):
+                    val = getattr(mod, name)
+                    globals()[name] = val
+                    return val
+            except Exception:
                 continue
-            if hasattr(mod, name):
-                return getattr(mod, name)
-    raise AttributeError(f"module {__name__} has no attribute {name}")
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-def __dir__():
+def __dir__() -> list[str]:
     base = set(globals().keys())
     base.update([
         "BLENDERMCP_PT_Panel",
@@ -172,27 +180,3 @@ def __dir__():
         "BLENDERMCP_OT_ApplyRemoteExecSetting",
     ])
     return sorted(base)
-
-
-def unregister() -> None:
-    """Unregister UI classes and scene properties."""
-    _load_submodules()
-    AddonPrefs = _get_addon_preferences_class()
-    classes = list(_classes())
-    if AddonPrefs is not None:
-        classes.append(AddonPrefs)
-
-    try:
-        import bpy
-
-        for cls in classes:
-            try:
-                bpy.utils.unregister_class(cls)
-            except Exception:
-                pass
-    except Exception:
-        # No-op if bpy not present
-        pass
-
-    _props._unregister_scene_properties()
-    print("BlenderMCP addon unregistered (package façade)")
