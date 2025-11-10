@@ -91,6 +91,16 @@ class BLENDERMCP_PT_Panel(bpy.types.Panel):
             layout.operator("blendermcp.stop_server", text="Disconnect from MCP server")
             layout.label(text=f"Running on port {scene.blendermcp_port}")
 
+        # WARNING: remote code execution is dangerous. This UI shows the
+        # current preference and provides a one-click apply button to set the
+        # runtime env var that enables the execution endpoint. We do NOT enable
+        # execution automatically to avoid accidental execution in CI.
+        box = layout.box()
+        box.label(text="Remote code execution (dangerous)")
+        box.label(text="execute_blender_code is disabled by default.")
+        box.prop(scene, "blendermcp_allow_remote_exec", text="Allow remote execution")
+        box.operator("blendermcp.apply_remote_exec_setting", text="Apply setting")
+
 
 # Operator to set Hyper3D API Key
 class BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey(bpy.types.Operator):
@@ -168,21 +178,7 @@ class BLENDERMCP_OT_StartServer(bpy.types.Operator):
             self.report({"INFO"}, "Started external MCP server (or launched helper script)")
             return {"FINISHED"}
         except Exception as e:
-            # If starting fails, fall back to marking as not-running and inform the user.
-            scene.blendermcp_server_running = False
-            self.report({"ERROR"}, f"Failed to start external MCP server: {e}")
-            return {"CANCELLED"}
 
-
-# Operator to stop the server
-class BLENDERMCP_OT_StopServer(bpy.types.Operator):
-    bl_idname = "blendermcp.stop_server"
-    bl_label = "Stop the connection to Gemini"
-    bl_description = "Stop the connection to Gemini"
-
-    def execute(self, context):
-        scene = context.scene
-        global _server_proc
         # Attempt to stop an external server previously started via the adapter.
         try:
             from . import embedded_server_adapter as adapter
@@ -200,6 +196,24 @@ class BLENDERMCP_OT_StopServer(bpy.types.Operator):
             return {"CANCELLED"}
 
 
+
+        class BLENDERMCP_OT_ApplyRemoteExecSetting(bpy.types.Operator):
+            bl_idname = "blendermcp.apply_remote_exec_setting"
+            bl_label = "Apply remote-exec setting"
+
+            def execute(self, context):
+                try:
+                    import os
+
+                    enabled = bool(getattr(context.scene, "blendermcp_allow_remote_exec", False))
+                    os.environ["BLENDER_MCP_ALLOW_EXECUTE"] = "1" if enabled else "0"
+                    self.report({"INFO"}, f"BLENDER_MCP_ALLOW_EXECUTE set to {os.environ["BLENDER_MCP_ALLOW_EXECUTE"]}")
+                    return {"FINISHED"}
+                except Exception as e:
+                    self.report({"ERROR"}, f"Failed to apply setting: {e}")
+                    return {"CANCELLED"}
+
+
 def register():
     """Register blender UI classes and properties.
 
@@ -214,6 +228,7 @@ def register():
         BLENDERMCP_PT_Panel,
         BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey,
         BLENDERMCP_OT_StartServer,
+        BLENDERMCP_OT_ApplyRemoteExecSetting,
         BLENDERMCP_OT_StopServer,
         BLENDERMCP_AddonPreferences,
     ):
@@ -234,6 +249,7 @@ def unregister():
         BLENDERMCP_PT_Panel,
         BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey,
         BLENDERMCP_OT_StartServer,
+        BLENDERMCP_OT_ApplyRemoteExecSetting,
         BLENDERMCP_OT_StopServer,
         BLENDERMCP_AddonPreferences,
     ):
@@ -308,6 +324,12 @@ def _register_scene_properties() -> None:
         default="",
     )
 
+    bpy.types.Scene.blendermcp_allow_remote_exec = bpy.props.BoolProperty(
+        name="Allow remote execution",
+        description="Enable remote execution of Python snippets (dangerous). Requires explicit opt-in and caution.",
+        default=False,
+    )
+
 
 def _unregister_scene_properties() -> None:
     """Remove scene-level properties previously registered.
@@ -324,6 +346,7 @@ def _unregister_scene_properties() -> None:
         "blendermcp_hyper3d_api_key",
         "blendermcp_use_sketchfab",
         "blendermcp_sketchfab_api_key",
+        "blendermcp_allow_remote_exec",
     ):
         try:
             delattr(bpy.types.Scene, name)
