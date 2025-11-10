@@ -46,8 +46,18 @@ class BlenderConnectionNetwork:
             if self._core is not None:
                 return True
             try:
+                # Instantiate the core connection and ensure it is actually connected.
                 self._core = CoreBlenderConnection(self.host, self.port)
-                return True
+                try:
+                    ok = self._core.connect()
+                except Exception:
+                    ok = False
+                if ok:
+                    return True
+                # Core failed to connect; clear and signal failure so callers can
+                # fall back to socket path or handle as appropriate.
+                self._core = None
+                return False
             except Exception:
                 logger.exception("CoreBlenderConnection failed to init for %s:%s", self.host, self.port)
                 self._core = None
@@ -127,7 +137,14 @@ class BlenderConnectionNetwork:
     ) -> Any:
         # Prefer core implementation if available
         if self._core is not None:
-            return self._core.send_command(command_type, params)
+            resp = self._core.send_command(command_type, params)
+            # Maintain the same unwrapping semantics as the socket-based path:
+            if isinstance(resp, dict):
+                r = cast(Dict[str, Any], resp)
+                if r.get("status") == "error":
+                    raise RuntimeError(r.get("message", "error from peer"))
+                return r.get("result", resp)
+            return resp
 
         if not self.sock and not self.connect():
             raise ConnectionError("Not connected")

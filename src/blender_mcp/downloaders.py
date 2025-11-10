@@ -148,6 +148,7 @@ def download_to_tempfile(
     suffix: str = "",
     timeout: Optional[float] = 120.0,
     headers: Optional[Mapping[str, Any]] = None,
+    session: Optional[requests.sessions.Session] = None,
 ) -> str:
     """Download a URL and write it to a NamedTemporaryFile, returning the path.
 
@@ -157,7 +158,11 @@ def download_to_tempfile(
     import os
     import tempfile
 
-    data = download_bytes(url, timeout=timeout, headers=headers)
+    # Forward optional session to download_bytes for connection reuse/testability.
+    if session is None:
+        data = download_bytes(url, timeout=timeout, headers=headers)
+    else:
+        data = download_bytes(url, timeout=timeout, headers=headers, session=session)
     tf = tempfile.NamedTemporaryFile(delete=False, prefix=prefix, suffix=suffix)
     try:
         tf.write(data)

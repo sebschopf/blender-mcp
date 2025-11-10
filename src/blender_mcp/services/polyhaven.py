@@ -251,6 +251,7 @@ def download_asset(
     asset_type: str = "models",
     resolution: str = "1k",
     file_format: Optional[str] = None,
+    session: Optional[requests.sessions.Session] = None,
 ) -> Dict[str, Any]:
     if not download_url:
         if not asset_id:
@@ -259,7 +260,10 @@ def download_asset(
         download_url = f"https://dl.polyhaven.org/file/ph-assets/{asset_type}/{asset_id}/{resolution}.{fmt}"
 
     try:
-        zip_bytes = downloaders.download_bytes(download_url, timeout=120)
+        if session is None:
+            zip_bytes = downloaders.download_bytes(download_url, timeout=120)
+        else:
+            zip_bytes = downloaders.download_bytes(download_url, timeout=120, session=session)
         temp_dir = downloaders.secure_extract_zip_bytes(zip_bytes)
         return {"temp_dir": temp_dir}
     except Exception as e:
