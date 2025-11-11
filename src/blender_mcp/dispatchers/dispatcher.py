@@ -1,13 +1,10 @@
 """Dispatcher utility for registering and dispatching BlenderMCP handlers.
 
-This module implements a reasonably complete, testable dispatcher used by
-the server façade. It focuses on clarity and testability rather than
-performance. Key features:
-- register/unregister/list handlers
-- dispatch (programmatic) and dispatch_strict (raises if missing)
-- dispatch_with_timeout (ThreadPoolExecutor)
-- dispatch_command: adapter that accepts a dict {"type","params"}
+This module is a relocated copy of the top-level `blender_mcp.dispatcher`.
+Relative imports have been adjusted so this file lives inside the
+`blender_mcp.dispatchers` package.
 """
+
 from __future__ import annotations
 
 import logging
@@ -15,9 +12,28 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutTimeout
 from typing import Any, Callable, Dict, List, Optional, cast
 
-from .types import DispatcherResult
+from ..types import DispatcherResult
 
 logger = logging.getLogger(__name__)
+
+
+# Backwards-compatible simple exception types used by some tests/modules
+class HandlerNotFound(Exception):
+    """Raised when a dispatch target cannot be found."""
+
+
+class HandlerError(Exception):
+    """Wraps exceptions raised by handlers.
+
+    Attributes:
+        name: the handler name that raised
+        original: the original exception instance
+    """
+
+    def __init__(self, name: str, original: Exception) -> None:
+        super().__init__(f"Handler '{name}' raised {original!r}")
+        self.name = name
+        self.original = original
 
 
 Handler = Callable[[Dict[str, Any]], Any]
@@ -58,7 +74,13 @@ class Dispatcher:
             logger.debug("no handler for %s", name)
             return None
         logger.debug("dispatching handler %s with params=%s", name, params)
-        return fn(params or {})
+        try:
+            return fn(params or {})
+        except Exception as exc:
+            # wrap in HandlerError for compatibility with code that expects
+            # handler exceptions to be wrapped
+            logger.exception("handler %s raised", name)
+            raise HandlerError(name, exc) from exc
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
@@ -123,6 +145,7 @@ def register_default_handlers(dispatcher: Dispatcher) -> None:
         dispatcher.register("add_primitive", add_primitive, overwrite=True)  # type: ignore[arg-type]
     except TypeError:
         dispatcher.register("add_primitive", add_primitive)
+
     # also register a small convenience helper expected by some tests
     def create_dice(params: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": True, "primitive": "dice", "sides": params.get("sides", 6)}
@@ -168,7 +191,12 @@ class _CommandDispatcherCompat:
     def list_handlers(self) -> List[str]:
         return sorted(self._handlers.keys())
 
-    def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None, config: Optional[Any] = None) -> Any:
+    def dispatch(
+        self,
+        name: str,
+        params: Optional[Dict[str, Any]] = None,
+        config: Optional[Any] = None,
+    ) -> Any:
         if name not in self._handlers:
             raise KeyError(name)
         handler = self._handlers[name]
@@ -199,7 +227,12 @@ def call_mcp_tool(tool: str, params: Dict[str, Any]):
     raise NotImplementedError("call_mcp_tool should be provided by environment/tests")
 
 
-def run_bridge(user_req: str, config: Any, dispatcher: _CommandDispatcherCompat, use_api: bool = False) -> None:
+def run_bridge(
+    user_req: str,
+    config: Any,
+    dispatcher: _CommandDispatcherCompat,
+    use_api: bool = False,
+) -> None:
     """Run the Gemini->tool bridging flow.
 
     This function asks Gemini (via `call_gemini_cli`) to map a user

@@ -49,6 +49,14 @@ Liste de tâches principale (à cocher au fur et à mesure)
 
 - [ ] Packaging / release readiness
 
+> Note sur le comportement de l'Add-on UI :
+
+Pendant la refactorisation, l'UI de l'add-on a été rendue minimale et n'essaie plus de démarrer/arrêter
+des processus serveur depuis l'intérieur de Blender. Les opérateurs UI basculent seulement un drapeau
+(`blendermcp_server_running`) et affichent une information invitant l'utilisateur à démarrer/arrêter le serveur
+depuis l'extérieur (ex. `start-server.ps1` ou `blender-mcp`). Ceci évite des mélanges de processus et
+rend l'import du module sûr pour CI/tests.
+
 ### État de la factorisation (résumé)
 
 Ce qui a déjà été factorisé / stabilisé :

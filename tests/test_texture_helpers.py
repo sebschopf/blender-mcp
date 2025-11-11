@@ -1,4 +1,5 @@
 """Tests for texture_helpers using fake image objects and fake loader."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -45,9 +46,7 @@ def test_load_and_configure_image_uses_loader_and_sets_name():
         assert path == "some/path.png"
         return img
 
-    res = texture_helpers.load_and_configure_image(
-        "some/path.png", "albedo", name="texname", loader=loader
-    )
+    res = texture_helpers.load_and_configure_image("some/path.png", "albedo", name="texname", loader=loader)
     assert res is img
     assert img.name == "texname"
     assert img.colorspace_settings.name == "sRGB"

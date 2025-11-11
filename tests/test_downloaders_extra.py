@@ -2,6 +2,7 @@
 
 Covers download_to_tempfile happy/error paths.
 """
+
 from __future__ import annotations
 
 import os

@@ -2,10 +2,13 @@
 
 Keep pure, well-typed helpers here so they can be unit-tested.
 """
+
 from typing import List, Optional, Sequence
 
 
-def process_bbox(original_bbox: Optional[Sequence[float]] = None) -> Optional[List[int]]:
+def process_bbox(
+    original_bbox: Optional[Sequence[float]] = None,
+) -> Optional[List[int]]:
     """Normalize a bbox (sequence of numbers) into percentages as ints or return None.
 
     This is a small, pure helper extracted from integrations to make it

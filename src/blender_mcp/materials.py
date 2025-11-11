@@ -9,6 +9,7 @@ set of texture maps (color, roughness, metallic, normal, displacement...).
 create the material using `bpy` when available; it's not covered by unit
 tests here to avoid needing Blender in CI.
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence, Union
@@ -130,8 +131,16 @@ def _build_spec_from_keys(keys: Sequence[str]) -> Dict[str, Any]:
     # Consolidate mapping rules to reduce branching/complexity
     rules = [
         ("base_color", ("color", "diffuse", "albedo"), lambda k: k),
-        ("roughness", ("roughness", "rough", "arm"), lambda k: "arm.g" if k == "arm" else k),
-        ("metallic", ("metallic", "metal", "arm"), lambda k: "arm.b" if k == "arm" else k),
+        (
+            "roughness",
+            ("roughness", "rough", "arm"),
+            lambda k: "arm.g" if k == "arm" else k,
+        ),
+        (
+            "metallic",
+            ("metallic", "metal", "arm"),
+            lambda k: "arm.b" if k == "arm" else k,
+        ),
         ("normal", ("normal", "nor"), lambda k: k),
         ("displacement", ("displacement", "disp", "height"), lambda k: k),
     ]
@@ -188,7 +197,10 @@ def create_material_in_blender(images_map: Dict[str, str], material_name: str) -
         try:
             from_node = node_objs[link["from_node"]]
             to_node = node_objs[link["to_node"]]
-            links.new(from_node.outputs[link["from_socket"]], to_node.inputs[link["to_socket"]])
+            links.new(
+                from_node.outputs[link["from_socket"]],
+                to_node.inputs[link["to_socket"]],
+            )
         except Exception:
             pass
 

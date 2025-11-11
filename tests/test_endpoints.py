@@ -1,7 +1,7 @@
 import sys
 import types
 
-from blender_mcp.dispatcher import Dispatcher
+from blender_mcp.dispatchers.dispatcher import Dispatcher
 from blender_mcp.endpoints import register_builtin_endpoints
 
 
@@ -15,6 +15,7 @@ def test_endpoints_registered_and_callable(monkeypatch):
     assert "execute_blender_code" in names
     assert "get_scene_info" in names
     assert "get_viewport_screenshot" in names
+    assert "ping" in names
 
     # mock bpy for scene and screenshot
     fake_bpy = types.SimpleNamespace()
@@ -22,14 +23,18 @@ def test_endpoints_registered_and_callable(monkeypatch):
     fake_scene = types.SimpleNamespace()
     fake_scene.name = "EScene"
     fake_bpy.context = types.SimpleNamespace(scene=fake_scene)
+
     class Obj:
         def __init__(self, name, type_):
             self.name = name
             self.type = type_
-    fake_bpy.data = types.SimpleNamespace(objects=[Obj("Cube","MESH")])
+
+    fake_bpy.data = types.SimpleNamespace(objects=[Obj("Cube", "MESH")])
+
     # screenshot helper
     def fake_capture():
         return b"\x89PNG..."
+
     fake_bpy.capture_viewport_bytes = fake_capture
 
     sys.modules["bpy"] = fake_bpy
@@ -41,6 +46,11 @@ def test_endpoints_registered_and_callable(monkeypatch):
         # call screenshot endpoint
         resp_shot = d.dispatch_command({"type": "get_viewport_screenshot"})
         assert resp_shot["status"] == "success"
+
+        # call ping endpoint with params
+        resp_ping = d.dispatch_command({"type": "ping", "params": {"msg": "hello"}})
+        assert resp_ping["status"] == "success"
+        assert resp_ping["result"]["ping"] == "hello"
 
     finally:
         del sys.modules["bpy"]

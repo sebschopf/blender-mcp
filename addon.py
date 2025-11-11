@@ -53,15 +53,33 @@ def unregister():
             print(f"Error unregistering blender_mcp UI: {e}")
 
 
-# Try to expose the packaged server implementation when available; otherwise
-# provide a clear runtime error on instantiation so external scripts see a
-# helpful message.
-try:
-    from blender_mcp.server import BlenderMCPServer  # type: ignore
-except Exception:
-    class BlenderMCPServer:  # type: ignore
-        def __init__(self, *args, **kwargs):
-            raise RuntimeError("BlenderMCPServer is unavailable; install the package version")
+# Expose a lazy wrapper for the packaged server implementation.
+#
+# Rationale: avoid importing `blender_mcp.server` at module import time so the
+# add-on remains import-safe in headless/test environments. The wrapper tries
+# to import the real implementation when instantiated and delegates to it.
+class BlenderMCPServer:
+    """Lazy wrapper around the real BlenderMCPServer implementation.
+
+    On instantiation, attempt to import `blender_mcp.server.BlenderMCPServer` and
+    create a delegate instance. If the import fails, raise a RuntimeError with a
+    clear message.
+    """
+
+    def __init__(self, *args, **kwargs):
+        try:
+            from importlib import import_module
+
+            mod = import_module("blender_mcp.server")
+            Real = getattr(mod, "BlenderMCPServer")
+            # instantiate the real server and keep as delegate
+            self._delegate = Real(*args, **kwargs)
+        except Exception as e:  # pragma: no cover - environment dependent
+            raise RuntimeError("BlenderMCPServer is unavailable; install the package version") from e
+
+    def __getattr__(self, item):
+        # Delegate attribute access to the real server instance
+        return getattr(self._delegate, item)
 
 
 if __name__ == "__main__":

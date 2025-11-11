@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     # Help static analyzers know these names exist at import-time while
     # keeping runtime imports lazy and side-effect free.
-    from .connection import BlenderConnection  # pragma: no cover
+    from .connection_core import BlenderConnection  # pragma: no cover
     from .tools import get_blender_connection  # pragma: no cover
 
 __all__ = ["BlenderConnection", "get_blender_connection", "__version__"]
@@ -28,7 +28,7 @@ def __getattr__(name: str):
     aren't available.
     """
     if name == "BlenderConnection":
-        from .connection import BlenderConnection
+        from .connection_core import BlenderConnection
 
         return BlenderConnection
     if name == "get_blender_connection":

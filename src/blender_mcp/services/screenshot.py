@@ -7,6 +7,7 @@ Design:
   small and testable: tests can inject a fake `bpy` with that function.
 - The service returns a dict {status, image_base64} on success.
 """
+
 from __future__ import annotations
 
 import base64
@@ -38,7 +39,10 @@ def get_viewport_screenshot(params: Optional[Dict[str, Any]] = None) -> Dict[str
     capture = getattr(bpy, "capture_viewport_bytes", None)
     if capture is None or not callable(capture):
         logger.debug("bpy.capture_viewport_bytes not available")
-        return {"status": "error", "message": "capture_viewport_bytes not available on bpy"}
+        return {
+            "status": "error",
+            "message": "capture_viewport_bytes not available on bpy",
+        }
 
     try:
         img_bytes = capture()

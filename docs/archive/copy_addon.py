@@ -32,22 +32,14 @@ raise ImportError(
 )
 # Code created by Siddharth Ahuja: www.github.com/ahujasid © 2025
 
-import io
 import json
-import os
-import shutil
 import socket
-import tempfile
 import threading
 import time
 import traceback
-import zipfile
-from contextlib import redirect_stdout, suppress
 
 import bpy
-import mathutils
 import requests
-from bpy.props import IntProperty
 
 bl_info = {
     "name": "Blender MCP",
@@ -65,8 +57,9 @@ RODIN_FREE_TRIAL_KEY = "k9TcfFoEhNd9cCPP2guHAHHHkctZHIRhZDywZ1euGUXwihbYLpOjQhof
 REQ_HEADERS = requests.utils.default_headers()
 REQ_HEADERS.update({"User-Agent": "blender-mcp"})
 
+
 class BlenderMCPServer:
-    def __init__(self, host='localhost', port=9876):
+    def __init__(self, host="localhost", port=9876):
         self.host = host
         self.port = port
         self.running = False
@@ -134,10 +127,7 @@ class BlenderMCPServer:
                     print(f"Connected to client: {address}")
 
                     # Handle client in a separate thread
-                    client_thread = threading.Thread(
-                        target=self._handle_client,
-                        args=(client,)
-                    )
+                    client_thread = threading.Thread(target=self._handle_client, args=(client,))
                     client_thread.daemon = True
                     client_thread.start()
                 except socket.timeout:
@@ -158,7 +148,7 @@ class BlenderMCPServer:
         """Handle connected client"""
         print("Client handler started")
         client.settimeout(None)  # No timeout
-        buffer = b''
+        buffer = b""
 
         try:
             while self.running:
@@ -172,8 +162,8 @@ class BlenderMCPServer:
                     buffer += data
                     try:
                         # Try to parse command
-                        command = json.loads(buffer.decode('utf-8'))
-                        buffer = b''
+                        command = json.loads(buffer.decode("utf-8"))
+                        buffer = b""
 
                         # Execute command in Blender's main thread
                         def execute_wrapper():
@@ -181,7 +171,7 @@ class BlenderMCPServer:
                                 response = self.execute_command(command)
                                 response_json = json.dumps(response)
                                 try:
-                                    client.sendall(response_json.encode('utf-8'))
+                                    client.sendall(response_json.encode("utf-8"))
                                 except Exception as e:
                                     # client likely disconnected; log and continue
                                     print(f"Failed to send response - client disconnected: {e}")
@@ -189,11 +179,8 @@ class BlenderMCPServer:
                                 print(f"Error executing command: {str(e)}")
                                 traceback.print_exc()
                                 try:
-                                    error_response = {
-                                        "status": "error",
-                                        "message": str(e)
-                                    }
-                                    client.sendall(json.dumps(error_response).encode('utf-8'))
+                                    error_response = {"status": "error", "message": str(e)}
+                                    client.sendall(json.dumps(error_response).encode("utf-8"))
                                 except Exception:
                                     # If sending error response fails, ignore
                                     pass
@@ -287,6 +274,7 @@ class BlenderMCPServer:
                 return {"status": "error", "message": str(e)}
         else:
             return {"status": "error", "message": f"Unknown command type: {cmd_type}"}
+
 
 # NOTE: Archive trimmed here for brevity in the repository copy. The full original
 # content is preserved in the repository history and can be recovered if needed.

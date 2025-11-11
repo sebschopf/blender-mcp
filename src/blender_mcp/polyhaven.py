@@ -3,56 +3,82 @@
 These helpers keep network & parsing logic separate from Blender-specific
 code so we can unit-test the behaviour without Blender.
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
 import requests
 
-REQ_HEADERS = requests.utils.default_headers()
-REQ_HEADERS.update({"User-Agent": "blender-mcp"})
+# Prefer the shared session headers but keep a module-level default for callers
+_REQ_HEADERS = requests.utils.default_headers()
+_REQ_HEADERS.update({"User-Agent": "blender-mcp"})
 
 
-def fetch_files_data(asset_id: str, *, timeout: int = 10) -> Dict[str, Any]:
+def fetch_files_data(
+    asset_id: str, *, timeout: int = 10, session: Optional[requests.sessions.Session] = None
+) -> Dict[str, Any]:
     """Fetch files metadata for a PolyHaven asset.
 
     Raises RuntimeError on non-200 responses.
     """
     url = f"https://api.polyhaven.com/files/{asset_id}"
-    resp = requests.get(url, headers=REQ_HEADERS, timeout=timeout)
+    if session is None:
+        # maintain test- and backwards-compatibility (tests monkeypatch poly.requests.get)
+        resp = requests.get(url, headers=_REQ_HEADERS, timeout=timeout)
+    else:
+        sess = session
+        # merge headers so caller-provided session headers take precedence
+        headers = dict(_REQ_HEADERS)
+        headers.update(getattr(sess, "headers", {}))
+        resp = sess.get(url, headers=headers, timeout=timeout)
     if resp.status_code != 200:
         raise RuntimeError(f"Failed to get asset files: {resp.status_code}")
     return resp.json()
 
 
-def fetch_categories(asset_type: str, *, timeout: int = 10) -> Dict[str, Any]:
+def fetch_categories(
+    asset_type: str, *, timeout: int = 10, session: Optional[requests.sessions.Session] = None
+) -> Dict[str, Any]:
     """Fetch categories for a given asset type from PolyHaven.
 
     Raises RuntimeError on non-200 responses.
     """
     url = f"https://api.polyhaven.com/categories/{asset_type}"
-    resp = requests.get(url, headers=REQ_HEADERS, timeout=timeout)
+    if session is None:
+        resp = requests.get(url, headers=_REQ_HEADERS, timeout=timeout)
+    else:
+        sess = session
+        headers = dict(_REQ_HEADERS)
+        headers.update(getattr(sess, "headers", {}))
+        resp = sess.get(url, headers=headers, timeout=timeout)
     if resp.status_code != 200:
         raise RuntimeError(f"Failed to get categories: {resp.status_code}")
     return resp.json()
 
 
-def search_assets(params: Dict[str, Any], *, timeout: int = 10) -> Dict[str, Any]:
+def search_assets(
+    params: Dict[str, Any], *, timeout: int = 10, session: Optional[requests.sessions.Session] = None
+) -> Dict[str, Any]:
     """Search assets on PolyHaven using the /assets endpoint.
 
     params: query parameters forwarded to the API (e.g. type, categories)
     Returns parsed JSON (dict of assets).
     """
     url = "https://api.polyhaven.com/assets"
-    resp = requests.get(url, params=params, headers=REQ_HEADERS, timeout=timeout)
+    if session is None:
+        resp = requests.get(url, params=params, headers=_REQ_HEADERS, timeout=timeout)
+    else:
+        sess = session
+        headers = dict(_REQ_HEADERS)
+        headers.update(getattr(sess, "headers", {}))
+        resp = sess.get(url, params=params, headers=headers, timeout=timeout)
     if resp.status_code != 200:
         raise RuntimeError(f"Failed to search assets: {resp.status_code}")
     return resp.json()
 
 
-def find_texture_map_urls(
-    files_data: Dict[str, Any], resolution: str, file_format: str
-) -> Dict[str, str]:
+def find_texture_map_urls(files_data: Dict[str, Any], resolution: str, file_format: str) -> Dict[str, str]:
     """Return a mapping map_type -> download URL for texture maps matching
     the requested resolution and file_format.
 
@@ -77,9 +103,7 @@ def find_texture_map_urls(
     return out
 
 
-def find_model_file_info(
-    files_data: Dict[str, Any], file_format: str, resolution: str
-) -> Optional[Dict[str, Any]]:
+def find_model_file_info(files_data: Dict[str, Any], file_format: str, resolution: str) -> Optional[Dict[str, Any]]:
     """Return the file_info dict for a model in the requested format/resolution,
     or None if not found.
     """
@@ -96,16 +120,27 @@ def find_model_file_info(
     return res_block
 
 
-def download_bytes(url: str, *, timeout: int = 30) -> bytes:
-    """Download bytes from url, raising RuntimeError on non-200."""
-    resp = requests.get(url, timeout=timeout)
+def download_bytes(url: str, *, timeout: int = 30, session: Optional[requests.sessions.Session] = None) -> bytes:
+    """Download bytes from url, raising RuntimeError on non-200.
+
+    Accepts an optional `requests.Session` (or session-like) for testing and
+    connection reuse. Falls back to the shared `get_session()`.
+    """
+    if session is None:
+        resp = requests.get(url, timeout=timeout)
+    else:
+        sess = session
+        resp = sess.get(url, timeout=timeout)
     if resp.status_code != 200:
         raise RuntimeError(f"Failed to download URL: {resp.status_code}")
     return resp.content
 
 
 def prepare_model_files(
-    file_info: Dict[str, Any], *, base_temp_dir: Optional[str] = None
+    file_info: Dict[str, Any],
+    *,
+    base_temp_dir: Optional[str] = None,
+    session: Optional[requests.sessions.Session] = None,
 ) -> tuple[str, str]:
     """Download main model file and any included files to a temporary dir.
 
@@ -128,7 +163,12 @@ def prepare_model_files(
     main_path = os.path.join(temp_dir, main_name)
 
     # Download main file
-    content = download_bytes(main_url)
+    # Call download_bytes compatibly: only pass `session` kw when provided so
+    # tests that monkeypatch poly.download_bytes (without session kw) keep working.
+    if session is None:
+        content = download_bytes(main_url)
+    else:
+        content = download_bytes(main_url, session=session)
     with open(main_path, "wb") as fh:
         fh.write(content)
 
@@ -140,7 +180,10 @@ def prepare_model_files(
             continue
         dest_path = os.path.join(temp_dir, rel_path)
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        inc_bytes = download_bytes(inc_url)
+        if session is None:
+            inc_bytes = download_bytes(inc_url)
+        else:
+            inc_bytes = download_bytes(inc_url, session=session)
         with open(dest_path, "wb") as fh:
             fh.write(inc_bytes)
 

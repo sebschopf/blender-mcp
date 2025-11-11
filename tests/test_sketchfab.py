@@ -42,7 +42,7 @@ def test_download_model_uses_downloaders(monkeypatch, tmp_path):
     called = {}
 
     def fake_download_bytes(url, timeout=30):
-        called['url'] = url
+        called["url"] = url
         # Create a small zip file in memory with a dummy glb
         import io
         import zipfile

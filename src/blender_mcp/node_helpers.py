@@ -3,6 +3,7 @@
 These helpers encapsulate small wiring tasks. They are defensive so tests
 can exercise logic using simple mock containers instead of requiring Blender.
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, Tuple
@@ -37,16 +38,19 @@ def displacement_node(node_id: str = "displacement_node") -> Dict[str, Any]:
 
 
 def make_link(from_node: str, from_socket: str, to_node: str, to_socket: str) -> Dict[str, Any]:
-    return {"from_node": from_node, "from_socket": from_socket, "to_node": to_node, "to_socket": to_socket}
+    return {
+        "from_node": from_node,
+        "from_socket": from_socket,
+        "to_node": to_node,
+        "to_socket": to_socket,
+    }
 
 
 def _is_blender_nodes(nodes: Any) -> bool:
     return hasattr(nodes, "new")
 
 
-def _append_mock_ao_links(
-    links: Any, base_node: Any, mix_node: Any, ao_node: Any, principled: Any
-) -> None:
+def _append_mock_ao_links(links: Any, base_node: Any, mix_node: Any, ao_node: Any, principled: Any) -> None:
     """Append best-effort mock link representations into the links container."""
     base_id = getattr(base_node, "id", getattr(base_node, "name", str(base_node)))
     mix_id = getattr(mix_node, "id", getattr(mix_node, "name", str(mix_node)))
@@ -55,7 +59,12 @@ def _append_mock_ao_links(
     links.append({"from": base_id, "from_socket": "Color", "to": mix_id, "to_socket": 1})
     links.append({"from": ao_id, "from_socket": "R", "to": mix_id, "to_socket": 2})
     links.append(
-        {"from": mix_id, "from_socket": "Color", "to": principled_id, "to_socket": "Base Color"}
+        {
+            "from": mix_id,
+            "from_socket": "Color",
+            "to": principled_id,
+            "to_socket": "Base Color",
+        }
     )
 
 
@@ -119,8 +128,7 @@ def create_displacement_for(
     location: Tuple[int, int] = (300, -200),
     scale: float = 0.1,
 ) -> Any:
-    """Create a Displacement node, wire texture to Height and connect to output.
-    """
+    """Create a Displacement node, wire texture to Height and connect to output."""
     if _is_blender_nodes(nodes):
         disp = nodes.new(type="ShaderNodeDisplacement")
         try:
@@ -279,8 +287,22 @@ def _create_ao_mix_mock(
     node_id = f"mix_{len(created)}"
     m = {"id": node_id, "type": "MixRGB", "location": location, "fac": fac}
     created.append(m)
-    links.append({"from": base_node.get("id", "base"), "from_socket": "Color", "to": node_id, "to_socket": 1})
-    links.append({"from": ao_node.get("id", "ao"), "from_socket": "R", "to": node_id, "to_socket": 2})
+    links.append(
+        {
+            "from": base_node.get("id", "base"),
+            "from_socket": "Color",
+            "to": node_id,
+            "to_socket": 1,
+        }
+    )
+    links.append(
+        {
+            "from": ao_node.get("id", "ao"),
+            "from_socket": "R",
+            "to": node_id,
+            "to_socket": 2,
+        }
+    )
     links.append(
         {
             "from": node_id,
@@ -290,4 +312,3 @@ def _create_ao_mix_mock(
         }
     )
     return m
-

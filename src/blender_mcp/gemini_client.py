@@ -2,6 +2,7 @@
 
 This module is self-contained so tests can mock network/subprocess calls.
 """
+
 from __future__ import annotations
 
 import json
@@ -13,8 +14,7 @@ import subprocess
 import sys
 from typing import Any, Optional, cast
 
-import requests
-
+from .http import get_session
 from .types import ToolCommand
 
 # Configuration
@@ -85,7 +85,7 @@ def get_local_tool_catalog() -> str:
     tools: list[str] = []
     try:
         url = f"{MCP_BASE}/tools"
-        resp = requests.get(url, timeout=3)
+        resp = get_session().get(url, timeout=3)
         if resp.ok:
             j = resp.json()
             for t in j.get("tools", []):
@@ -137,7 +137,7 @@ def get_mcp_runtime_summary() -> str:
     parts: list[str] = []
     for title, tool in services:
         try:
-            resp = requests.post(f"{MCP_BASE}/tools/{tool}", json={}, timeout=3)
+            resp = get_session().post(f"{MCP_BASE}/tools/{tool}", json={}, timeout=3)
             if resp.ok:
                 j = resp.json()
                 summary = j.get("summary") or str(j)
@@ -166,7 +166,11 @@ def call_gemini_cli(user_request: str) -> ToolCommand:
         if isinstance(inner_raw, dict):
             return cast(ToolCommand, inner_raw)
         return inner_raw
-    print("Could not find a tool JSON in Gemini CLI output. Raw output:\n", out, file=sys.stderr)
+    print(
+        "Could not find a tool JSON in Gemini CLI output. Raw output:\n",
+        out,
+        file=sys.stderr,
+    )
     raise SystemExit(1)
 
 
@@ -202,7 +206,12 @@ def _run_gemini_subprocess(cmd: list[str], prompt: str) -> str:
         raise SystemExit(1)
 
     try:
-        proc = subprocess.run(cmd, input=prompt.encode("utf-8"), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.run(
+            cmd,
+            input=prompt.encode("utf-8"),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
     except FileNotFoundError as e:
         print(f"Failed to launch gemini command: {e}")
         raise
@@ -278,5 +287,9 @@ def call_gemini_api(user_request: str) -> ToolCommand:
     found = _extract_tool_from_genai_response(resp, text)
     if found is not None:
         return found
-    print("Could not extract tool JSON from Gemini API response. Response snapshot:", resp, file=sys.stderr)
+    print(
+        "Could not extract tool JSON from Gemini API response. Response snapshot:",
+        resp,
+        file=sys.stderr,
+    )
     raise SystemExit(1)

@@ -4,6 +4,7 @@ This module exposes a single helper `register_default_handlers(dispatcher)`
 which registers handlers for PolyHaven and Sketchfab operations so the MCP
 server can perform network actions directly when commands arrive.
 """
+
 import os
 from typing import Any, Dict
 
@@ -71,9 +72,7 @@ def _search_sketchfab_models(
         key = api_key or os.environ.get("SKETCHFAB_API_KEY")
         if not key:
             return {"error": "No Sketchfab API key configured"}
-        return sketchfab.search_models(
-            key, query, categories=categories, count=count, downloadable=downloadable
-        )
+        return sketchfab.search_models(key, query, categories=categories, count=count, downloadable=downloadable)
     except Exception as e:
         return {"error": str(e)}
 

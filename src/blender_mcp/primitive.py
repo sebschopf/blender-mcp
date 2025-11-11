@@ -2,6 +2,7 @@
 
 Contains pure/side-effecting helpers that generate Blender code and call MCP.
 """
+
 from __future__ import annotations
 
 import os
@@ -62,8 +63,7 @@ def handle_add_primitive_mapping(params: dict[str, Any] | None, config) -> Any:
             save_path_escaped = save_path.replace("\\", "\\\\")
             code += (
                 "\n# Auto-save from bridge\n"
-                "import bpy\n"
-                + "bpy.ops.wm.save_mainfile(filepath=r'" + save_path_escaped + "')\n"
+                "import bpy\n" + "bpy.ops.wm.save_mainfile(filepath=r'" + save_path_escaped + "')\n"
             )
 
     return call_mcp_tool("execute_blender_code", {"code": code})

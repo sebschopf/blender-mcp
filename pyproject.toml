@@ -35,8 +35,10 @@ strict = false
 
 [tool.ruff]
 line-length = 120
-# Exclude archival snapshots and top-level import-blockers to avoid tooling noise
-exclude = ["docs/archive/**", "copy_addon.py", "copy_server.py"]
+# Exclude archival snapshots and top-level import-blockers to avoid tooling noise.
+# We intentionally ignore both the docs archive and the in-repo `src/blender_mcp/archive`
+# snapshots which contain legacy/partial code not intended for linting.
+exclude = ["docs/archive/**", "src/blender_mcp/archive/**", "copy_addon.py", "copy_server.py"]
 # `select` and `extend-ignore` are configured in the new `tool.lint.ruff`
 
 [tool.black]

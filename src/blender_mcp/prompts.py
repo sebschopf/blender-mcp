@@ -13,7 +13,10 @@ def asset_creation_strategy() -> str:
             return tpl_path.read_text(encoding="utf-8")
     except Exception:
         logger = logging.getLogger("blender_mcp.prompts")
-        logger.debug("Could not load asset_creation_strategy template, using fallback", exc_info=True)
+        logger.debug(
+            "Could not load asset_creation_strategy template, using fallback",
+            exc_info=True,
+        )
 
     # Fallback short message for cases where the template is not available
     return (

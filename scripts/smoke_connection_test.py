@@ -10,8 +10,8 @@ repo_root = os.path.dirname(os.path.dirname(__file__))
 # external dependencies during this smoke test).
 
 
-connection_path = os.path.join(repo_root, "src", "blender_mcp", "connection.py")
-spec = importlib.util.spec_from_file_location("blender_mcp.connection", connection_path)
+connection_path = os.path.join(repo_root, "src", "blender_mcp", "connection_core.py")
+spec = importlib.util.spec_from_file_location("blender_mcp.connection_core", connection_path)
 connection_mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(connection_mod)
 BlenderConnection = connection_mod.BlenderConnection

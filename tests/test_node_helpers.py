@@ -4,6 +4,7 @@ These tests avoid importing `bpy` by providing small fakes that implement
 the minimal surface used by the helpers: nodes.new(...), links.new(src, dst),
 and sockets with `.links` lists. The goal is to validate wiring logic.
 """
+
 from __future__ import annotations
 
 from typing import List
@@ -85,6 +86,7 @@ class FakeLinks:
 
 def suppress_value_errors():
     """Context manager that ignores ValueError during removals."""
+
     class CM:
         def __enter__(self):
             return None

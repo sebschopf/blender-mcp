@@ -25,6 +25,7 @@ except Exception:  # pragma: no cover - fallback for test environments
         It's intentionally empty; callers only need it to be subscriptable
         and to appear as a valid type in annotations.
         """
+
         pass
 
 
@@ -72,6 +73,7 @@ def _get_blender_connection():
 
         return _g
     except Exception:  # pragma: no cover - in tests we'll patch this
+
         def _missing():
             raise ConnectionError("Blender server not available")
 
@@ -114,7 +116,9 @@ def get_scene_info(ctx: Context[Any, Any, Any]) -> str:
         try:
             from . import server as _server
 
-            _server.logger.error(f"Error getting scene info from Blender: {str(e)}")
+            _log = getattr(_server, "logger", None)
+            if _log is not None:
+                _log.error(f"Error getting scene info from Blender: {str(e)}")
         except Exception:
             pass
         return f"Error getting scene info: {str(e)}"
@@ -124,13 +128,18 @@ def get_scene_info(ctx: Context[Any, Any, Any]) -> str:
 def get_object_info(ctx: Context[Any, Any, Any], object_name: str) -> str:
     try:
         blender = get_blender_connection()
-        result = cast(Dict[str, Any], blender.send_command("get_object_info", {"name": object_name}))
+        result = cast(
+            Dict[str, Any],
+            blender.send_command("get_object_info", {"name": object_name}),
+        )
         return json.dumps(result, indent=2)
     except Exception as e:
         try:
             from . import server as _server
 
-            _server.logger.error(f"Error getting object info from Blender: {str(e)}")
+            _log = getattr(_server, "logger", None)
+            if _log is not None:
+                _log.error(f"Error getting object info from Blender: {str(e)}")
         except Exception:
             pass
         return f"Error getting object info: {str(e)}"
@@ -161,7 +170,9 @@ def get_viewport_screenshot(ctx: Context[Any, Any, Any], max_size: int = 800) ->
         try:
             from . import server as _server
 
-            _server.logger.error(f"Error capturing screenshot: {str(e)}")
+            _log = getattr(_server, "logger", None)
+            if _log is not None:
+                _log.error(f"Error capturing screenshot: {str(e)}")
         except Exception:
             pass
         raise Exception(f"Screenshot failed: {str(e)}")
@@ -177,7 +188,9 @@ def execute_blender_code(ctx: Context[Any, Any, Any], code: str) -> str:
         try:
             from . import server as _server
 
-            _server.logger.error(f"Error executing code: {str(e)}")
+            _log = getattr(_server, "logger", None)
+            if _log is not None:
+                _log.error(f"Error executing code: {str(e)}")
         except Exception:
             pass
         return f"Error executing code: {str(e)}"
