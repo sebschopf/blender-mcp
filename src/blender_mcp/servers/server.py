@@ -10,7 +10,8 @@ import json
 import logging
 from typing import Any, Dict, Optional
 
-from ..dispatcher import Dispatcher, register_default_handlers
+from blender_mcp.dispatchers.dispatcher import Dispatcher, register_default_handlers
+
 from ..endpoints import register_builtin_endpoints
 
 logger = logging.getLogger(__name__)

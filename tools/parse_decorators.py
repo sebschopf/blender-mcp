@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 p = Path(r"c:\Users\sebas\Documents\MCP_OUtils\blender-mcp\copy_server.py")
-text = p.read_text(encoding='utf-8')
+text = p.read_text(encoding="utf-8")
 lines = text.splitlines()
 
 # Each tuple: (decorator, func_name, signature, def_line_no, doc_summary)
@@ -109,7 +109,14 @@ while i < len(lines):
                             doc_summary = ml
                             break
                     break
-                elif l.startswith("return") or l.startswith("async") or l.startswith("@") or l.startswith("pass") or l.startswith("raise") or l.startswith("try"):
+                elif (
+                    l.startswith("return")
+                    or l.startswith("async")
+                    or l.startswith("@")
+                    or l.startswith("pass")
+                    or l.startswith("raise")
+                    or l.startswith("try")
+                ):
                     break
                 elif l.strip() == "":
                     k += 1
@@ -121,7 +128,6 @@ while i < len(lines):
             i = j + 1
         else:
             i += 1
-
 
     # print markdown table
     print("| Decorator | Function Name | Signature | Def line | Docstring summary |")

@@ -72,16 +72,12 @@ def _search_sketchfab_models(
         key = api_key or os.environ.get("SKETCHFAB_API_KEY")
         if not key:
             return {"error": "No Sketchfab API key configured"}
-        return sketchfab.search_models(
-            key, query, categories=categories, count=count, downloadable=downloadable
-        )
+        return sketchfab.search_models(key, query, categories=categories, count=count, downloadable=downloadable)
     except Exception as e:
         return {"error": str(e)}
 
 
-def _download_sketchfab_model(
-    api_key: str | None = None, uid: str | None = None
-) -> Dict[str, Any]:
+def _download_sketchfab_model(api_key: str | None = None, uid: str | None = None) -> Dict[str, Any]:
     try:
         key = api_key or os.environ.get("SKETCHFAB_API_KEY")
         if not key:

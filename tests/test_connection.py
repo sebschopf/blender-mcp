@@ -4,7 +4,7 @@ import struct
 
 import pytest
 
-from blender_mcp.connection import BlenderConnection, ChunkedJSONReassembler
+from blender_mcp.services.connection import BlenderConnection, ChunkedJSONReassembler
 
 
 def pack_frame(obj: object) -> bytes:
@@ -58,6 +58,7 @@ def test_receive_timeout_raises():
         a.close()
         b.close()
 
+
 def test_reassembler_single_message():
     r = ChunkedJSONReassembler()
     r.feed(b'{"a": 1}\n')
@@ -70,7 +71,7 @@ def test_reassembler_split_chunks():
     r.feed(b'{"a":')
     # no complete message yet
     assert r.pop_messages() == []
-    r.feed(b' 2}\n')
+    r.feed(b" 2}\n")
     assert r.pop_messages() == [{"a": 2}]
 
 
@@ -83,7 +84,7 @@ def test_reassembler_multiple_messages():
 
 def test_reassembler_ignores_empty_lines():
     r = ChunkedJSONReassembler()
-    r.feed(b'\n')
+    r.feed(b"\n")
     assert r.pop_messages() == []
 
 
@@ -101,7 +102,7 @@ def test_blender_connection_iter_chunks():
 
 def test_reassembler_bad_json_raises():
     r = ChunkedJSONReassembler()
-    r.feed(b'{bad json}\n')
+    r.feed(b"{bad json}\n")
     with pytest.raises(ValueError):
         r.pop_messages()
 

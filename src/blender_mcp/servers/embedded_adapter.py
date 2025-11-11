@@ -37,8 +37,8 @@ def start_server_process(command: Optional[Iterable[str]] = None, cwd: Optional[
     cmd_list = list(command)
     logger.info("Starting external server: %s", cmd_list)
     # Start detached process group so child won't be killed when parent exits
-    proc = subprocess.Popen(cmd_list, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return proc
+    # Return the process directly; the local assignment is unnecessary.
+    return subprocess.Popen(cmd_list, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def stop_server_process(proc: subprocess.Popen[Any], timeout: float = 5.0) -> None:

@@ -32,4 +32,3 @@ def test_call_mcp_tool_with_session():
     res = mcp_client.call_mcp_tool("test-tool", {"x": 1}, session=sess)
     assert res == {"result": "ok"}
     assert len(sess.posts) == 1
-

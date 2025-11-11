@@ -1,10 +1,11 @@
 from typing import Any, List, Tuple, cast
+
 import requests
 
 from blender_mcp.hyper3d import (
     create_rodin_job_fal_ai,
-    import_generated_asset_fal_ai,
     create_rodin_job_main_site,
+    import_generated_asset_fal_ai,
 )
 
 
@@ -51,4 +52,3 @@ def test_create_rodin_job_main_site_uses_session() -> None:
     assert isinstance(res, dict)
     assert res.get("id") == "job-1"
     assert len(sess.posts) == 1
-

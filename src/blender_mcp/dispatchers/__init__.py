@@ -5,14 +5,14 @@ and centralizes re-exports so callers can use `from
 blender_mcp.dispatchers import Dispatcher`.
 """
 
+from .command_dispatcher import CommandDispatcher as CommandDispatcherImpl
 from .dispatcher import (
     Dispatcher,
-    register_default_handlers,
     HandlerError,
     HandlerNotFound,
+    register_default_handlers,
     run_bridge,
 )
-from .command_dispatcher import CommandDispatcher as CommandDispatcherImpl
 
 # Maintain the historical name at package level
 CommandDispatcher = CommandDispatcherImpl

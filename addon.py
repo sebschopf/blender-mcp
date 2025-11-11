@@ -75,9 +75,7 @@ class BlenderMCPServer:
             # instantiate the real server and keep as delegate
             self._delegate = Real(*args, **kwargs)
         except Exception as e:  # pragma: no cover - environment dependent
-            raise RuntimeError(
-                "BlenderMCPServer is unavailable; install the package version"
-            ) from e
+            raise RuntimeError("BlenderMCPServer is unavailable; install the package version") from e
 
     def __getattr__(self, item):
         # Delegate attribute access to the real server instance

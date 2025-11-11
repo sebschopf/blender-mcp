@@ -14,8 +14,8 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-from ..connection import BlenderConnectionNetwork
-from ..dispatcher import Dispatcher
+from blender_mcp.dispatchers.dispatcher import Dispatcher
+from blender_mcp.services.connection import BlenderConnectionNetwork
 
 logger = logging.getLogger(__name__)
 
@@ -78,9 +78,7 @@ def execute_blender_code(params: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "error", "message": str(e)}
 
 
-def send_command_over_network(
-    host: str, port: int, command_type: str, params: Optional[Dict[str, Any]] = None
-) -> Any:
+def send_command_over_network(host: str, port: int, command_type: str, params: Optional[Dict[str, Any]] = None) -> Any:
     """Helper to send a command to Blender over TCP and return the result.
 
     This function constructs a `BlenderConnectionNetwork`, connects, sends

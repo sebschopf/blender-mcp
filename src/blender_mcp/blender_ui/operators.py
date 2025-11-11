@@ -11,9 +11,7 @@ from typing import Optional
 _server_proc: Optional[object] = None
 
 
-RODIN_FREE_TRIAL_KEY = (
-    "k9TcfFoEhNd9cCPP2guHAHHHkctZHIRhZDywZ1euGUXwihbYLpOjQhofby80NJez"
-)
+RODIN_FREE_TRIAL_KEY = "k9TcfFoEhNd9cCPP2guHAHHHkctZHIRhZDywZ1euGUXwihbYLpOjQhofby80NJez"
 
 
 def _has_real_bpy() -> bool:
@@ -29,8 +27,8 @@ def _has_real_bpy() -> bool:
 
 if _has_real_bpy():
     import importlib
-    bpy = importlib.import_module("bpy")  # type: ignore
 
+    bpy = importlib.import_module("bpy")  # type: ignore
 
     class BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey(bpy.types.Operator):
         bl_idname = "blendermcp.set_hyper3d_free_trial_api_key"
@@ -42,13 +40,12 @@ if _has_real_bpy():
             self.report({"INFO"}, "API Key set successfully!")
             return {"FINISHED"}
 
-
     class BLENDERMCP_OT_StartServer(bpy.types.Operator):
         bl_idname = "blendermcp.start_server"
         bl_label = "Connect to Gemini"
         bl_description = "Start the BlenderMCP server to connect with Gemini"
 
-        def execute(self, context):
+        def execute(self, context):  # noqa: C901
             scene = context.scene
             global _server_proc
 
@@ -59,9 +56,10 @@ if _has_real_bpy():
                 bpy_mod = sys.modules.get("bpy", bpy)
 
                 prefs_container = None
-                if getattr(bpy_mod, "context", None) is not None and getattr(
-                    bpy_mod.context, "preferences", None
-                ) is not None:
+                if (
+                    getattr(bpy_mod, "context", None) is not None
+                    and getattr(bpy_mod.context, "preferences", None) is not None
+                ):
                     prefs_container = bpy_mod.context.preferences
                 elif getattr(bpy_mod, "preferences", None) is not None:
                     prefs_container = bpy_mod.preferences
@@ -87,9 +85,9 @@ if _has_real_bpy():
 
             # Try to start an external server adapter (lazy import)
             try:
-                # Import the adapter from the blender_mcp package root so tests
-                # that monkeypatch `blender_mcp.embedded_server_adapter` still work.
-                from blender_mcp import embedded_server_adapter as adapter
+                # Import the adapter from its new package location.
+                # Tests and callers should patch `blender_mcp.servers.embedded_adapter`.
+                from blender_mcp.servers import embedded_adapter as adapter
 
                 proc = adapter.start_server_process()
                 _server_proc = proc
@@ -98,14 +96,11 @@ if _has_real_bpy():
                 except Exception:
                     scene.blendermcp_server_pid = 0
                 scene.blendermcp_server_running = True
-                self.report(
-                    {"INFO"}, "Started external MCP server (or launched helper script)"
-                )
+                self.report({"INFO"}, "Started external MCP server (or launched helper script)")
                 return {"FINISHED"}
             except Exception as e:
                 self.report({"ERROR"}, f"Failed to start external MCP server: {e}")
                 return {"CANCELLED"}
-
 
     class BLENDERMCP_OT_StopServer(bpy.types.Operator):
         bl_idname = "blendermcp.stop_server"
@@ -115,22 +110,19 @@ if _has_real_bpy():
             scene = context.scene
             global _server_proc
             try:
-                from blender_mcp import embedded_server_adapter as adapter
+                from blender_mcp.servers import embedded_adapter as adapter
 
                 if _server_proc is not None:
                     adapter.stop_server_process(_server_proc)
                     _server_proc = None
                 scene.blendermcp_server_pid = 0
                 scene.blendermcp_server_running = False
-                self.report(
-                    {"INFO"}, "Stopped external MCP server (if it was started by the addon)"
-                )
+                self.report({"INFO"}, "Stopped external MCP server (if it was started by the addon)")
                 return {"FINISHED"}
             except Exception as e:
                 scene.blendermcp_server_running = False
                 self.report({"ERROR"}, f"Failed to stop external MCP server: {e}")
                 return {"CANCELLED"}
-
 
     class BLENDERMCP_OT_ApplyRemoteExecSetting(bpy.types.Operator):
         bl_idname = "blendermcp.apply_remote_exec_setting"
@@ -150,6 +142,7 @@ if _has_real_bpy():
             except Exception as e:
                 self.report({"ERROR"}, f"Failed to apply setting: {e}")
                 return {"CANCELLED"}
+
 else:
     # Fallback placeholders when bpy is not present. These are simple classes
     # that mirror the public names; they are not real Operators and should not
@@ -158,14 +151,11 @@ else:
     class BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey:  # type: ignore
         pass
 
-
     class BLENDERMCP_OT_StartServer:  # type: ignore
         pass
 
-
     class BLENDERMCP_OT_StopServer:  # type: ignore
         pass
-
 
     class BLENDERMCP_OT_ApplyRemoteExecSetting:  # type: ignore
         pass

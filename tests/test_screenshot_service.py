@@ -44,8 +44,10 @@ def test_screenshot_success(monkeypatch):
 
 def test_screenshot_helper_raises(monkeypatch):
     fake = types.ModuleType("bpy")
+
     def bad():
         raise RuntimeError("boom")
+
     fake.capture_viewport_bytes = bad
     monkeypatch.setitem(sys.modules, "bpy", fake)
     importlib.reload(screenshot)

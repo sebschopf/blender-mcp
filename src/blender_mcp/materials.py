@@ -103,9 +103,7 @@ def build_material_spec(
         nid = add_tex_node("displacement", mapping[key])
         nodes.append(displacement_node("displacement_node"))
         links.append(make_link(nid, "Color", "displacement_node", "Height"))
-        links.append(
-            make_link("displacement_node", "Displacement", "output", "Displacement")
-        )
+        links.append(make_link("displacement_node", "Displacement", "output", "Displacement"))
 
     spec: Dict[str, Any] = {
         "name": material_name,
@@ -156,9 +154,7 @@ def _build_spec_from_keys(keys: Sequence[str]) -> Dict[str, Any]:
     return spec
 
 
-def create_material_in_blender(
-    images_map: Dict[str, str], material_name: str
-) -> Optional[str]:
+def create_material_in_blender(images_map: Dict[str, str], material_name: str) -> Optional[str]:
     """Create the material in Blender if `bpy` is importable.
 
     Returns the created material name or None if bpy is not available.
@@ -182,9 +178,7 @@ def create_material_in_blender(
     spec = build_material_spec(images_map, material_name)
     node_objs = {}
     for n in spec["nodes"]:
-        node = (
-            nodes.new(type=n["type"]) if hasattr(nodes, "new") else nodes.new(n["type"])
-        )
+        node = nodes.new(type=n["type"]) if hasattr(nodes, "new") else nodes.new(n["type"])
         # Some node types don't expose an 'image' attribute; set name and optionally image
         try:
             node.name = n["id"]
@@ -192,9 +186,7 @@ def create_material_in_blender(
             pass
         if "image" in n and hasattr(node, "image"):
             try:
-                node.image = bpy.data.images.get(n["image"]) or bpy.data.images.load(
-                    n["image"]
-                )
+                node.image = bpy.data.images.get(n["image"]) or bpy.data.images.load(n["image"])
             except Exception:
                 # Image loading may fail in tests or if path invalid; ignore
                 pass

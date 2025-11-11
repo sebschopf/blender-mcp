@@ -91,9 +91,7 @@ def get_local_tool_catalog() -> str:
     tools = []
     import re as _re
 
-    for m in _re.finditer(
-        r"def\s+(\w+)\s*\(([^)]*)\)\s*:\s*(?:\"\"\"([\s\S]*?)\"\"\"|)", txt
-    ):
+    for m in _re.finditer(r"def\s+(\w+)\s*\(([^)]*)\)\s*:\s*(?:\"\"\"([\s\S]*?)\"\"\"|)", txt):
         name = m.group(1)
         sig = m.group(2).strip()
         doc = (m.group(3) or "").strip().split("\n")[0] if m.group(3) else ""
@@ -134,9 +132,7 @@ def get_mcp_runtime_summary() -> str:
                     enabled = res.get("enabled")
                     msg = res.get("message") or ""
                     if enabled is not None:
-                        summary = (
-                            f"enabled={enabled}; {msg}" if msg else f"enabled={enabled}"
-                        )
+                        summary = f"enabled={enabled}; {msg}" if msg else f"enabled={enabled}"
                     else:
                         # Fallback – stringify
                         summary = str(res)
@@ -343,7 +339,9 @@ def handle_add_primitive_mapping(params: dict, config):
             save_path = os.path.join(save_dir, filename)
             # Ensure Windows-friendly path escaping
             save_path_escaped = save_path.replace("\\", "\\\\")
-            code += f"\n# Auto-save from bridge\nimport bpy\nbpy.ops.wm.save_mainfile(filepath=r'{save_path_escaped}')\n"
+            code += (
+                f"\n# Auto-save from bridge\nimport bpy\nbpy.ops.wm.save_mainfile(filepath=r'{save_path_escaped}')\n"
+            )
 
     # Call execute_blender_code via MCP
     print("Sending generated Blender code to MCP...")
@@ -453,9 +451,7 @@ def main():
 
         if any(x in t_lower for x in ("dice", "die", "d10")):
             try:
-                print(
-                    "Tool name looks like a dice/die intent — using local mapping to generate Blender code..."
-                )
+                print("Tool name looks like a dice/die intent — using local mapping to generate Blender code...")
                 mapped_result = handle_add_primitive_mapping(params or {})
                 print(
                     "Fallback mapping handler result:",
@@ -476,9 +472,7 @@ def main():
                 file=sys.stderr,
             )
             print(
-                "Il semble que le serveur MCP n'expose pas un outil nommé '"
-                + str(tool)
-                + "'.",
+                "Il semble que le serveur MCP n'expose pas un outil nommé '" + str(tool) + "'.",
                 file=sys.stderr,
             )
             print(
@@ -492,7 +486,7 @@ if __name__ == "__main__":
     # The CLI script is now a thin wrapper that builds the BridgeConfig and
     # delegates orchestration to the package-level dispatcher. This keeps the
     # script import-light and the orchestration testable.
-    from blender_mcp.dispatcher import run_bridge
+    from blender_mcp.dispatchers.dispatcher import run_bridge
 
     # Parse flags in main() earlier and build config; reuse existing logic
     use_api = False

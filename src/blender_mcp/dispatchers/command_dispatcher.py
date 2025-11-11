@@ -8,9 +8,7 @@ from typing import Any, Callable, Dict, Optional
 
 
 class CommandDispatcher:
-    def __init__(
-        self, handlers: Optional[Dict[str, Callable[..., Any]]] = None
-    ) -> None:
+    def __init__(self, handlers: Optional[Dict[str, Callable[..., Any]]] = None) -> None:
         # handlers: mapping from command type -> callable(**params)
         self.handlers: Dict[str, Callable[..., Any]] = {}
         if handlers:

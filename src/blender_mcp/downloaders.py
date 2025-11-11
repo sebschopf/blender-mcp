@@ -7,15 +7,14 @@ can handle/report them. They make it easier to mock network calls in tests.
 from __future__ import annotations
 
 import io
+import logging
 import os
+import time
 import zipfile
 from typing import Any, Mapping, Optional
 
 import requests
-import time
-import logging
-from requests.exceptions import RequestException, HTTPError
-from typing import Any
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +69,7 @@ def download_bytes(
             raise RuntimeError("download failed")
 
         # Sleep with exponential backoff before retrying
-        sleep_for = backoff_factor * (2 ** attempt)
+        sleep_for = backoff_factor * (2**attempt)
         logger.debug(
             "download_bytes: attempt %s failed, sleeping %s seconds before retry (%s)",
             attempt,

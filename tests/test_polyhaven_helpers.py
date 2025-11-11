@@ -31,13 +31,13 @@ def test_fetch_files_data_success(monkeypatch):
     called = {}
 
     def fake_get(url, headers=None, timeout=None):
-        called['url'] = url
+        called["url"] = url
         return DummyResponse(200, {"color": {"1k": {"jpg": {"url": "https://example.com/c.jpg"}}}})
 
     monkeypatch.setattr(poly.requests, "get", fake_get)
     data = poly.fetch_files_data("asset123")
     assert "color" in data
-    assert called['url'].endswith("/files/asset123")
+    assert called["url"].endswith("/files/asset123")
 
 
 def test_find_texture_map_urls():
@@ -53,9 +53,7 @@ def test_find_texture_map_urls():
 
 
 def test_find_model_file_info():
-    files_data = {
-        "gltf": {"1k": {"gltf": {"url": "https://a/model.gltf", "include": {}}}}
-    }
+    files_data = {"gltf": {"1k": {"gltf": {"url": "https://a/model.gltf", "include": {}}}}}
     fi = poly.find_model_file_info(files_data, "gltf", "1k")
     assert fi is not None
     assert fi.get("url").endswith("model.gltf")
@@ -74,14 +72,12 @@ def test_prepare_model_files(monkeypatch, tmp_path):
     # Prepare a fake file_info structure with includes
     file_info = {
         "url": "https://example.com/models/main.gltf",
-        "include": {
-            "textures/tex.png": {"url": "https://example.com/models/textures/tex.png"}
-        },
+        "include": {"textures/tex.png": {"url": "https://example.com/models/textures/tex.png"}},
     }
 
     def fake_download(url, timeout=None):
         # Return deterministic bytes depending on url
-        return (b"MAIN" if url.endswith("main.gltf") else b"INC")
+        return b"MAIN" if url.endswith("main.gltf") else b"INC"
 
     monkeypatch.setattr(poly, "download_bytes", fake_download)
 
@@ -103,24 +99,24 @@ def test_fetch_categories(monkeypatch):
     called = {}
 
     def fake_get(url, headers=None, timeout=None):
-        called['url'] = url
+        called["url"] = url
         return DummyResponse(200, {"hdris": 10, "textures": 20})
 
     monkeypatch.setattr(poly.requests, "get", fake_get)
     cats = poly.fetch_categories("hdris")
     assert isinstance(cats, dict)
-    assert called['url'].endswith("/categories/hdris")
+    assert called["url"].endswith("/categories/hdris")
 
 
 def test_search_assets(monkeypatch):
     called = {}
 
     def fake_get(url, params=None, headers=None, timeout=None):
-        called['url'] = url
-        called['params'] = params
+        called["url"] = url
+        called["params"] = params
         return DummyResponse(200, {"asset1": {"name": "A"}, "asset2": {"name": "B"}})
 
     monkeypatch.setattr(poly.requests, "get", fake_get)
     res = poly.search_assets({"type": "hdris", "categories": "sky"})
     assert "asset1" in res
-    assert called['params']["type"] == "hdris"
+    assert called["params"]["type"] == "hdris"

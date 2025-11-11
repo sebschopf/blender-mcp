@@ -8,25 +8,21 @@ during the ongoing refactor.
 
 from __future__ import annotations
 
-import json
 import logging
-import os
-import socket
-from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 try:
-    # Prefer the consolidated implementation; import the uniquely named
-    # module to avoid collision with `services.connection` packages.
+    # Prefer the consolidated implementation from the src package. Import the
+    # concrete BlenderConnection implementation and helpers used by tests.
     from blender_mcp.connection_core import (
         BlenderConnection,
         get_blender_connection,
         server_lifespan,
     )
+    import socket  # expose the stdlib socket module so tests can monkeypatch it
 except Exception:
-    # If import fails, raise early so the developer can correct environment.
+    # If import fails, re-raise to help diagnose environment issues.
     raise
 
 
@@ -36,3 +32,11 @@ try:
     mcp = FastMCP("BlenderMCP", lifespan=server_lifespan)
 except Exception:
     mcp = None
+
+
+__all__ = [
+    "BlenderConnection",
+    "get_blender_connection",
+    "server_lifespan",
+    "mcp",
+]

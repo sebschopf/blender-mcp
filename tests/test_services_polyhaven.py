@@ -14,9 +14,7 @@ def test_format_categories_output():
 
 def test_format_search_assets():
     result = {
-        "assets": {
-            "id1": {"name": "Tex1", "type": 1, "categories": ["c1"], "download_count": 3}
-        },
+        "assets": {"id1": {"name": "Tex1", "type": 1, "categories": ["c1"], "download_count": 3}},
         "total_count": 1,
         "returned_count": 1,
     }

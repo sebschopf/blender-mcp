@@ -1,10 +1,11 @@
 import builtins
+import importlib
 from typing import Any, Dict
 
 import pytest
 
-from blender_mcp import dispatcher
-from blender_mcp.dispatcher import Dispatcher, _CommandDispatcherCompat
+dispatcher = importlib.import_module("blender_mcp.dispatchers.dispatcher")
+from blender_mcp.dispatchers.dispatcher import Dispatcher, _CommandDispatcherCompat
 
 
 def test_run_bridge_calls_local_handler(monkeypatch):

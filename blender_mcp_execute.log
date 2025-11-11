@@ -298,3 +298,231 @@ result = {'value': 42}
 2025-11-11 11:34:02,347 ERROR bpy not available; cannot execute code
 2025-11-11 11:34:02,348 INFO execute_blender_code request: len=11 code=result = 42
 2025-11-11 11:34:02,348 INFO execute_blender_code succeeded: result=42
+2025-11-11 11:55:49,469 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 11:55:49,471 ERROR bpy not available; cannot execute code
+2025-11-11 11:55:49,472 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 11:55:49,472 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 11:55:49,473 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 11:55:49,473 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 11:55:49,519 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 11:55:49,519 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 11:55:49,521 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 11:55:49,521 ERROR bpy not available; cannot execute code
+2025-11-11 11:55:49,522 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 11:55:49,523 INFO execute_blender_code succeeded: result=42
+2025-11-11 12:00:02,490 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 12:00:02,491 ERROR bpy not available; cannot execute code
+2025-11-11 12:00:02,492 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 12:00:02,492 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 12:00:02,493 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 12:00:02,494 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 12:00:02,551 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 12:00:02,551 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 12:00:02,552 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 12:00:02,552 ERROR bpy not available; cannot execute code
+2025-11-11 12:00:02,555 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 12:00:02,555 INFO execute_blender_code succeeded: result=42
+2025-11-11 12:48:10,447 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 12:48:10,448 ERROR bpy not available; cannot execute code
+2025-11-11 12:48:10,450 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 12:48:10,450 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 12:48:10,451 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 12:48:10,468 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 12:48:10,546 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 12:48:10,546 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 12:48:10,546 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 12:48:10,547 ERROR bpy not available; cannot execute code
+2025-11-11 12:48:10,548 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 12:48:10,548 INFO execute_blender_code succeeded: result=42
+2025-11-11 13:44:34,169 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 13:44:34,170 ERROR bpy not available; cannot execute code
+2025-11-11 13:44:34,172 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 13:44:34,172 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 13:44:34,175 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 13:44:34,176 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 13:44:34,241 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 13:44:34,241 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 13:44:34,243 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 13:44:34,244 ERROR bpy not available; cannot execute code
+2025-11-11 13:44:34,246 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 13:44:34,246 INFO execute_blender_code succeeded: result=42
+2025-11-11 14:10:47,387 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 14:10:47,388 ERROR bpy not available; cannot execute code
+2025-11-11 14:10:47,390 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 14:10:47,391 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 14:10:47,392 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 14:10:47,393 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 14:10:47,450 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 14:10:47,451 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 14:10:47,452 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 14:10:47,452 ERROR bpy not available; cannot execute code
+2025-11-11 14:10:47,453 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 14:10:47,453 INFO execute_blender_code succeeded: result=42
+2025-11-11 14:14:33,804 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 14:14:33,805 ERROR bpy not available; cannot execute code
+2025-11-11 14:14:33,806 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 14:14:33,806 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 14:14:33,807 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 14:14:33,808 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 14:14:33,860 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 14:14:33,860 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 14:14:33,861 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 14:14:33,861 ERROR bpy not available; cannot execute code
+2025-11-11 14:14:33,863 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 14:14:33,863 INFO execute_blender_code succeeded: result=42
+2025-11-11 14:50:53,530 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 14:50:53,531 ERROR bpy not available; cannot execute code
+2025-11-11 14:50:53,533 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 14:50:53,533 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 14:50:53,534 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 14:50:53,534 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 14:50:53,583 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 14:50:53,583 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 14:50:53,584 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 14:50:53,585 ERROR bpy not available; cannot execute code
+2025-11-11 14:50:53,587 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 14:50:53,587 INFO execute_blender_code succeeded: result=42
+2025-11-11 14:57:32,591 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 14:57:32,592 ERROR bpy not available; cannot execute code
+2025-11-11 14:57:32,594 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 14:57:32,594 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 14:57:32,596 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 14:57:32,597 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 14:57:32,645 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 14:57:32,645 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 14:57:32,646 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 14:57:32,647 ERROR bpy not available; cannot execute code
+2025-11-11 14:57:32,648 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 14:57:32,648 INFO execute_blender_code succeeded: result=42
+2025-11-11 16:10:36,680 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 16:10:36,681 ERROR bpy not available; cannot execute code
+2025-11-11 16:10:36,683 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 16:10:36,683 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 16:10:36,684 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 16:10:36,685 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 16:10:36,743 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 16:10:36,743 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 16:10:36,744 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 16:10:36,744 ERROR bpy not available; cannot execute code
+2025-11-11 16:10:36,746 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 16:10:36,746 INFO execute_blender_code succeeded: result=42
+2025-11-11 16:13:02,615 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 16:13:02,616 ERROR bpy not available; cannot execute code
+2025-11-11 16:13:02,617 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 16:13:02,617 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 16:13:02,618 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 16:13:02,619 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 16:13:02,665 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 16:13:02,665 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 16:13:02,666 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 16:13:02,667 ERROR bpy not available; cannot execute code
+2025-11-11 16:13:02,668 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 16:13:02,668 INFO execute_blender_code succeeded: result=42
+2025-11-11 16:25:02,546 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 16:25:02,547 ERROR bpy not available; cannot execute code
+2025-11-11 16:25:02,548 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 16:25:02,548 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 16:25:02,549 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 16:25:02,550 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 16:25:02,607 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 16:25:02,607 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 16:25:02,608 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 16:25:02,608 ERROR bpy not available; cannot execute code
+2025-11-11 16:25:02,611 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 16:25:02,611 INFO execute_blender_code succeeded: result=42
+2025-11-11 16:44:23,503 INFO execute_blender_code request: len=14 code=result = 1 + 1
+2025-11-11 16:44:23,504 ERROR bpy not available; cannot execute code
+2025-11-11 16:44:23,505 INFO execute_blender_code request: len=13 code=result = 'ok'
+2025-11-11 16:44:23,505 INFO execute_blender_code succeeded: result='ok'
+2025-11-11 16:44:23,507 INFO execute_blender_code request: len=24 code=raise ValueError('boom')
+2025-11-11 16:44:23,508 ERROR execute_blender_code failed: boom
+Traceback (most recent call last):
+  File "C:\Users\sebas\Documents\MCP_Outils\blender-mcp\src\blender_mcp\services\execute.py", line 71, in execute_blender_code
+    exec(code, {"bpy": bpy}, local_ns)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1, in <module>
+ValueError: boom
+2025-11-11 16:44:23,565 INFO execute_blender_code request: len=36 code=bpy.OK = True
+result = {'value': 42}
+2025-11-11 16:44:23,565 INFO execute_blender_code succeeded: result={'value': 42}
+2025-11-11 16:44:23,566 INFO execute_blender_code request: len=10 code=result = 1
+2025-11-11 16:44:23,566 ERROR bpy not available; cannot execute code
+2025-11-11 16:44:23,568 INFO execute_blender_code request: len=11 code=result = 42
+2025-11-11 16:44:23,568 INFO execute_blender_code succeeded: result=42

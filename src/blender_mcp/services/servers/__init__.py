@@ -5,23 +5,24 @@ concerns here. These modules must not import `bpy` and should call service-
 facing modules under `src/blender_mcp/services`.
 """
 
-from ... import server as _server
-from ..connection import (
-	BlenderConnection,
-	BlenderConnectionNetwork,
-	ChunkedJSONReassembler,
-	LengthPrefixedReassembler,
-	SocketBlenderConnection,
+from blender_mcp.services.connection import (
+    BlenderConnection,
+    BlenderConnectionNetwork,
+    ChunkedJSONReassembler,
+    LengthPrefixedReassembler,
+    SocketBlenderConnection,
 )
 
+from ... import server as _server
+
 __all__ = [
-	"_process_bbox",
-	"BlenderMCPServer",
-	"ChunkedJSONReassembler",
-	"LengthPrefixedReassembler",
-	"SocketBlenderConnection",
-	"BlenderConnectionNetwork",
-	"BlenderConnection",
+    "_process_bbox",
+    "BlenderMCPServer",
+    "ChunkedJSONReassembler",
+    "LengthPrefixedReassembler",
+    "SocketBlenderConnection",
+    "BlenderConnectionNetwork",
+    "BlenderConnection",
 ]
 
 # Re-export server helpers from top-level server module

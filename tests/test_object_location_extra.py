@@ -18,7 +18,7 @@ def _make_fake_bpy_with_obj(location):
 
 
 def test_location_decimal(monkeypatch):
-    fake = _make_fake_bpy_with_obj(types.SimpleNamespace(x=Decimal('1.1'), y=Decimal('2.2'), z=Decimal('3.3')))
+    fake = _make_fake_bpy_with_obj(types.SimpleNamespace(x=Decimal("1.1"), y=Decimal("2.2"), z=Decimal("3.3")))
     monkeypatch.setitem(sys.modules, "bpy", fake)
     importlib.reload(object_service)
 
@@ -28,7 +28,7 @@ def test_location_decimal(monkeypatch):
 
 
 def test_location_array_sequence(monkeypatch):
-    arr = array.array('d', [4.0, 5.0, 6.0])
+    arr = array.array("d", [4.0, 5.0, 6.0])
     fake = _make_fake_bpy_with_obj(arr)
     monkeypatch.setitem(sys.modules, "bpy", fake)
     importlib.reload(object_service)
@@ -39,7 +39,7 @@ def test_location_array_sequence(monkeypatch):
 
 
 def test_location_non_numeric(monkeypatch):
-    fake = _make_fake_bpy_with_obj(types.SimpleNamespace(x='a', y='b', z='c'))
+    fake = _make_fake_bpy_with_obj(types.SimpleNamespace(x="a", y="b", z="c"))
     monkeypatch.setitem(sys.modules, "bpy", fake)
     importlib.reload(object_service)
 

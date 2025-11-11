@@ -38,9 +38,7 @@ class Image:  # simple fallback used in tests
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-def _get_mcp_tool_decorator() -> (
-    Callable[..., Callable[[Callable[..., Any]], Callable[..., Any]]]
-):
+def _get_mcp_tool_decorator() -> Callable[..., Callable[[Callable[..., Any]], Callable[..., Any]]]:
     try:
         from . import server as _server
 
@@ -52,9 +50,7 @@ def _get_mcp_tool_decorator() -> (
         pass
 
     # fallback no-op decorator
-    def _noop(
-        *args: Any, **kwargs: Any
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def _noop(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def _inner(f: Callable[..., Any]) -> Callable[..., Any]:
             return f
 
@@ -63,9 +59,7 @@ def _get_mcp_tool_decorator() -> (
     return _noop
 
 
-_tool: Callable[..., Callable[[Callable[..., Any]], Callable[..., Any]]] = (
-    _get_mcp_tool_decorator()
-)
+_tool: Callable[..., Callable[[Callable[..., Any]], Callable[..., Any]]] = _get_mcp_tool_decorator()
 
 
 def _get_blender_connection():
@@ -99,21 +93,13 @@ def get_blender_connection():
 # `mcp` object (if present) will be used by other code paths; this shim keeps
 # static analyzers and tests happy.
 class _MCPShim:
-    def tool(
-        self, *args: Any, **kwargs: Any
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def tool(self, *args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         # Cast since _tool may be untyped at runtime; we guarantee a decorator-like
         # callable is returned by _get_mcp_tool_decorator.
-        return cast(
-            Callable[..., Callable[[Callable[..., Any]], Callable[..., Any]]], _tool
-        )(*args, **kwargs)
+        return cast(Callable[..., Callable[[Callable[..., Any]], Callable[..., Any]]], _tool)(*args, **kwargs)
 
-    def prompt(
-        self, *args: Any, **kwargs: Any
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        return cast(
-            Callable[..., Callable[[Callable[..., Any]], Callable[..., Any]]], _tool
-        )(*args, **kwargs)
+    def prompt(self, *args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        return cast(Callable[..., Callable[[Callable[..., Any]], Callable[..., Any]]], _tool)(*args, **kwargs)
 
 
 mcp = _MCPShim()
@@ -190,9 +176,7 @@ def get_viewport_screenshot(ctx: Context[Any, Any, Any], max_size: int = 800) ->
 def execute_blender_code(ctx: Context[Any, Any, Any], code: str) -> str:
     try:
         blender = get_blender_connection()
-        result = cast(
-            Dict[str, Any], blender.send_command("execute_code", {"code": code})
-        )
+        result = cast(Dict[str, Any], blender.send_command("execute_code", {"code": code}))
         return f"Code executed successfully: {result.get('result', '')}"
     except Exception as e:
         try:

@@ -56,7 +56,9 @@ def make_fake_bpy(allow_pref: bool):
 
     # minimal preferences with addon prefs map used by the UI
     fake_pref = types.SimpleNamespace()
-    fake_pref.addons = {"blender_mcp": types.SimpleNamespace(preferences=types.SimpleNamespace(allow_ui_start_server=allow_pref))}
+    fake_pref.addons = {
+        "blender_mcp": types.SimpleNamespace(preferences=types.SimpleNamespace(allow_ui_start_server=allow_pref))
+    }
     fake.preferences = fake_pref
 
     return fake
@@ -75,6 +77,7 @@ def test_start_server_respects_pref(monkeypatch):
     sys.modules["bpy.props"] = props_mod
 
     try:
+
         class DummyProc:
             pid = 4242
 
@@ -85,8 +88,8 @@ def test_start_server_respects_pref(monkeypatch):
             return None
 
         mod = importlib.import_module("blender_mcp.blender_ui")
-        monkeypatch.setattr("blender_mcp.embedded_server_adapter.start_server_process", fake_start)
-        monkeypatch.setattr("blender_mcp.embedded_server_adapter.stop_server_process", fake_stop)
+        monkeypatch.setattr("blender_mcp.servers.embedded_adapter.start_server_process", fake_start)
+        monkeypatch.setattr("blender_mcp.servers.embedded_adapter.stop_server_process", fake_stop)
 
         start_op = mod.BLENDERMCP_OT_StartServer()
         res = start_op.execute(fake.context)
@@ -131,8 +134,8 @@ def test_start_server_blocked_by_pref(monkeypatch):
             return None
 
         mod = importlib.import_module("blender_mcp.blender_ui")
-        monkeypatch.setattr("blender_mcp.embedded_server_adapter.start_server_process", fake_start)
-        monkeypatch.setattr("blender_mcp.embedded_server_adapter.stop_server_process", fake_stop)
+        monkeypatch.setattr("blender_mcp.servers.embedded_adapter.start_server_process", fake_start)
+        monkeypatch.setattr("blender_mcp.servers.embedded_adapter.stop_server_process", fake_stop)
 
         start_op = mod.BLENDERMCP_OT_StartServer()
         res = start_op.execute(fake.context)

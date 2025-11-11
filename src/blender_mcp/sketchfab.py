@@ -12,7 +12,6 @@ from typing import Any, Dict, Optional
 import requests
 
 from . import downloaders  # type: ignore
-from .http import get_session
 
 # Base endpoints can be overridden in tests by passing a session that wraps
 # the desired base URL. Keeping them as module constants makes the helpers

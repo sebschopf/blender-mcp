@@ -1,7 +1,3 @@
-import types
-import requests
-
-
 def test_search_models_uses_provided_session(monkeypatch):
     from blender_mcp import sketchfab
 

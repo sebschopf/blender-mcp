@@ -1,12 +1,10 @@
-"""Blender connection helper consolidated from the repo-root shim.
+"""Archived snapshot of the legacy top-level `connection.py`.
 
-Provides a testable, import-safe `BlenderConnection`, a module-global
-singleton accessor `get_blender_connection()`, and a small `server_lifespan`
-contextmanager used by the ASGI/runtime glue.
-
-This module is intended to be the single source of truth for connection
-logic during the refactor.
+This file contains the historical implementation which was consolidated
+into `connection_core.py` and the `services.connection` package. It is
+kept for reference only and is not part of the active public API.
 """
+
 from __future__ import annotations
 
 import json
@@ -128,25 +126,3 @@ async def server_lifespan(server: "Any") -> AsyncIterator[Dict[str, Any]]:
 
 
 __all__ = ["BlenderConnection", "get_blender_connection", "server_lifespan"]
-"""Backward-compatible re-export of the connection package.
-
-This module re-exports the public types from ``blender_mcp.services.connection``
-so existing imports like ``from blender_mcp.connection import BlenderConnection``
-continue to work during and after the refactor.
-"""
-
-from .services.connection import (
-    BlenderConnection,
-    BlenderConnectionNetwork,
-    ChunkedJSONReassembler,
-    LengthPrefixedReassembler,
-    SocketBlenderConnection,
-)
-
-__all__ = [
-    "ChunkedJSONReassembler",
-    "LengthPrefixedReassembler",
-    "SocketBlenderConnection",
-    "BlenderConnectionNetwork",
-    "BlenderConnection",
-]

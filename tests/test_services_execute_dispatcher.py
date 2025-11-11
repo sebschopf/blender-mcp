@@ -1,5 +1,4 @@
-
-from blender_mcp.dispatcher import Dispatcher
+from blender_mcp.dispatchers.dispatcher import Dispatcher
 from blender_mcp.services import execute
 
 

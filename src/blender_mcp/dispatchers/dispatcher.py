@@ -82,18 +82,14 @@ class Dispatcher:
             logger.exception("handler %s raised", name)
             raise HandlerError(name, exc) from exc
 
-    def dispatch_strict(
-        self, name: str, params: Optional[Dict[str, Any]] = None
-    ) -> Any:
+    def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
         if name not in self._handlers:
             logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
 
-    def dispatch_with_timeout(
-        self, name: str, params: Optional[Dict[str, Any]] = None, timeout: float = 5.0
-    ) -> Any:
+    def dispatch_with_timeout(self, name: str, params: Optional[Dict[str, Any]] = None, timeout: float = 5.0) -> Any:
         """Call handler with a timeout (seconds). Raises TimeoutError on timeout."""
         if name not in self._handlers:
             raise KeyError(name)
@@ -104,9 +100,7 @@ class Dispatcher:
                 return fut.result(timeout=timeout)
             except FutTimeout as e:
                 logger.error("handler %s timed out after %s", name, timeout)
-                raise TimeoutError(
-                    f"handler {name} timed out after {timeout} seconds"
-                ) from e
+                raise TimeoutError(f"handler {name} timed out after {timeout} seconds") from e
 
     def dispatch_command(self, command: Dict[str, Any]) -> DispatcherResult:
         """Adapter to accept command dicts and return normalized responses.

@@ -15,8 +15,6 @@ import sys
 from typing import Any, Optional, cast
 
 from .http import get_session
-import requests  # kept for typing and backwards compat where needed
-
 from .types import ToolCommand
 
 # Configuration
@@ -112,9 +110,7 @@ def get_local_tool_catalog() -> str:
         return ""
 
     # reuse the `tools` list declared above
-    for m in re.finditer(
-        r"def\s+(\w+)\s*\(([^)]*)\)\s*:\s*(?:\"\"\"([\s\S]*?)\"\"\"|)", txt
-    ):
+    for m in re.finditer(r"def\s+(\w+)\s*\(([^)]*)\)\s*:\s*(?:\"\"\"([\s\S]*?)\"\"\"|)", txt):
         name = m.group(1)
         sig = m.group(2).strip()
         doc = (m.group(3) or "").strip().split("\n")[0] if m.group(3) else ""
@@ -195,9 +191,7 @@ def _run_gemini_subprocess(cmd: list[str], prompt: str) -> str:
     if not resolved and os.name == "nt":
         appdata = os.environ.get("APPDATA")
         if appdata:
-            candidate = os.path.join(
-                appdata, "npm", exe if exe.lower().endswith(".cmd") else exe + ".cmd"
-            )
+            candidate = os.path.join(appdata, "npm", exe if exe.lower().endswith(".cmd") else exe + ".cmd")
             if os.path.exists(candidate):
                 resolved = candidate
     if resolved:
@@ -276,9 +270,7 @@ def call_gemini_api(user_request: str) -> ToolCommand:
         genai = importlib.import_module("google.genai")
     except Exception:
         # Be explicit: this feature is optional and requires the google-genai SDK.
-        raise RuntimeError(
-            "google-genai library not available. Install with: pip install google-genai"
-        )
+        raise RuntimeError("google-genai library not available. Install with: pip install google-genai")
 
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:

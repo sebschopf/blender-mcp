@@ -1,4 +1,5 @@
 """Tests for downloaders using monkeypatched requests and an in-memory zip."""
+
 from __future__ import annotations
 
 import io
