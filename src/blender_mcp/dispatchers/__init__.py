@@ -14,8 +14,15 @@ from .dispatcher import (
     run_bridge,
 )
 
+# Compatibility: also export the compatibility class under the historical
+# name from the `compat` module to centralize any future changes.
+try:
+    from .compat import CommandDispatcher as CommandDispatcherCompat  # type: ignore
+except Exception:
+    CommandDispatcherCompat = CommandDispatcherImpl
+
 # Maintain the historical name at package level
-CommandDispatcher = CommandDispatcherImpl
+CommandDispatcher = CommandDispatcherCompat
 
 __all__ = [
     "Dispatcher",
