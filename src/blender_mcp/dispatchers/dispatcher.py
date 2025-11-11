@@ -10,9 +10,12 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutTimeout
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Dict, List, Optional
 
 from ..types import DispatcherResult
+from .abc import AbstractDispatcher
+from .bridge import BridgeService
+from .command_adapter import CommandAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +42,17 @@ class HandlerError(Exception):
 Handler = Callable[[Dict[str, Any]], Any]
 
 
-class Dispatcher:
-    def __init__(self) -> None:
+class Dispatcher(AbstractDispatcher):
+    def __init__(self, *, executor_factory: Optional[Callable[[], ThreadPoolExecutor]] = None) -> None:
+        """Create a Dispatcher.
+
+        executor_factory: optional callable that returns a ThreadPoolExecutor
+        (or context-manager compatible object). If provided, it's used by
+        `dispatch_with_timeout` to create executors, allowing callers to
+        inject test doubles or alternative executors.
+        """
         self._handlers: Dict[str, Handler] = {}
+        self._executor_factory = executor_factory
 
     def register(self, name: str, fn: Handler, *, overwrite: bool = False) -> None:
         """Register a handler by name.
@@ -94,41 +105,33 @@ class Dispatcher:
         if name not in self._handlers:
             raise KeyError(name)
         handler = self._handlers[name]
-        with ThreadPoolExecutor(max_workers=1) as ex:
-            fut = ex.submit(handler, params or {})
-            try:
-                return fut.result(timeout=timeout)
-            except FutTimeout as e:
-                logger.error("handler %s timed out after %s", name, timeout)
-                raise TimeoutError(f"handler {name} timed out after {timeout} seconds") from e
+        # Use injected executor factory if available to support DI/testing.
+        if self._executor_factory is not None:
+            with self._executor_factory() as ex:
+                fut = ex.submit(handler, params or {})
+                try:
+                    return fut.result(timeout=timeout)
+                except FutTimeout as e:
+                    logger.error("handler %s timed out after %s", name, timeout)
+                    raise TimeoutError(f"handler {name} timed out after {timeout} seconds") from e
+        else:
+            with ThreadPoolExecutor(max_workers=1) as ex:
+                fut = ex.submit(handler, params or {})
+                try:
+                    return fut.result(timeout=timeout)
+                except FutTimeout as e:
+                    logger.error("handler %s timed out after %s", name, timeout)
+                    raise TimeoutError(f"handler {name} timed out after {timeout} seconds") from e
 
     def dispatch_command(self, command: Dict[str, Any]) -> DispatcherResult:
-        """Adapter to accept command dicts and return normalized responses.
+        """Deprecated: delegate to CommandAdapter for normalization.
 
-        Expected shape: {"type": <str>, "params": {...}}
-        Returns: {"status":"success","result":...} or {"status":"error","message":...}
+        Kept for backward compatibility; behavior unchanged — the
+        implementation now delegates to `CommandAdapter` which houses the
+        normalization and error handling logic.
         """
-        # command is expected to be a mapping-like object; normalize access
-        if not isinstance(command, dict):
-            return {"status": "error", "message": "Invalid command format"}
-
-        cmd_type_raw = command.get("type") or command.get("tool")
-        if not isinstance(cmd_type_raw, str):
-            return {"status": "error", "message": "Invalid or missing command type"}
-        cmd_type = cmd_type_raw
-
-        params_raw = command.get("params", {}) or {}
-        params: Dict[str, Any] = params_raw if isinstance(params_raw, dict) else {}
-
-        if cmd_type not in self._handlers:
-            return {"status": "error", "message": f"Unknown command type: {cmd_type}"}
-
-        try:
-            result = self._handlers[cmd_type](params)
-            return {"status": "success", "result": result}
-        except Exception as e:
-            logger.exception("error while executing handler %s", cmd_type)
-            return {"status": "error", "message": str(e)}
+        adapter = CommandAdapter(self)
+        return adapter.dispatch_command(command)
 
 
 def register_default_handlers(dispatcher: Dispatcher) -> None:
@@ -241,39 +244,7 @@ def run_bridge(
     handler is invoked with (params, config). If the mapping specifies
     a remote MCP tool, `call_mcp_tool` is used.
     """
-    resp: Any = call_gemini_cli(user_req, use_api=use_api)
-    while True:
-        # When resp is a mapping, cast it so static analyzers know types
-        if isinstance(resp, dict) and "clarify" in resp:
-            data = cast(Dict[str, Any], resp)
-            prompts_raw = data.get("clarify", []) or []
-            # normalize prompts to list[str]
-            if isinstance(prompts_raw, list):
-                prompts: List[str] = [str(p) for p in prompts_raw]
-            else:
-                prompts = [str(prompts_raw)]
-
-            for p in prompts:
-                try:
-                    ans = input(p + " ")
-                except Exception:
-                    ans = ""
-                resp = call_gemini_cli(ans or user_req, use_api=use_api)
-                # loop continues and will handle the new resp
-        elif isinstance(resp, dict) and "tool" in resp:
-            data = cast(Dict[str, Any], resp)
-            tool_raw = data.get("tool")
-            params_raw = data.get("params", {}) or {}
-            tool = str(tool_raw) if tool_raw is not None else ""
-            params = params_raw if isinstance(params_raw, dict) else {}
-
-            # if the dispatcher knows this tool, call the local handler
-            if tool in dispatcher.list_handlers():
-                dispatcher.dispatch(tool, params, config)
-            else:
-                # otherwise call remote MCP tool
-                call_mcp_tool(tool, params)
-            return
-        else:
-            # nothing to do
-            return
+    # Delegate to BridgeService so callers can inject alternate
+    # gemini/mcp callers for testing or policy integration.
+    service = BridgeService(call_gemini_cli, call_mcp_tool)
+    return service.run(user_req, config, dispatcher, use_api=use_api)
