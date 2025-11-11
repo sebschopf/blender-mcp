@@ -14,6 +14,24 @@ Les tâches sont regroupées par domaine : architecture, endpoints, tests, CI, p
 
 Important : chaque tâche doit être accompagnée d'un petit test unitaire (ou d'un test d'intégration léger) et d'une entrée de journal décrivant les fichiers modifiés et la commande pour reproduire les tests.
 
+État canonique et règles d'exécution (rappel)
+--------------------------------------------
+
+- Source canonique du package : `src/blender_mcp/`.
+- Le dossier au niveau racine `blender_mcp/` est un shim legacy utilisé pendant la refactorisation pour conserver la compatibilité des imports dans les tests et scripts. Il ne doit pas être modifié directement pour implémenter de nouvelles fonctionnalités ; toute modification structurante le concernant nécessite une proposition OpenSpec (voir `openspec/AGENTS.md`).
+- Les snapshots historiques dans `src/blender_mcp/archive/` doivent être conservés mais exclus des checks automatiques (lint/type). La configuration actuelle (`mypy.ini`, `.ruff`) doit déjà exclure `archive` — vérifiez avant d'ajouter de nouveaux fichiers.
+- Commande recommandée pour reproduire l'environnement CI localement (PowerShell) :
+
+```powershell
+$env:PYTHONPATH = 'src'
+python -m pytest -q
+Remove-Item Env:\PYTHONPATH
+```
+
+Utilisez systématiquement `PYTHONPATH=src` dans les scripts locaux ou dans les workflows CI pour s'assurer que la version canonique du package est testée.
+
+Si un import divergent est observé (p.ex. le package résolu depuis la racine au lieu de `src`), exécutez `tools/check_shim_imports.py` pour diagnostiquer la résolution du module.
+
 Liste de tâches principale (à cocher au fur et à mesure)
 ----------------------------------------------------
 
