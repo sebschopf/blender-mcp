@@ -9,14 +9,14 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FutTimeout
 from typing import Any, Callable, Dict, List, Optional
-from .registry import HandlerRegistry
 
 from ..types import DispatcherResult
 from .abc import AbstractDispatcher
 from .bridge import BridgeService
 from .command_adapter import CommandAdapter
+from .executor import HandlerExecutor
+from .registry import HandlerRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,7 @@ class Dispatcher(AbstractDispatcher):
         """
         self._registry = HandlerRegistry()
         self._executor_factory = executor_factory
+        self._executor = HandlerExecutor(executor_factory)
 
     def register(self, name: str, fn: Handler, *, overwrite: bool = False) -> None:
         """Register a handler by name.
@@ -105,23 +106,12 @@ class Dispatcher(AbstractDispatcher):
             raise KeyError(name)
         handler = self._registry.get(name)
         assert handler is not None
-        # Use injected executor factory if available to support DI/testing.
-        if self._executor_factory is not None:
-            with self._executor_factory() as ex:
-                fut = ex.submit(handler, params or {})
-                try:
-                    return fut.result(timeout=timeout)
-                except FutTimeout as e:
-                    logger.error("handler %s timed out after %s", name, timeout)
-                    raise TimeoutError(f"handler {name} timed out after {timeout} seconds") from e
-        else:
-            with ThreadPoolExecutor(max_workers=1) as ex:
-                fut = ex.submit(handler, params or {})
-                try:
-                    return fut.result(timeout=timeout)
-                except FutTimeout as e:
-                    logger.error("handler %s timed out after %s", name, timeout)
-                    raise TimeoutError(f"handler {name} timed out after {timeout} seconds") from e
+        # Delegate execution to HandlerExecutor (strategy encapsulated)
+        try:
+            return self._executor.execute_with_timeout(handler, params, timeout=timeout)
+        except TimeoutError:
+            logger.error("handler %s timed out after %s", name, timeout)
+            raise
 
     def dispatch_command(self, command: Dict[str, Any]) -> DispatcherResult:
         """Deprecated: delegate to CommandAdapter for normalization.
