@@ -6,12 +6,16 @@ responses to the canonical service schema.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 import logging
+from typing import Any, Dict, Optional
 
 from .addon.polyhaven import (
     download_polyhaven_asset as _addon_download_polyhaven_asset,
+)
+from .addon.polyhaven import (
     get_polyhaven_categories as _addon_get_polyhaven_categories,
+)
+from .addon.polyhaven import (
     search_polyhaven_assets as _addon_search_polyhaven_assets,
 )
 
@@ -166,9 +170,7 @@ def format_search_assets(result: Dict[str, Any], categories: Optional[str] = Non
         formatted += f" in categories: {categories}"
     formatted += f"\nShowing {returned_count} assets:\n\n"
 
-    sorted_assets = sorted(
-        assets.items(), key=lambda x: x[1].get("download_count", 0), reverse=True
-    )
+    sorted_assets = sorted(assets.items(), key=lambda x: x[1].get("download_count", 0), reverse=True)
 
     for asset_id, asset_data in sorted_assets:
         formatted += f"- {asset_data.get('name', asset_id)} (ID: {asset_id})\n"
@@ -268,4 +270,3 @@ def download_asset(
         return {"temp_dir": temp_dir}
     except Exception as e:
         return {"error": str(e)}
-

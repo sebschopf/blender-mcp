@@ -1,15 +1,9 @@
 import json
 
-import importlib.util
-from pathlib import Path
-
-# Load the repository-root `blender_mcp/server.py` archive shim so tests exercise
-# the legacy BlenderConnection implementation. We can't import it as
-# `blender_mcp.server` because the test PYTHONPATH points at `src/`.
-root_server_path = Path(__file__).resolve().parents[1] / "blender_mcp" / "server.py"
-spec = importlib.util.spec_from_file_location("blender_mcp_root_server", str(root_server_path))
-srv = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(srv)  # type: ignore
+# Import the canonical connection implementation directly from the package.
+# Tests should exercise the canonical module (`connection_core`) rather than
+# loading a repo-root shim file.
+import blender_mcp.connection_core as srv
 
 
 class FakeSocket:

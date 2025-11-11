@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import Optional, Dict, Any, cast, Any as _Any, Mapping
+from typing import Any, Dict, Optional, cast
+
 import requests
 
-from blender_mcp.downloaders import download_bytes
 from blender_mcp import downloaders
+from blender_mcp.downloaders import download_bytes
 
 
 class FakeResp:
@@ -56,4 +57,3 @@ def test_download_bytes_uses_injected_session():
     data = downloaders.download_bytes("https://example.org/file", session=sess)
     assert data == b"data-bytes"
     assert len(sess.calls) == 1
-

@@ -1,7 +1,7 @@
 import sys
 import types
 
-from blender_mcp.dispatcher import Dispatcher
+from blender_mcp.dispatchers.dispatcher import Dispatcher
 from blender_mcp.endpoints import register_builtin_endpoints
 
 
@@ -23,14 +23,18 @@ def test_endpoints_registered_and_callable(monkeypatch):
     fake_scene = types.SimpleNamespace()
     fake_scene.name = "EScene"
     fake_bpy.context = types.SimpleNamespace(scene=fake_scene)
+
     class Obj:
         def __init__(self, name, type_):
             self.name = name
             self.type = type_
-    fake_bpy.data = types.SimpleNamespace(objects=[Obj("Cube","MESH")])
+
+    fake_bpy.data = types.SimpleNamespace(objects=[Obj("Cube", "MESH")])
+
     # screenshot helper
     def fake_capture():
         return b"\x89PNG..."
+
     fake_bpy.capture_viewport_bytes = fake_capture
 
     sys.modules["bpy"] = fake_bpy

@@ -7,16 +7,14 @@ from typing import Any, Dict, Optional
 
 import requests
 
-from .constants import REQ_HEADERS
 from ...http import get_session
+from .constants import REQ_HEADERS
 
 
 def get_polyhaven_categories(asset_type: str, session: Optional[requests.Session] = None) -> Dict[str, Any]:
     try:
         if asset_type not in ["hdris", "textures", "models", "all"]:
-            return {
-                "error": f"Invalid asset type: {asset_type}. Must be one of: hdris, textures, models, all"
-            }
+            return {"error": f"Invalid asset type: {asset_type}. Must be one of: hdris, textures, models, all"}
 
         try:
             from blender_mcp.polyhaven import fetch_categories  # type: ignore
@@ -43,14 +41,14 @@ def get_polyhaven_categories(asset_type: str, session: Optional[requests.Session
         return {"error": str(e)}
 
 
-def search_polyhaven_assets(asset_type=None, categories=None, session: Optional[requests.Session] = None) -> Dict[str, Any]:
+def search_polyhaven_assets(
+    asset_type=None, categories=None, session: Optional[requests.Session] = None
+) -> Dict[str, Any]:
     try:
         params = {}
         if asset_type and asset_type != "all":
             if asset_type not in ["hdris", "textures", "models"]:
-                return {
-                    "error": f"Invalid asset type: {asset_type}. Must be one of: hdris, textures, models, all"
-                }
+                return {"error": f"Invalid asset type: {asset_type}. Must be one of: hdris, textures, models, all"}
             params["type"] = asset_type
 
         if categories:
@@ -93,7 +91,9 @@ def search_polyhaven_assets(asset_type=None, categories=None, session: Optional[
         return {"error": str(e)}
 
 
-def download_polyhaven_asset(asset_id, asset_type, resolution="1k", file_format=None, session: Optional[requests.Session] = None) -> Dict[str, Any]:
+def download_polyhaven_asset(
+    asset_id, asset_type, resolution="1k", file_format=None, session: Optional[requests.Session] = None
+) -> Dict[str, Any]:
     try:
         from blender_mcp.polyhaven import fetch_files_data  # type: ignore
 

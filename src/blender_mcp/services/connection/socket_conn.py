@@ -31,9 +31,7 @@ class SocketBlenderConnection:
 
     def send(self, obj: Any) -> None:
         payload = json.dumps(obj, separators=(",", ":")).encode("utf-8")
-        frame = (
-            struct.pack(LengthPrefixedReassembler.HEADER_FMT, len(payload)) + payload
-        )
+        frame = struct.pack(LengthPrefixedReassembler.HEADER_FMT, len(payload)) + payload
         self._sock.sendall(frame)
 
     def receive(self, timeout: Optional[float] = None) -> Any:

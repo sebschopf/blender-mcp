@@ -7,6 +7,7 @@ def test_addon_import_is_import_safe():
     """
     import importlib
     import sys
+
     import pytest
 
     mod = importlib.import_module("addon")

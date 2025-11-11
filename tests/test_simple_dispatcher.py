@@ -1,4 +1,4 @@
-from blender_mcp.dispatcher import Dispatcher, register_default_handlers
+from blender_mcp.dispatchers.dispatcher import Dispatcher, register_default_handlers
 from blender_mcp.server import BlenderMCPServer
 
 

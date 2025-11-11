@@ -4,6 +4,7 @@ Provides a single place to configure request sessions (headers, retries,
 proxies, timeouts). Services should accept an optional `session` parameter
 and use `get_session()` when None.
 """
+
 from __future__ import annotations
 
 from typing import Optional

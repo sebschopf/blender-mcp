@@ -14,9 +14,7 @@ import requests
 from .http import get_session
 
 
-def call_mcp_tool(
-    tool: str, params: dict[str, Any] | None, session: Optional[requests.sessions.Session] = None
-) -> Any:
+def call_mcp_tool(tool: str, params: dict[str, Any] | None, session: Optional[requests.sessions.Session] = None) -> Any:
     """Call an MCP tool over HTTP and return parsed JSON.
 
     Accepts an optional requests.Session-like object. If omitted, a shared

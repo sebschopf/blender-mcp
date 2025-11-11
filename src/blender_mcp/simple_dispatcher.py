@@ -1,11 +1,15 @@
-"""Compatibility façade.
+"""Top-level compatibility façade re-exporting the dispatcher package.
 
-This module re-exports the canonical `Dispatcher` implementation from
-`blender_mcp.dispatcher` so external code that imports
-`blender_mcp.simple_dispatcher` keeps working while we maintain a single
-source of truth.
+The implementation is now in ``blender_mcp.dispatchers``.
 """
 
-from .dispatcher import Dispatcher, register_default_handlers  # type: ignore
+from .dispatchers.simple_dispatcher import Dispatcher, register_default_handlers  # noqa: F401
+
+__all__ = ["Dispatcher", "register_default_handlers"]
+"""Top-level compatibility façade re-exporting the dispatcher package.
+
+The implementation is now in `blender_mcp.dispatchers`.
+"""
+
 
 __all__ = ["Dispatcher", "register_default_handlers"]

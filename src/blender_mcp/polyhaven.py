@@ -10,14 +10,14 @@ from typing import Any, Dict, Optional
 
 import requests
 
-from .http import get_session
-
 # Prefer the shared session headers but keep a module-level default for callers
 _REQ_HEADERS = requests.utils.default_headers()
 _REQ_HEADERS.update({"User-Agent": "blender-mcp"})
 
 
-def fetch_files_data(asset_id: str, *, timeout: int = 10, session: Optional[requests.sessions.Session] = None) -> Dict[str, Any]:
+def fetch_files_data(
+    asset_id: str, *, timeout: int = 10, session: Optional[requests.sessions.Session] = None
+) -> Dict[str, Any]:
     """Fetch files metadata for a PolyHaven asset.
 
     Raises RuntimeError on non-200 responses.
@@ -37,7 +37,9 @@ def fetch_files_data(asset_id: str, *, timeout: int = 10, session: Optional[requ
     return resp.json()
 
 
-def fetch_categories(asset_type: str, *, timeout: int = 10, session: Optional[requests.sessions.Session] = None) -> Dict[str, Any]:
+def fetch_categories(
+    asset_type: str, *, timeout: int = 10, session: Optional[requests.sessions.Session] = None
+) -> Dict[str, Any]:
     """Fetch categories for a given asset type from PolyHaven.
 
     Raises RuntimeError on non-200 responses.
@@ -55,7 +57,9 @@ def fetch_categories(asset_type: str, *, timeout: int = 10, session: Optional[re
     return resp.json()
 
 
-def search_assets(params: Dict[str, Any], *, timeout: int = 10, session: Optional[requests.sessions.Session] = None) -> Dict[str, Any]:
+def search_assets(
+    params: Dict[str, Any], *, timeout: int = 10, session: Optional[requests.sessions.Session] = None
+) -> Dict[str, Any]:
     """Search assets on PolyHaven using the /assets endpoint.
 
     params: query parameters forwarded to the API (e.g. type, categories)
@@ -74,9 +78,7 @@ def search_assets(params: Dict[str, Any], *, timeout: int = 10, session: Optiona
     return resp.json()
 
 
-def find_texture_map_urls(
-    files_data: Dict[str, Any], resolution: str, file_format: str
-) -> Dict[str, str]:
+def find_texture_map_urls(files_data: Dict[str, Any], resolution: str, file_format: str) -> Dict[str, str]:
     """Return a mapping map_type -> download URL for texture maps matching
     the requested resolution and file_format.
 
@@ -101,9 +103,7 @@ def find_texture_map_urls(
     return out
 
 
-def find_model_file_info(
-    files_data: Dict[str, Any], file_format: str, resolution: str
-) -> Optional[Dict[str, Any]]:
+def find_model_file_info(files_data: Dict[str, Any], file_format: str, resolution: str) -> Optional[Dict[str, Any]]:
     """Return the file_info dict for a model in the requested format/resolution,
     or None if not found.
     """
@@ -137,7 +137,10 @@ def download_bytes(url: str, *, timeout: int = 30, session: Optional[requests.se
 
 
 def prepare_model_files(
-    file_info: Dict[str, Any], *, base_temp_dir: Optional[str] = None, session: Optional[requests.sessions.Session] = None
+    file_info: Dict[str, Any],
+    *,
+    base_temp_dir: Optional[str] = None,
+    session: Optional[requests.sessions.Session] = None,
 ) -> tuple[str, str]:
     """Download main model file and any included files to a temporary dir.
 

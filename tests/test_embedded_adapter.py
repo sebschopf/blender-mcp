@@ -2,7 +2,7 @@ import subprocess
 
 import pytest
 
-from blender_mcp import embedded_server_adapter as adapter
+from blender_mcp.servers import embedded_adapter as adapter
 
 
 class DummyProcess:
@@ -29,14 +29,17 @@ def test_start_server_process_monkeypatched(monkeypatch):
     captured = {}
 
     def fake_popen(cmd, cwd=None, stdout=None, stderr=None):
-        captured['cmd'] = cmd
-        captured['cwd'] = cwd
+        captured["cmd"] = cmd
+        captured["cwd"] = cwd
         return DummyProcess()
 
-    monkeypatch.setattr(subprocess, 'Popen', fake_popen)
-    proc = adapter.start_server_process(command=['echo', 'hi'], cwd='/',)
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    proc = adapter.start_server_process(
+        command=["echo", "hi"],
+        cwd="/",
+    )
     assert adapter.is_running(proc)
-    assert captured['cmd'] == ['echo', 'hi']
+    assert captured["cmd"] == ["echo", "hi"]
 
 
 def test_stop_server_process(monkeypatch):
@@ -49,6 +52,6 @@ def test_stop_server_process(monkeypatch):
 
 def test_default_command_nonwindows(monkeypatch):
     # On non-Windows platforms the adapter should raise if no command is passed
-    monkeypatch.setattr(adapter.platform, 'system', lambda: 'Linux')
+    monkeypatch.setattr(adapter.platform, "system", lambda: "Linux")
     with pytest.raises(RuntimeError):
         adapter.start_server_process(command=None)

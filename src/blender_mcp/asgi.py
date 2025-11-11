@@ -30,9 +30,7 @@ def _startup():
     global mcp_thread
     # Start MCP server in a daemon thread so FastAPI/uvicorn can run alongside it
     if mcp_thread is None or not mcp_thread.is_alive():
-        mcp_thread = threading.Thread(
-            target=_run_mcp, name="BlenderMCPThread", daemon=True
-        )
+        mcp_thread = threading.Thread(target=_run_mcp, name="BlenderMCPThread", daemon=True)
         mcp_thread.start()
         logger.info("Started BlenderMCP thread")
 
@@ -81,9 +79,7 @@ def list_tools():
                     sig = str(inspect.signature(func))
                 except Exception:
                     sig = "()"
-                doc = (
-                    (func.__doc__ or "").strip().split("\n")[0] if func.__doc__ else ""
-                )
+                doc = (func.__doc__ or "").strip().split("\n")[0] if func.__doc__ else ""
                 tools_info.append(
                     {
                         "name": name,

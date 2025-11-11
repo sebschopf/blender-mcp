@@ -28,6 +28,7 @@ def _make_fake_bpy():
             self.scale = types.SimpleNamespace(x=1.0, y=1.0, z=1.0)
             self.visible_get = lambda: True
             self.material_slots = []
+
     class FakeObjects:
         def __init__(self, items):
             self._items = list(items)

@@ -2,15 +2,15 @@ import builtins
 
 import pytest
 
-import blender_mcp.dispatcher as dispatcher
+import blender_mcp.dispatchers.dispatcher as dispatcher
 from blender_mcp.config import BridgeConfig
-from blender_mcp.dispatcher import (
+from blender_mcp.dispatchers.dispatcher import (
     CommandDispatcher,
     Dispatcher,
     HandlerError,
     run_bridge,
 )
-from blender_mcp.dispatcher import (
+from blender_mcp.dispatchers.dispatcher import (
     register_default_handlers as register_default_handlers_cmd,
 )
 from blender_mcp.server_shim import BlenderMCPServer
@@ -53,6 +53,8 @@ def test_handler_exception_wrapped():
 
     assert isinstance(excinfo.value.original, ValueError)
     assert "bad" in str(excinfo.value)
+
+
 def test_dispatcher_register_and_dispatch():
     d = SimpleDispatcher()
     assert d.list_handlers() == []
@@ -106,6 +108,8 @@ def test_register_default_handlers():
     # ensure core names are registered
     assert "add_primitive" in disp.list_handlers()
     assert "create_dice" in disp.list_handlers()
+
+
 def test_run_bridge_calls_primitive_handler(monkeypatch):
     cfg = BridgeConfig()
 

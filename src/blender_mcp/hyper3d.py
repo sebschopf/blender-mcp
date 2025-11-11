@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional, Tuple
 import requests
 
 from . import downloaders  # type: ignore
-from .http import get_session
 
 
 def create_rodin_job_main_site(
@@ -24,10 +23,7 @@ def create_rodin_job_main_site(
     session: Optional[requests.sessions.Session] = None,
 ) -> Dict[str, Any]:
     files: List[Tuple[str, Tuple[Optional[str], Any]]] = [
-        *[
-            ("images", (f"{i:04d}{img_suffix}", img))
-            for i, (img_suffix, img) in enumerate(images or [])
-        ],
+        *[("images", (f"{i:04d}{img_suffix}", img)) for i, (img_suffix, img) in enumerate(images or [])],
         ("tier", (None, "Sketch")),
         ("mesh_mode", (None, "Raw")),
     ]

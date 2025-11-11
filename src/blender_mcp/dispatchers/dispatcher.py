@@ -1,12 +1,8 @@
 """Dispatcher utility for registering and dispatching BlenderMCP handlers.
 
-This module implements a reasonably complete, testable dispatcher used by
-the server façade. It focuses on clarity and testability rather than
-performance. Key features:
-- register/unregister/list handlers
-- dispatch (programmatic) and dispatch_strict (raises if missing)
-- dispatch_with_timeout (ThreadPoolExecutor)
-- dispatch_command: adapter that accepts a dict {"type","params"}
+This module is a relocated copy of the top-level `blender_mcp.dispatcher`.
+Relative imports have been adjusted so this file lives inside the
+`blender_mcp.dispatchers` package.
 """
 
 from __future__ import annotations
@@ -16,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutTimeout
 from typing import Any, Callable, Dict, List, Optional, cast
 
-from .types import DispatcherResult
+from ..types import DispatcherResult
 
 logger = logging.getLogger(__name__)
 
@@ -86,18 +82,14 @@ class Dispatcher:
             logger.exception("handler %s raised", name)
             raise HandlerError(name, exc) from exc
 
-    def dispatch_strict(
-        self, name: str, params: Optional[Dict[str, Any]] = None
-    ) -> Any:
+    def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
         if name not in self._handlers:
             logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
 
-    def dispatch_with_timeout(
-        self, name: str, params: Optional[Dict[str, Any]] = None, timeout: float = 5.0
-    ) -> Any:
+    def dispatch_with_timeout(self, name: str, params: Optional[Dict[str, Any]] = None, timeout: float = 5.0) -> Any:
         """Call handler with a timeout (seconds). Raises TimeoutError on timeout."""
         if name not in self._handlers:
             raise KeyError(name)
@@ -108,9 +100,7 @@ class Dispatcher:
                 return fut.result(timeout=timeout)
             except FutTimeout as e:
                 logger.error("handler %s timed out after %s", name, timeout)
-                raise TimeoutError(
-                    f"handler {name} timed out after {timeout} seconds"
-                ) from e
+                raise TimeoutError(f"handler {name} timed out after {timeout} seconds") from e
 
     def dispatch_command(self, command: Dict[str, Any]) -> DispatcherResult:
         """Adapter to accept command dicts and return normalized responses.

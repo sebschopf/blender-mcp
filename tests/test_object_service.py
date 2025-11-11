@@ -58,4 +58,3 @@ def test_get_object_info_not_found(monkeypatch):
     res = obj_service.get_object_info({"name": "DoesNotExist"})
     assert res.get("status") == "error"
     assert "not found" in res.get("message", "")
-

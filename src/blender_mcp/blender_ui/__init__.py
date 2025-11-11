@@ -75,7 +75,7 @@ def register() -> None:
             pass
 
 
-def unregister() -> None:
+def unregister() -> None:  # noqa: C901
     """Unregister the addon UI and remove scene properties.
 
     Best-effort: ignores missing classes/properties when `bpy` is not
@@ -172,11 +172,13 @@ def __getattr__(name: str):
 
 def __dir__() -> list[str]:
     base = set(globals().keys())
-    base.update([
-        "BLENDERMCP_PT_Panel",
-        "BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey",
-        "BLENDERMCP_OT_StartServer",
-        "BLENDERMCP_OT_StopServer",
-        "BLENDERMCP_OT_ApplyRemoteExecSetting",
-    ])
+    base.update(
+        [
+            "BLENDERMCP_PT_Panel",
+            "BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey",
+            "BLENDERMCP_OT_StartServer",
+            "BLENDERMCP_OT_StopServer",
+            "BLENDERMCP_OT_ApplyRemoteExecSetting",
+        ]
+    )
     return sorted(base)

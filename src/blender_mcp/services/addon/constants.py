@@ -12,8 +12,6 @@ import requests
 REQ_HEADERS = requests.utils.default_headers()
 REQ_HEADERS.update({"User-Agent": "blender-mcp"})
 
-RODIN_FREE_TRIAL_KEY = (
-    "k9TcfFoEhNd9cCPP2guHAHHHkctZHIRhZDywZ1euGUXwihbYLpOjQhofby80NJez"
-)
+RODIN_FREE_TRIAL_KEY = "k9TcfFoEhNd9cCPP2guHAHHHkctZHIRhZDywZ1euGUXwihbYLpOjQhofby80NJez"
 
 __all__ = ["REQ_HEADERS", "RODIN_FREE_TRIAL_KEY"]

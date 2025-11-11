@@ -52,13 +52,9 @@ class BlenderConnection:
             raise TypeError("get_messages is only available in reassembler mode")
         return self._re.pop_messages()
 
-    def iter_messages_from_chunks(
-        self, chunks: Generator[bytes, None, None]
-    ) -> Generator[Any, None, None]:
+    def iter_messages_from_chunks(self, chunks: Generator[bytes, None, None]) -> Generator[Any, None, None]:
         if self._mode != "reassembler":
-            raise TypeError(
-                "iter_messages_from_chunks is only available in reassembler mode"
-            )
+            raise TypeError("iter_messages_from_chunks is only available in reassembler mode")
         for c in chunks:
             self.feed_bytes(c)
             for msg in self.get_messages():
@@ -86,16 +82,12 @@ class BlenderConnection:
             raise TypeError("disconnect is only available in network mode")
         return self._net.disconnect()
 
-    def receive_full_response(
-        self, buffer_size: int = 8192, timeout: float = 15.0
-    ) -> Dict[str, Any]:
+    def receive_full_response(self, buffer_size: int = 8192, timeout: float = 15.0) -> Dict[str, Any]:
         if self._mode != "network":
             raise TypeError("receive_full_response is only available in network mode")
         return self._net.receive_full_response(buffer_size=buffer_size, timeout=timeout)
 
-    def send_command(
-        self, command_type: str, params: Optional[Dict[str, Any]] = None
-    ) -> Any:
+    def send_command(self, command_type: str, params: Optional[Dict[str, Any]] = None) -> Any:
         if self._mode != "network":
             raise TypeError("send_command is only available in network mode")
         return self._net.send_command(command_type, params)

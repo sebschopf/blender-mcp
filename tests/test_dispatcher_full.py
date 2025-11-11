@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from blender_mcp.dispatcher import Dispatcher, register_default_handlers
+from blender_mcp.dispatchers.dispatcher import Dispatcher, register_default_handlers
 
 
 def test_register_duplicate_raises():

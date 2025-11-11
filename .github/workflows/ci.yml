@@ -40,11 +40,14 @@ jobs:
 
       - name: Lint (ruff)
         run: |
-          ruff check src tests
+          # Exclude legacy archive snapshots which are not valid Python packages
+          # and intentionally kept for history/reference.
+          ruff check --exclude "src/blender_mcp/archive/**" src tests
 
       - name: Typecheck (mypy)
         run: |
-          mypy src
+          # Exclude archive snapshots from typechecking (partial/legacy code)
+          mypy src --exclude "src/blender_mcp/archive/.*"
 
       - name: Run tests (pytest)
         env:

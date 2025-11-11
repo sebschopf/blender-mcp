@@ -14,7 +14,6 @@ fail in CI.
 try:
     import bpy  # type: ignore
 
-
     class BLENDERMCP_PT_Panel(bpy.types.Panel):
         bl_label = "Blender MCP"
         bl_idname = "BLENDERMCP_PT_Panel"
@@ -27,9 +26,7 @@ try:
             scene = context.scene
 
             layout.prop(scene, "blendermcp_port")
-            layout.prop(
-                scene, "blendermcp_use_polyhaven", text="Use assets from Poly Haven"
-            )
+            layout.prop(scene, "blendermcp_use_polyhaven", text="Use assets from Poly Haven")
 
             layout.prop(
                 scene,
@@ -51,9 +48,7 @@ try:
             if not scene.blendermcp_server_running:
                 layout.operator("blendermcp.start_server", text="Connect to MCP server")
             else:
-                layout.operator(
-                    "blendermcp.stop_server", text="Disconnect from MCP server"
-                )
+                layout.operator("blendermcp.stop_server", text="Disconnect from MCP server")
                 layout.label(text=f"Running on port {scene.blendermcp_port}")
 
             # WARNING: remote code execution
@@ -62,6 +57,7 @@ try:
             box.label(text="execute_blender_code is disabled by default.")
             box.prop(scene, "blendermcp_allow_remote_exec", text="Allow remote execution")
             box.operator("blendermcp.apply_remote_exec_setting", text="Apply setting")
+
 except Exception:
     # Import-time fallback for environments without bpy: provide a simple
     # placeholder so attribute lookups don't fail. The placeholder is not a

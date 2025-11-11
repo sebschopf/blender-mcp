@@ -1,16 +1,9 @@
-"""A tiny adapter to start/stop an external embedded server process.
+"""Embedded server adapter moved into `servers` package.
 
-The historical addon started an in-process socket server inside Blender's
-Python runtime. That approach caused lifecycle/threading issues and made the
-addon unsafe to import. This adapter provides a minimal, opt-in way to
-spawn an external server process and control it from Python. It's intentionally
-small: the addon UI should only call the adapter to request start/stop and
-the heavy lifting runs in a separate process.
-
-The adapter does NOT pick a specific server binary; callers should provide a
-command list. For convenience, a sensible Windows default using the
-repository's PowerShell helper is provided when running on Windows.
+This is a copy of the top-level `embedded_server_adapter.py` adjusted to
+live under the `servers` package.
 """
+
 from __future__ import annotations
 
 import logging
@@ -44,8 +37,8 @@ def start_server_process(command: Optional[Iterable[str]] = None, cwd: Optional[
     cmd_list = list(command)
     logger.info("Starting external server: %s", cmd_list)
     # Start detached process group so child won't be killed when parent exits
-    proc = subprocess.Popen(cmd_list, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return proc
+    # Return the process directly; the local assignment is unnecessary.
+    return subprocess.Popen(cmd_list, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def stop_server_process(proc: subprocess.Popen[Any], timeout: float = 5.0) -> None:

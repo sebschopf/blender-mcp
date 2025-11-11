@@ -1,4 +1,5 @@
 from typing import Any, List, Tuple, cast
+
 import requests
 
 from blender_mcp.polyhaven import fetch_categories, fetch_files_data
@@ -35,4 +36,3 @@ def test_fetch_files_data_uses_injected_session() -> None:
     assert isinstance(res, dict)
     assert res.get("files") == {"fileA": {}}
     assert len(sess.calls) == 1
-

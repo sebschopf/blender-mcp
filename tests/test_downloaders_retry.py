@@ -1,6 +1,5 @@
-import requests
-
 import pytest
+import requests
 
 from blender_mcp import downloaders
 

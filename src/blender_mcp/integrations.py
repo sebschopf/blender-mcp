@@ -45,9 +45,7 @@ def _process_bbox(
 
 
 @mcp.tool()
-def get_polyhaven_categories(
-    ctx: Context[Any, Any, Any], asset_type: str = "hdris"
-) -> str:
+def get_polyhaven_categories(ctx: Context[Any, Any, Any], asset_type: str = "hdris") -> str:
     """
     Get a list of categories for a specific asset type on Polyhaven
     """
@@ -63,9 +61,7 @@ def get_polyhaven_categories(
             blender = get_blender_connection()
             if not _polyhaven_enabled:
                 return "PolyHaven integration is disabled. Select it in the sidebar in BlenderMCP, then run it again."
-            result = blender.send_command(
-                "get_polyhaven_categories", {"asset_type": asset_type}
-            )
+            result = blender.send_command("get_polyhaven_categories", {"asset_type": asset_type})
             if "error" in result:
                 return f"Error: {result['error']}"
             categories = result.get("categories", {})
@@ -195,9 +191,7 @@ def _format_addon_download_result(result: Dict[str, Any], asset_type: str) -> st
 def set_texture(ctx: Context[Any, Any, Any], object_name: str, texture_id: str) -> str:
     try:
         blender = get_blender_connection()
-        result = blender.send_command(
-            "set_texture", {"object_name": object_name, "texture_id": texture_id}
-        )
+        result = blender.send_command("set_texture", {"object_name": object_name, "texture_id": texture_id})
         if "error" in result:
             return f"Error: {result['error']}"
         if result.get("success"):
@@ -236,10 +230,7 @@ def get_polyhaven_status(ctx: Context[Any, Any, Any]) -> str:
         enabled = result.get("enabled", False)
         message = result.get("message", "")
         if enabled:
-            message += (
-                "PolyHaven is strong for textures and has a wider "
-                "variety of textures than Sketchfab."
-            )
+            message += "PolyHaven is strong for textures and has a wider " "variety of textures than Sketchfab."
         return message
     except Exception as e:
         logger.error(f"Error checking PolyHaven status: {str(e)}")
@@ -287,8 +278,7 @@ def get_sketchfab_status(ctx: Context[Any, Any, Any]) -> str:
         message = result.get("message", "")
         if enabled:
             message += (
-                "Sketchfab is strong for realistic models and offers "
-                "a wider variety of models than PolyHaven."
+                "Sketchfab is strong for realistic models and offers " "a wider variety of models than PolyHaven."
             )
         return message
     except Exception as e:
@@ -306,10 +296,7 @@ def search_sketchfab_models(
 ) -> str:
     try:
         blender = get_blender_connection()
-        msg = (
-            "Searching Sketchfab models with query: %s, categories: %s, count: %s, "
-            "downloadable: %s"
-        )
+        msg = "Searching Sketchfab models with query: %s, categories: %s, count: %s, " "downloadable: %s"
         logger.info(msg, query, categories, count, downloadable)
         result = blender.send_command(
             "search_sketchfab_models",
@@ -337,18 +324,10 @@ def search_sketchfab_models(
             model_uid = model.get("uid", "Unknown ID")
             formatted_output += f"- {model_name} (UID: {model_uid})\n"
             user = model.get("user") or {}
-            username = (
-                user.get("username", "Unknown author")
-                if isinstance(user, dict)
-                else "Unknown author"
-            )
+            username = user.get("username", "Unknown author") if isinstance(user, dict) else "Unknown author"
             formatted_output += f"  Author: {username}\n"
             license_data = model.get("license") or {}
-            license_label = (
-                license_data.get("label", "Unknown")
-                if isinstance(license_data, dict)
-                else "Unknown"
-            )
+            license_label = license_data.get("label", "Unknown") if isinstance(license_data, dict) else "Unknown"
             formatted_output += f"  License: {license_label}\n"
             face_count = model.get("faceCount", "Unknown")
             is_downloadable = "Yes" if model.get("isDownloadable") else "No"
@@ -432,16 +411,10 @@ def generate_hyper3d_model_via_images(
 
         for path in input_image_paths:
             with open(path, "rb") as f:
-                images.append(
-                    (Path(path).suffix, base64.b64encode(f.read()).decode("ascii"))
-                )
+                images.append((Path(path).suffix, base64.b64encode(f.read()).decode("ascii")))
     elif input_image_urls is not None:
         # validate urls
-        bad = [
-            u
-            for u in input_image_urls
-            if not (urlparse(u).scheme and urlparse(u).netloc)
-        ]
+        bad = [u for u in input_image_urls if not (urlparse(u).scheme and urlparse(u).netloc)]
         if bad:
             return "Error: not all image URLs are valid!"
 

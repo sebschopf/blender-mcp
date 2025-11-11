@@ -12,8 +12,6 @@ collection and CI don't fail. When running inside Blender the real
 properties are registered.
 """
 
-from typing import Callable
-
 
 def _register_scene_properties() -> None:
     """Register scene-level properties used by the addon.
@@ -36,9 +34,7 @@ def _register_scene_properties() -> None:
             name="Server PID", description="PID of external MCP server", default=0
         )
 
-        bpy.types.Scene.blendermcp_server_running = bpy.props.BoolProperty(
-            name="Server Running", default=False
-        )
+        bpy.types.Scene.blendermcp_server_running = bpy.props.BoolProperty(name="Server Running", default=False)
 
         bpy.types.Scene.blendermcp_use_polyhaven = bpy.props.BoolProperty(
             name="Use Poly Haven",
@@ -85,8 +81,7 @@ def _register_scene_properties() -> None:
         bpy.types.Scene.blendermcp_allow_remote_exec = bpy.props.BoolProperty(
             name="Allow remote execution",
             description=(
-                "Enable remote execution of Python snippets (dangerous). "
-                "Requires explicit opt-in and caution."
+                "Enable remote execution of Python snippets (dangerous). " "Requires explicit opt-in and caution."
             ),
             default=False,
         )

@@ -5,6 +5,7 @@ This mirrors the consolidated connection logic and is intended to be
 imported explicitly by the repository-root shim to provide a single
 authoritative implementation.
 """
+
 from __future__ import annotations
 
 import json

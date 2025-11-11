@@ -56,7 +56,9 @@ def make_fake_bpy():
 
     # minimal preferences with addon prefs map used by the UI
     fake_pref = types.SimpleNamespace()
-    fake_pref.addons = {"blender_mcp": types.SimpleNamespace(preferences=types.SimpleNamespace(allow_ui_start_server=True))}
+    fake_pref.addons = {
+        "blender_mcp": types.SimpleNamespace(preferences=types.SimpleNamespace(allow_ui_start_server=True))
+    }
     fake.preferences = fake_pref
 
     return fake
@@ -88,8 +90,8 @@ def test_start_stop_server_ui(monkeypatch):
         # import the module under test after installing fake bpy
         mod = importlib.import_module("blender_mcp.blender_ui")
         # patch the adapter module in its package location
-        monkeypatch.setattr("blender_mcp.embedded_server_adapter.start_server_process", fake_start)
-        monkeypatch.setattr("blender_mcp.embedded_server_adapter.stop_server_process", fake_stop)
+        monkeypatch.setattr("blender_mcp.servers.embedded_adapter.start_server_process", fake_start)
+        monkeypatch.setattr("blender_mcp.servers.embedded_adapter.stop_server_process", fake_stop)
 
         # Create operator instances and call execute with a fake context
         start_op = mod.BLENDERMCP_OT_StartServer()

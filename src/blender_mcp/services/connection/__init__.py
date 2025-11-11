@@ -10,6 +10,7 @@ from .framing import LengthPrefixedReassembler
 from .network import BlenderConnectionNetwork
 from .reassembler import ChunkedJSONReassembler
 from .socket_conn import SocketBlenderConnection
+
 # Re-export canonical runtime accessor from consolidated implementation
 try:
     # Prefer the canonical implementation in src/blender_mcp/connection_core.py

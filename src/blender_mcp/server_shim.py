@@ -1,56 +1,17 @@
-"""Minimal server shim used in tests.
+"""Top-level compatibility façade for the `servers` package shim.
 
-This is a small alternative to `server.py` used while the main module is
-being refactored. It intentionally keeps the surface area tiny and
-import-safe.
+Implementation moved to `blender_mcp.servers.shim` to consolidate server
+code under one package. This façade keeps existing imports working.
 """
 
-from __future__ import annotations
+from .servers.shim import BlenderMCPServer, _process_bbox  # noqa: F401
 
-import json
-import logging
-from typing import Any, Dict, Optional
+__all__ = ["BlenderMCPServer", "_process_bbox"]
+"""Top-level compatibility façade for the `servers` package shim.
 
-from .simple_dispatcher import Dispatcher, register_default_handlers
-
-logger = logging.getLogger(__name__)
-
-
-def _process_bbox(
-    bbox: Optional[list[float] | tuple[float, float, float]],
-) -> Optional[list[int]]:
-    if bbox is None:
-        return None
-    if not isinstance(bbox, (list, tuple)) or len(bbox) != 3:
-        raise ValueError("bbox must be a 3-tuple/list or None")
-    vals = [float(x) for x in bbox]
-    if any(v < 0 for v in vals):
-        raise ValueError("bbox values must be non-negative")
-    mx = max(vals)
-    if mx == 0:
-        raise ValueError("bbox max cannot be zero")
-    factor = 100 if mx <= 1.0 else 50
-    return [int(v * factor) for v in vals]
-
-
-class BlenderMCPServer:
-    def execute_command(self, command: Dict[str, Any]) -> Dict[str, Any]:
-        if not hasattr(self, "_dispatcher"):
-            self._dispatcher = Dispatcher()
-            register_default_handlers(self._dispatcher)
-
-        tool = command.get("tool") or command.get("type")
-        params = command.get("params", {})
-        if tool:
-            result = self._dispatcher.dispatch(tool, params)
-            if result is not None:
-                return {"status": "ok", "handled": True, "result": result}
-
-        return {"status": "ok", "handled": False, "echo": command}
-
-    def _schedule_execute_wrapper(self, client: Any, command: Dict[str, Any]) -> None:
-        result = self.execute_command(command)
-        client.sendall(json.dumps(result).encode("utf-8"))
+Implementation moved to `blender_mcp.servers.shim` to consolidate server
+code under one package. This façade keeps existing imports working.
+"""
 
 
 __all__ = ["BlenderMCPServer", "_process_bbox"]

@@ -36,8 +36,6 @@ def _normalize_objects(addon_objects: Any) -> list[Dict[str, Any]]:
     return out
 
 
-
-
 def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """Canonical service-facing get_scene_info.
 
@@ -131,7 +129,6 @@ def _fallback_get_scene_info(bpy) -> Dict[str, Any]:
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
-
 
 
 __all__ = ["get_scene_info"]

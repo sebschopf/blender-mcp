@@ -1,4 +1,5 @@
 from typing import Any, List, Tuple, cast
+
 import requests
 
 from blender_mcp.sketchfab import get_sketchfab_status, search_models
@@ -36,4 +37,3 @@ def test_search_models_injected_session() -> None:
     fake = FakeSession(json_data=data)
     out = search_models("k", "chair", session=cast(requests.Session, fake))
     assert isinstance(out, dict)
-
