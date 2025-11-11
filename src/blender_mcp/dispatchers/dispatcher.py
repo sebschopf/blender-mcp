@@ -11,6 +11,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutTimeout
 from typing import Any, Callable, Dict, List, Optional
+from .registry import HandlerRegistry
 
 from ..types import DispatcherResult
 from .abc import AbstractDispatcher
@@ -51,7 +52,7 @@ class Dispatcher(AbstractDispatcher):
         `dispatch_with_timeout` to create executors, allowing callers to
         inject test doubles or alternative executors.
         """
-        self._handlers: Dict[str, Handler] = {}
+        self._registry = HandlerRegistry()
         self._executor_factory = executor_factory
 
     def register(self, name: str, fn: Handler, *, overwrite: bool = False) -> None:
@@ -61,26 +62,24 @@ class Dispatcher(AbstractDispatcher):
         existing name will raise ValueError (audit-friendly). Set
         `overwrite=True` to replace existing handlers.
         """
-        if name in self._handlers and not overwrite:
-            raise ValueError(f"handler already registered for {name}")
-        self._handlers[name] = fn
+        self._registry.register(name, fn, overwrite=overwrite)
         logger.debug("registered handler %s (overwrite=%s)", name, overwrite)
 
     def unregister(self, name: str) -> None:
         """Remove a handler if present (no-op if missing)."""
-        self._handlers.pop(name, None)
+        self._registry.unregister(name)
         logger.debug("unregistered handler %s", name)
 
     def list_handlers(self) -> List[str]:
         """Return a sorted list of registered handler names."""
-        return sorted(self._handlers.keys())
+        return self._registry.list_handlers()
 
     def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Call the handler named `name` with `params` and return its result.
 
         If the handler is not found, returns None.
         """
-        fn = self._handlers.get(name)
+        fn = self._registry.get(name)
         if fn is None:
             logger.debug("no handler for %s", name)
             return None
@@ -95,16 +94,17 @@ class Dispatcher(AbstractDispatcher):
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
-        if name not in self._handlers:
+        if self._registry.get(name) is None:
             logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
 
     def dispatch_with_timeout(self, name: str, params: Optional[Dict[str, Any]] = None, timeout: float = 5.0) -> Any:
         """Call handler with a timeout (seconds). Raises TimeoutError on timeout."""
-        if name not in self._handlers:
+        if self._registry.get(name) is None:
             raise KeyError(name)
-        handler = self._handlers[name]
+        handler = self._registry.get(name)
+        assert handler is not None
         # Use injected executor factory if available to support DI/testing.
         if self._executor_factory is not None:
             with self._executor_factory() as ex:
