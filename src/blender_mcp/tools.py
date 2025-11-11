@@ -116,7 +116,9 @@ def get_scene_info(ctx: Context[Any, Any, Any]) -> str:
         try:
             from . import server as _server
 
-            _server.logger.error(f"Error getting scene info from Blender: {str(e)}")
+            _log = getattr(_server, "logger", None)
+            if _log is not None:
+                _log.error(f"Error getting scene info from Blender: {str(e)}")
         except Exception:
             pass
         return f"Error getting scene info: {str(e)}"
@@ -135,7 +137,9 @@ def get_object_info(ctx: Context[Any, Any, Any], object_name: str) -> str:
         try:
             from . import server as _server
 
-            _server.logger.error(f"Error getting object info from Blender: {str(e)}")
+            _log = getattr(_server, "logger", None)
+            if _log is not None:
+                _log.error(f"Error getting object info from Blender: {str(e)}")
         except Exception:
             pass
         return f"Error getting object info: {str(e)}"
@@ -166,7 +170,9 @@ def get_viewport_screenshot(ctx: Context[Any, Any, Any], max_size: int = 800) ->
         try:
             from . import server as _server
 
-            _server.logger.error(f"Error capturing screenshot: {str(e)}")
+            _log = getattr(_server, "logger", None)
+            if _log is not None:
+                _log.error(f"Error capturing screenshot: {str(e)}")
         except Exception:
             pass
         raise Exception(f"Screenshot failed: {str(e)}")
@@ -182,7 +188,9 @@ def execute_blender_code(ctx: Context[Any, Any, Any], code: str) -> str:
         try:
             from . import server as _server
 
-            _server.logger.error(f"Error executing code: {str(e)}")
+            _log = getattr(_server, "logger", None)
+            if _log is not None:
+                _log.error(f"Error executing code: {str(e)}")
         except Exception:
             pass
         return f"Error executing code: {str(e)}"

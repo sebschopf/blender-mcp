@@ -11,4 +11,4 @@ This keeps package import lightweight and avoids circular imports when
 refactoring modules.
 """
 
-__all__ = []
+__all__: list[str] = []

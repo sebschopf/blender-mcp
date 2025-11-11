@@ -11,13 +11,15 @@ from __future__ import annotations
 import json
 import logging
 import socket
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 from .reassembler import ChunkedJSONReassembler
 
 logger = logging.getLogger(__name__)
 
 
+# Explicit annotation so static analyzers know this name may be a type or None
+CoreBlenderConnection: Optional[Type[Any]] = None
 try:
     from ...connection_core import BlenderConnection as CoreBlenderConnection  # type: ignore
 except Exception:
@@ -32,10 +34,14 @@ class NetworkCore:
         connect(), disconnect(), receive_full_response(), send_command()
     """
 
+    # Instance attribute annotations for static analyzers
+    sock: Optional[socket.socket]
+    _core: Optional[Any]
+
     def __init__(self, host: str = "localhost", port: int = 9876) -> None:
         self.host = host
         self.port = port
-        self.sock: Optional[socket.socket] = None
+        self.sock = None
         self._core = None
 
     def connect(self) -> bool:

@@ -30,7 +30,7 @@ if _has_real_bpy():
 
     bpy = importlib.import_module("bpy")  # type: ignore
 
-    class BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey(bpy.types.Operator):
+    class BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey(bpy.types.Operator):  # type: ignore[name-defined]
         bl_idname = "blendermcp.set_hyper3d_free_trial_api_key"
         bl_label = "Set Free Trial API Key"
 
@@ -40,7 +40,7 @@ if _has_real_bpy():
             self.report({"INFO"}, "API Key set successfully!")
             return {"FINISHED"}
 
-    class BLENDERMCP_OT_StartServer(bpy.types.Operator):
+    class BLENDERMCP_OT_StartServer(bpy.types.Operator):  # type: ignore[name-defined]
         bl_idname = "blendermcp.start_server"
         bl_label = "Connect to Gemini"
         bl_description = "Start the BlenderMCP server to connect with Gemini"
@@ -102,7 +102,7 @@ if _has_real_bpy():
                 self.report({"ERROR"}, f"Failed to start external MCP server: {e}")
                 return {"CANCELLED"}
 
-    class BLENDERMCP_OT_StopServer(bpy.types.Operator):
+    class BLENDERMCP_OT_StopServer(bpy.types.Operator):  # type: ignore[name-defined]
         bl_idname = "blendermcp.stop_server"
         bl_label = "Disconnect from MCP server"
 
@@ -124,7 +124,7 @@ if _has_real_bpy():
                 self.report({"ERROR"}, f"Failed to stop external MCP server: {e}")
                 return {"CANCELLED"}
 
-    class BLENDERMCP_OT_ApplyRemoteExecSetting(bpy.types.Operator):
+    class BLENDERMCP_OT_ApplyRemoteExecSetting(bpy.types.Operator):  # type: ignore[name-defined]
         bl_idname = "blendermcp.apply_remote_exec_setting"
         bl_label = "Apply remote-exec setting"
 
