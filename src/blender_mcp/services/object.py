@@ -11,6 +11,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
+from blender_mcp.errors import ExternalServiceError, HandlerError, InvalidParamsError
+
 from .addon.objects import get_object_info as _addon_get_object_info
 
 logger = logging.getLogger(__name__)
@@ -33,24 +35,27 @@ def get_object_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """
     name = _parse_name(params)
     if not name:
-        return {"status": "error", "message": "missing or invalid 'name'"}
+        raise InvalidParamsError("missing or invalid 'name'")
 
     try:
         addon_resp = _addon_get_object_info(name)
     except Exception as e:
         logger.exception("addon get_object_info failed")
-        return {"status": "error", "message": str(e)}
+        raise HandlerError("get_object_info", e)
 
     # If the addon returned an error dict, normalize it
     if isinstance(addon_resp, dict) and addon_resp.get("error"):
-        return {"status": "error", "message": addon_resp.get("error")}
+        msg = addon_resp.get("error") or ""
+        if "bpy" in msg or "Blender" in msg:
+            raise ExternalServiceError(msg)
+        raise HandlerError("get_object_info", Exception(msg))
 
     # Expect addon to return object info dict on success
     if isinstance(addon_resp, dict):
         return {"status": "success", "object": addon_resp}
 
     # Fallback: unexpected shape
-    return {"status": "error", "message": "unexpected addon response"}
+    raise HandlerError("get_object_info", Exception("unexpected addon response"))
 
 
 __all__ = ["get_object_info"]

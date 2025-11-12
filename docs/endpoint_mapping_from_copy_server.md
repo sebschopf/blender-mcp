@@ -1,3 +1,5 @@
+ARCHIVED: this generated mapping has been moved to `docs/archive/endpoint_mapping_from_copy_server.md`.
+See `docs/archive/endpoint_mapping_from_copy_server.md` for the preserved content.
 # Endpoint mapping extracted from `copy_server.py`
 
 This file was generated automatically by `tools/parse_decorators.py`.

@@ -26,6 +26,8 @@ class DispatcherResult(TypedDict, total=False):
     status: NotRequired[str]
     result: NotRequired[Any]
     message: NotRequired[str]
+    # stable machine-readable error code added for normalized error handling
+    error_code: NotRequired[str]
 
 
 class ToolInfo(TypedDict, total=False):

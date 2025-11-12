@@ -47,30 +47,7 @@ Notes:
 
 ## Server / connection symbols
 - BlenderConnection / connect / disconnect / send_command / receive_full_response
-  - Canonical implementations:
-    - `src/blender_mcp/connection_core.py::BlenderConnection`
-    - `src/blender_mcp/connection.py::BlenderConnection` (secondary)
+  This file has been archived and moved to `docs/archive/archive_symbol_mapping.md`.
+
+  See `docs/archive/archive_symbol_mapping.md` for the preserved content.
   - Service-side adapters and facade:
-    - `src/blender_mcp/services/connection/network.py`
-    - `src/blender_mcp/services/connection/facade.py`
-
-- DEFAULT_HOST / DEFAULT_PORT
-  - Defined in `src/blender_mcp/connection_core.py` and `src/blender_mcp/connection.py`.
-
-- _process_bbox
-  - Present in `src/blender_mcp/server.py` (exported)
-
-- server main / entrypoints
-  - `src/blender_mcp/server.py` and `src/blender_mcp/server_shim.py` provide runtime entry points. `asgi.py` adapts to ASGI when used.
-
-## Other notes
-- Central session factory
-  - Implemented at `src/blender_mcp/http.py::get_session()` and `reset_session()`; services were incrementally migrated (e.g., `sketchfab.py`, `services/addon/polyhaven.py`) to accept or use the shared session.
-
-- Download helpers
-  - `src/blender_mcp/downloaders.py` provides `download_bytes()` with retries/backoff; many callers now prefer it for downloads.
-
-- UI
-  - Panel and operators: `src/blender_mcp/blender_ui.py` (Start/Stop server operators now respect `AddonPreferences` and use the embedded server adapter lazily).
-
-If you want, I can convert this to a more machine-readable table or add links to exact line numbers.

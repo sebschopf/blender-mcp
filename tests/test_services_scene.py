@@ -1,6 +1,7 @@
 import sys
 import types
 
+from blender_mcp.errors import ExternalServiceError
 from blender_mcp.services.scene import get_scene_info
 
 
@@ -39,5 +40,7 @@ def test_get_scene_info_with_bpy(monkeypatch):
 def test_get_scene_info_no_bpy():
     if "bpy" in sys.modules:
         del sys.modules["bpy"]
-    resp = get_scene_info()
-    assert resp["status"] == "error"
+    import pytest
+
+    with pytest.raises(ExternalServiceError):
+        get_scene_info()

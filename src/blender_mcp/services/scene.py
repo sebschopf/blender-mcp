@@ -12,6 +12,8 @@ import importlib
 import logging
 from typing import Any, Dict
 
+from blender_mcp.errors import ExternalServiceError, HandlerError
+
 from .addon.scene import get_scene_info as _addon_get_scene_info
 
 logger = logging.getLogger(__name__)
@@ -49,7 +51,7 @@ def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
         addon_result = _addon_get_scene_info()
     except Exception as e:
         logger.exception("addon scene extraction failed")
-        return {"status": "error", "message": str(e)}
+        raise HandlerError("get_scene_info", e)
 
     # If the addon returned an error dict, try to normalize or fall back to
     # the older in-module extraction logic for compatibility with tests and
@@ -58,7 +60,7 @@ def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
         msg = addon_result.get("error") or ""
         # Preserve the older explicit message when bpy is not importable
         if "No module named 'bpy'" in msg or "cannot import name 'bpy'" in msg:
-            return {"status": "error", "message": "Blender (bpy) not available"}
+            raise ExternalServiceError("Blender (bpy) not available")
 
         # Otherwise try a best-effort fallback that mirrors the previous
         # implementation (query bpy.data.objects, etc.) so tests that
@@ -66,7 +68,7 @@ def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
         try:
             bpy = importlib.import_module("bpy")
         except Exception:
-            return {"status": "error", "message": msg}
+            raise ExternalServiceError(msg)
 
         return _fallback_get_scene_info(bpy)
 
@@ -96,7 +98,7 @@ def get_scene_info(params: Dict[str, Any] | None = None) -> Dict[str, Any]:
         }
     except Exception as e:
         logger.exception("unexpected error normalizing addon scene info")
-        return {"status": "error", "message": str(e)}
+        raise HandlerError("get_scene_info", e)
 
 
 def _fallback_get_scene_info(bpy) -> Dict[str, Any]:
@@ -128,7 +130,7 @@ def _fallback_get_scene_info(bpy) -> Dict[str, Any]:
             "active_camera": active_cam,
         }
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        raise HandlerError("get_scene_info", e)
 
 
 __all__ = ["get_scene_info"]

@@ -1,3 +1,5 @@
+ARCHIVED: this journal addendum has been moved to `docs/archive/PROJECT_JOURNAL.addendum.md`.
+See `docs/archive/PROJECT_JOURNAL.addendum.md` for the preserved content.
 2025-11-08 | sebas
 - Action: Created draft PR for current port/refactor work
 - Fichiers: branch `feature/port-refactor-2025-11-08` (many files under `src/`, tests and docs)

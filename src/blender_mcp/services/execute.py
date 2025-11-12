@@ -15,6 +15,7 @@ import os
 from typing import Any, Dict, Optional
 
 from blender_mcp.dispatchers.dispatcher import Dispatcher
+from blender_mcp.errors import ExternalServiceError, HandlerError, InvalidParamsError
 from blender_mcp.services.connection import BlenderConnectionNetwork
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ def execute_blender_code(params: Dict[str, Any]) -> Dict[str, Any]:
     """
     code = params.get("code")
     if not isinstance(code, str):
-        return {"status": "error", "message": "missing or invalid 'code'"}
+        raise InvalidParamsError("missing or invalid 'code'")
 
     # Audit the request (truncate code to reasonable length in logs)
     truncated = code[:200] + ("..." if len(code) > 200 else "")
@@ -59,7 +60,7 @@ def execute_blender_code(params: Dict[str, Any]) -> Dict[str, Any]:
     except Exception:
         logger.debug("bpy not available (not running inside Blender)")
         _audit_logger.error("bpy not available; cannot execute code")
-        return {"status": "error", "message": "Blender (bpy) not available"}
+        raise ExternalServiceError("Blender (bpy) not available")
 
     # execute user code in a minimal namespace exposing only `bpy`
     local_ns: Dict[str, Any] = {}
@@ -75,7 +76,8 @@ def execute_blender_code(params: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         logger.exception("error executing blender code")
         _audit_logger.exception("execute_blender_code failed: %s", str(e))
-        return {"status": "error", "message": str(e)}
+        # wrap handler exception for downstream adapters/dispatchers
+        raise HandlerError("execute_blender_code", e)
 
 
 def send_command_over_network(host: str, port: int, command_type: str, params: Optional[Dict[str, Any]] = None) -> Any:

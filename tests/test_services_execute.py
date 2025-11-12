@@ -24,8 +24,10 @@ def test_execute_blender_code_no_bpy():
     # Ensure behavior when bpy is not importable
     if "bpy" in sys.modules:
         del sys.modules["bpy"]
-    resp = execute_blender_code({"code": "result = 1"})
-    assert resp["status"] == "error"
+    import pytest
+
+    with pytest.raises(Exception):
+        execute_blender_code({"code": "result = 1"})
 
 
 def test_send_command_over_network(monkeypatch):
