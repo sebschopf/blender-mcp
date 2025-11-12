@@ -4,8 +4,8 @@ import types
 
 import pytest
 
-from blender_mcp.services import object as svc_object
 from blender_mcp.errors import ExternalServiceError
+from blender_mcp.services import object as svc_object
 
 
 def test_get_object_info_no_bpy(monkeypatch):

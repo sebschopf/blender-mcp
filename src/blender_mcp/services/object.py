@@ -11,7 +11,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
-from blender_mcp.errors import InvalidParamsError, ExternalServiceError, HandlerError
+from blender_mcp.errors import ExternalServiceError, HandlerError, InvalidParamsError
+
 from .addon.objects import get_object_info as _addon_get_object_info
 
 logger = logging.getLogger(__name__)

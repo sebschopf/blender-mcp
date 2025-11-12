@@ -1,8 +1,8 @@
 import sys
 import types
 
+from blender_mcp.errors import ExternalServiceError
 from blender_mcp.services.scene import get_scene_info
-from blender_mcp.errors import ExternalServiceError, HandlerError
 
 
 def make_fake_bpy():

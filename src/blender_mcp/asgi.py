@@ -3,25 +3,26 @@ import inspect
 import logging
 import threading
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Dict, Tuple
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from typing import Tuple, Dict, Any
 
-from .errors import (
-    InvalidParamsError,
-    HandlerNotFoundError,
-    PolicyDeniedError,
-    ExecutionTimeoutError,
-    ExternalServiceError,
-    HandlerError as CanonicalHandlerError,
-)
 from . import logging_utils
 
 # Import the server module; it defines `mcp` and helpers but does not call run()
 from . import server as srv
+from .errors import (
+    ExecutionTimeoutError,
+    ExternalServiceError,
+    HandlerNotFoundError,
+    InvalidParamsError,
+    PolicyDeniedError,
+)
+from .errors import (
+    HandlerError as CanonicalHandlerError,
+)
 
 logger = logging.getLogger("BlenderMCPASGI")
 

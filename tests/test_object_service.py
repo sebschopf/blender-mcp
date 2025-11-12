@@ -4,8 +4,8 @@ import types
 
 import pytest
 
+from blender_mcp.errors import ExternalServiceError, HandlerError, InvalidParamsError
 from blender_mcp.services import object as obj_service
-from blender_mcp.errors import InvalidParamsError, ExternalServiceError, HandlerError
 
 
 def test_get_object_info_missing_name():

@@ -4,8 +4,8 @@ import types
 
 import pytest
 
+from blender_mcp.errors import ExternalServiceError
 from blender_mcp.services import scene
-from blender_mcp.errors import ExternalServiceError, HandlerError
 
 
 def test_get_scene_info_no_bpy(monkeypatch):

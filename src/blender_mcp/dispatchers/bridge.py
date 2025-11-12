@@ -6,8 +6,7 @@ testing and policy-wiring.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, List
-from typing import Dict
+from typing import Any, Callable, Dict, List
 
 
 def call_gemini_cli(user_req: str, use_api: bool = False):

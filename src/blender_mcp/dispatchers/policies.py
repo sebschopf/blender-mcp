@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, Optional, Sequence
 
-
 # PolicyChecker returns None when allowed, or a string message when denied.
 PolicyChecker = Callable[[str, Dict[str, Any]], Optional[str]]
 

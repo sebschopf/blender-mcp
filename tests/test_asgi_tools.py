@@ -2,13 +2,12 @@ import pytest
 
 pytest.importorskip("fastapi")
 
-from fastapi.testclient import TestClient
 import importlib
-import types
+
+from fastapi.testclient import TestClient
 
 from blender_mcp import asgi
-from blender_mcp.errors import InvalidParamsError, ExecutionTimeoutError
-
+from blender_mcp.errors import ExecutionTimeoutError, InvalidParamsError
 
 client = TestClient(asgi.app)
 

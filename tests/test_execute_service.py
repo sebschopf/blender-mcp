@@ -4,8 +4,8 @@ import types
 
 import pytest
 
+from blender_mcp.errors import ExternalServiceError, HandlerError, InvalidParamsError
 from blender_mcp.services import execute
-from blender_mcp.errors import InvalidParamsError, ExternalServiceError, HandlerError
 
 
 def test_execute_blender_code_missing_param():

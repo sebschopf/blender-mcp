@@ -1,10 +1,11 @@
 import importlib
 import sys
 import types
+
 import pytest
 
-from blender_mcp.services import screenshot
 from blender_mcp.errors import ExternalServiceError, HandlerError
+from blender_mcp.services import screenshot
 
 
 def test_screenshot_no_bpy(monkeypatch):

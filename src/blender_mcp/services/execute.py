@@ -15,8 +15,8 @@ import os
 from typing import Any, Dict, Optional
 
 from blender_mcp.dispatchers.dispatcher import Dispatcher
+from blender_mcp.errors import ExternalServiceError, HandlerError, InvalidParamsError
 from blender_mcp.services.connection import BlenderConnectionNetwork
-from blender_mcp.errors import InvalidParamsError, ExternalServiceError, HandlerError
 
 logger = logging.getLogger(__name__)
 
