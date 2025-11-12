@@ -11,7 +11,6 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional
 
-
 from ..errors import (
     HandlerError as CanonicalHandlerError,
 )
