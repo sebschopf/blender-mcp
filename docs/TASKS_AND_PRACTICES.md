@@ -234,6 +234,49 @@ Ci‑dessous une checklist exhaustive et ordonnée par priorité/phase. Chaque l
 	- [x] Ajouter FastAPI (et ses dépendances: starlette, pydantic, httpx/tests reqs) en dépendance de développement si on veut exécuter les tests ASGI en CI.
 	- [x] Ajouter jobs CI pour `ruff`, `mypy`, `pytest` (matrix Python 3.11+).
 	- [x] Ajouter un job optionnel `integration` qui installe FastAPI et exécute `tests/test_asgi_tools.py`.
+
+	### Déclencher le job `integration` manuellement via la CLI GitHub
+
+	Si vous avez besoin d'exécuter le job `integration` (job optionnel qui installe FastAPI et exécute les tests ASGI) depuis la ligne de commande, vous pouvez utiliser la CLI `gh` pour re-runner ou déclencher un workflow dispatch. Deux approches utiles :
+
+	- Re-run d'un workflow existant (par exemple après avoir poussé un commit) :
+
+	  1. Listez les runs récents pour la branche courante :
+
+		  ```pwsh
+		  gh run list --branch feature/port-refactor-2025-11-08 --limit 10
+		  ```
+
+	  2. Identifiez l'ID du run que vous voulez relancer (colonne "ID"), puis relancez uniquement le job `integration` :
+
+		  ```pwsh
+		  gh run rerun <run-id> --job integration
+		  ```
+
+	  Note: `gh run rerun --job` relance un job spécifique dans un run existant si le workflow et la plateforme le supportent.
+
+	- Déclenchement via `workflow_dispatch` (si le workflow expose un événement `workflow_dispatch` avec des inputs) :
+
+	  1. Vérifiez que le workflow est déclarée avec `workflow_dispatch` dans `.github/workflows/ci.yml`.
+
+	  2. Déclenchez le workflow manuellement en fournissant la branche cible :
+
+		  ```pwsh
+		  gh workflow run ci.yml --ref feature/port-refactor-2025-11-08
+		  ```
+
+	  3. Si le workflow accepte des inputs (par ex. `run_integration: true`), vous pouvez les fournir ainsi :
+
+		  ```pwsh
+		  gh workflow run ci.yml --ref feature/port-refactor-2025-11-08 --field run_integration=true
+		  ```
+
+	Conseils pratiques :
+	- Assurez-vous d'avoir la CLI `gh` installée et authentifiée (`gh auth login`).
+	- Travaillez depuis la branche que vous voulez tester (la commande `--ref` accepte un nom de branche ou un sha). 
+	- Les permissions du token utilisé par `gh` doivent permettre d'exécuter et relancer des workflows (repo:workflow scope).
+
+	Si vous voulez, j'ajoute aussi un petit script PowerShell `scripts/run_integration_workflow.ps1` qui encapsule ces commandes et fait les vérifications basiques (présence de `gh`, login, choix du run ou dispatch).
 	- [ ] Documenter la commande exacte reproduisant la CI localement dans `DEVELOPER_SETUP.md`.
 
 Note: pour exécuter localement le job d'intégration (ASGI) qui est optionnel en CI, voici les commandes PowerShell recommandées :
