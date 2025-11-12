@@ -24,7 +24,8 @@ def test_role_based_allows_and_denies():
 
 def test_and_or_composition():
     allow = policies.allow_all
-    deny = lambda _t, _p: "nope"
+    def deny(_t, _p):
+        return "nope"
     and_checker = policies.and_(allow, allow)
     assert and_checker("cmd", {}) is None
     and_checker2 = policies.and_(allow, deny)

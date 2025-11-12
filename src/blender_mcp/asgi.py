@@ -29,6 +29,23 @@ logger = logging.getLogger("BlenderMCPASGI")
 mcp_thread = None
 
 
+def _map_exception_to_http(exc: Exception) -> Tuple[int, Dict[str, Any]]:
+    """Map canonical internal exceptions to HTTP status code + payload."""
+    if isinstance(exc, InvalidParamsError):
+        return 400, {"message": str(exc), "error_code": "invalid_params"}
+    if isinstance(exc, HandlerNotFoundError):
+        return 404, {"message": str(exc), "error_code": "not_found"}
+    if isinstance(exc, PolicyDeniedError):
+        return 403, {"message": str(exc), "error_code": "policy_denied"}
+    if isinstance(exc, ExecutionTimeoutError):
+        return 504, {"message": "Handler timed out", "error_code": "timeout"}
+    if isinstance(exc, ExternalServiceError):
+        return 502, {"message": str(exc), "error_code": "external_error"}
+    if isinstance(exc, CanonicalHandlerError):
+        return 500, {"message": str(exc), "error_code": "handler_error"}
+    return 500, {"message": str(exc), "error_code": "internal_error"}
+
+
 def _run_mcp():
     try:
         # srv.main() calls mcp.run() and blocks until shutdown
@@ -163,38 +180,33 @@ async def call_tool(name: str, request: Request) -> Any:
             result = await loop.run_in_executor(None, lambda: func(None, **params))
 
         # emit audit log for success (do not let logging failure break the response)
+        encoded = jsonable_encoder(result)
         try:
-            logging_utils.log_action("asgi", "call_tool", {"tool": name, "params": params}, {"status": "ok", "result": jsonable_encoder(result)})
+            logging_utils.log_action(
+                "asgi",
+                "call_tool",
+                {"tool": name, "params": params},
+                {"status": "ok", "result": encoded},
+            )
         except Exception:
             logger.exception("Failed to emit audit log for successful tool call")
 
-        return {"status": "ok", "result": jsonable_encoder(result)}
+        return {"status": "ok", "result": encoded}
     except Exception as e:
         logger.exception("Error calling tool %s", name)
 
         # Map canonical exceptions to HTTP status codes and include stable error_code
-        def _map_exc(exc: Exception) -> Tuple[int, Dict[str, Any]]:
-            if isinstance(exc, InvalidParamsError):
-                return 400, {"message": str(exc), "error_code": "invalid_params"}
-            if isinstance(exc, HandlerNotFoundError):
-                return 404, {"message": str(exc), "error_code": "not_found"}
-            if isinstance(exc, PolicyDeniedError):
-                return 403, {"message": str(exc), "error_code": "policy_denied"}
-            if isinstance(exc, ExecutionTimeoutError):
-                return 504, {"message": "Handler timed out", "error_code": "timeout"}
-            if isinstance(exc, ExternalServiceError):
-                return 502, {"message": str(exc), "error_code": "external_error"}
-            if isinstance(exc, CanonicalHandlerError):
-                return 500, {"message": str(exc), "error_code": "handler_error"}
-            # fallback
-            return 500, {"message": str(exc), "error_code": "internal_error"}
-
-        status_code, payload = _map_exc(e)
+        status_code, payload = _map_exception_to_http(e)
         body = {"status": "error", **payload}
 
         # audit log the failure (best-effort)
         try:
-            logging_utils.log_action("asgi", "call_tool_error", {"tool": name, "params": params}, body)
+            logging_utils.log_action(
+                "asgi",
+                "call_tool_error",
+                {"tool": name, "params": params},
+                body,
+            )
         except Exception:
             logger.exception("Failed to emit audit log for tool error")
 
