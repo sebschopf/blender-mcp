@@ -232,9 +232,26 @@ Ci‑dessous une checklist exhaustive et ordonnée par priorité/phase. Chaque l
 1) Environnement & CI
 	- [x] Vérifier et standardiser `PYTHONPATH=src` dans tous les workflows CI.
 	- [x] Ajouter FastAPI (et ses dépendances: starlette, pydantic, httpx/tests reqs) en dépendance de développement si on veut exécuter les tests ASGI en CI.
-	- [ ] Ajouter jobs CI pour `ruff`, `mypy`, `pytest` (matrix Python 3.11+).
-	- [ ] Ajouter un job optionnel `integration` qui installe FastAPI et exécute `tests/test_asgi_tools.py`.
+	- [x] Ajouter jobs CI pour `ruff`, `mypy`, `pytest` (matrix Python 3.11+).
+	- [x] Ajouter un job optionnel `integration` qui installe FastAPI et exécute `tests/test_asgi_tools.py`.
 	- [ ] Documenter la commande exacte reproduisant la CI localement dans `DEVELOPER_SETUP.md`.
+
+Note: pour exécuter localement le job d'intégration (ASGI) qui est optionnel en CI, voici les commandes PowerShell recommandées :
+
+```powershell
+# Crée et active un virtualenv (utiliser Python 3.11 pour parité)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Met à jour pip et installe les dépendances d'intégration
+python -m pip install --upgrade pip
+pip install fastapi==0.95 starlette==0.28 httpx==0.24 pytest-asyncio==0.21
+
+# Positionner PYTHONPATH puis exécuter uniquement le test ASGI
+$Env:PYTHONPATH = 'src;.'
+pytest -q tests/test_asgi_tools.py -q
+Remove-Item Env:\PYTHONPATH
+```
 
 2) Core infra (peu risqué, prioritaire)
 	- [ ] Finaliser `src/blender_mcp/errors.py` (liste exhaustive d'erreurs et TypedDicts) — vérifier exports.

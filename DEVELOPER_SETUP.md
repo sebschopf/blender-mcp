@@ -27,6 +27,25 @@ $env:PYTHONPATH = 'src'; python -m pytest -q
 
 Note: Dans CI (GitHub Actions) `PYTHONPATH` est défini en `src:.` pour garantir que le repo root est accessible pendant les tests. Localement, `$env:PYTHONPATH = 'src'` reste la pratique recommandée.
 
+## Running the optional ASGI integration test (local)
+
+If you want to reproduce the optional ASGI integration job locally (the one that runs `tests/test_asgi_tools.py` in CI), use these PowerShell commands (prefer Python 3.11 for parity):
+
+```powershell
+# create and activate venv
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# install ASGI test dependencies
+python -m pip install --upgrade pip
+pip install fastapi==0.95 starlette==0.28 httpx==0.24 pytest-asyncio==0.21
+
+# run the ASGI tests
+$Env:PYTHONPATH = 'src;.'
+pytest -q tests/test_asgi_tools.py -q
+Remove-Item Env:\PYTHONPATH
+```
+
 4. Install pre-commit hooks (recommended)
 
 ```powershell
