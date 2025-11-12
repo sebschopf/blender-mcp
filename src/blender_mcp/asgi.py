@@ -6,6 +6,17 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
+from typing import Tuple, Dict, Any
+
+from .errors import (
+    InvalidParamsError,
+    HandlerNotFoundError,
+    PolicyDeniedError,
+    ExecutionTimeoutError,
+    ExternalServiceError,
+    HandlerError as CanonicalHandlerError,
+)
+from .logging_utils import log_action
 
 # Import the server module; it defines `mcp` and helpers but does not call run()
 from . import server as srv
@@ -43,6 +54,7 @@ def health():
         srv.get_blender_connection()
         return {"status": "ok", "blender": "connected"}
     except Exception as e:
+        # keep health lightweight and backward-compatible
         return {"status": "error", "message": str(e)}
 
 
@@ -123,4 +135,27 @@ async def call_tool(name: str, request: Request) -> Any:
         return {"status": "ok", "result": jsonable_encoder(result)}
     except Exception as e:
         logger.exception("Error calling tool %s", name)
-        raise HTTPException(status_code=500, detail=str(e))
+        # Map canonical exceptions to HTTP status codes and include stable error_code
+        def _map_exc(exc: Exception) -> Tuple[int, Dict[str, Any]]:
+            if isinstance(exc, InvalidParamsError):
+                return 400, {"message": str(exc), "error_code": "invalid_params"}
+            if isinstance(exc, HandlerNotFoundError):
+                return 404, {"message": str(exc), "error_code": "not_found"}
+            if isinstance(exc, PolicyDeniedError):
+                return 403, {"message": str(exc), "error_code": "policy_denied"}
+            if isinstance(exc, ExecutionTimeoutError):
+                return 504, {"message": "Handler timed out", "error_code": "timeout"}
+            if isinstance(exc, ExternalServiceError):
+                return 502, {"message": str(exc), "error_code": "external_error"}
+            if isinstance(exc, CanonicalHandlerError):
+                return 500, {"message": str(exc), "error_code": "handler_error"}
+            # fallback
+            return 500, {"message": str(exc), "error_code": "internal_error"}
+
+        status_code, payload = _map_exc(e)
+        # audit log the failure
+        try:
+            log_action("asgi", "call_tool_error", {"tool": name, "params": params}, payload)
+        except Exception:
+            logger.exception("Failed to emit audit log for tool error")
+        raise HTTPException(status_code=status_code, detail=payload)
