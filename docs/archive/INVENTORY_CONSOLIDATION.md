@@ -1,5 +1,3 @@
-ARCHIVED: this inventory consolidation doc has been moved to `docs/archive/INVENTORY_CONSOLIDATION.md`.
-See `docs/archive/INVENTORY_CONSOLIDATION.md` for the preserved content.
 # Inventory & Consolidation Plan — `src/blender_mcp` and root shim
 
 Ce document liste les fichiers candidats à la consolidation, leur rôle estimé, l'action recommandée à court terme, le niveau de risque (impact API/comportement) et si une proposition OpenSpec est probablement requise.
@@ -56,7 +54,6 @@ Usage: ce fichier est généré automatiquement par l'outil d'audit. Servez-vous
 | `src/blender_mcp/templates/asset_creation_strategy.txt` | Template text | Keep | Low | No |
 | `src/blender_mcp/templates/*` | Templates | Keep / document | Low | No |
 
-
 ## Archive (snapshots)
 Les fichiers sous `src/blender_mcp/archive/` sont des snapshots historiques. Ils doivent être préservés mais exclus des checks automatiques (lint/mypy). Ne pas modifier sans accord explicite.
 
@@ -65,14 +62,12 @@ Examples:
 - `src/blender_mcp/archive/server_shim.py`
 - `src/blender_mcp/archive/*` (dispatcher, connection, blender_ui, etc.)
 
-Action courte recommandée: ajouter une note dans `openspec/changes/` si l'objectif est de réimporter/migrer ces snapshots.
-
+Action courte recommandée: ajouter une note dans `openspec/changes/` si l'objectif est de réimporter/migrer ces snapshots. 
 
 ## Priorités recommandées (rappel)
 1. High: consolidation points d'entrée (server, shim root, dispatchers, connection).
 2. Medium: shims/compat move to `compat/`, tests network, embedded adapter tests.
 3. Low: helpers, templates, docs, typings.
-
 
 ## Prochaine étape proposée
 - Je peux générer un Markdown plus détaillé listant chaque fichier individuel (83 lignes) dans le même format CSV/markdown si tu veux l'import direct dans un tracker. Dis si tu veux le Markdown complet, CSV, ou que je crée des branches PR stubs pour les 3 items high-priority.

@@ -2,10 +2,12 @@ import asyncio
 import inspect
 import logging
 import threading
+from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from typing import Tuple, Dict, Any
 
 from .errors import (
@@ -16,14 +18,12 @@ from .errors import (
     ExternalServiceError,
     HandlerError as CanonicalHandlerError,
 )
-from .logging_utils import log_action
+from . import logging_utils
 
 # Import the server module; it defines `mcp` and helpers but does not call run()
 from . import server as srv
 
 logger = logging.getLogger("BlenderMCPASGI")
-
-app = FastAPI(title="BlenderMCP ASGI adapter")
 
 mcp_thread = None
 
@@ -36,14 +36,43 @@ def _run_mcp():
         logger.exception("mcp.run() exited with an error")
 
 
-@app.on_event("startup")
-def _startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Start the MCP server in a background thread for the app lifespan.
+
+    Using FastAPI lifespan ensures TestClient triggers startup/shutdown and
+    avoids the deprecated `on_event('startup')` handler.
+    """
     global mcp_thread
-    # Start MCP server in a daemon thread so FastAPI/uvicorn can run alongside it
-    if mcp_thread is None or not mcp_thread.is_alive():
-        mcp_thread = threading.Thread(target=_run_mcp, name="BlenderMCPThread", daemon=True)
-        mcp_thread.start()
-        logger.info("Started BlenderMCP thread")
+    try:
+        if mcp_thread is None or not mcp_thread.is_alive():
+            mcp_thread = threading.Thread(target=_run_mcp, name="BlenderMCPThread", daemon=True)
+            mcp_thread.start()
+            logger.info("Started BlenderMCP thread (lifespan)")
+    except Exception:
+        logger.exception("Failed to start BlenderMCP thread")
+
+    try:
+        yield
+    finally:
+        # Attempt graceful shutdown if the server exposes a stop function.
+        try:
+            stop_fn = getattr(srv, "stop", None) or getattr(srv, "shutdown", None)
+            if callable(stop_fn):
+                try:
+                    stop_fn()
+                except Exception:
+                    logger.exception("Error while calling srv.stop()/shutdown()")
+
+            if mcp_thread is not None and mcp_thread.is_alive():
+                mcp_thread.join(timeout=2.0)
+                if mcp_thread.is_alive():
+                    logger.warning("MCP thread still alive after join timeout")
+        except Exception:
+            logger.exception("Error during MCP thread shutdown")
+
+
+app = FastAPI(title="BlenderMCP ASGI adapter", lifespan=lifespan)
 
 
 @app.get("/health")
@@ -132,9 +161,16 @@ async def call_tool(name: str, request: Request) -> Any:
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(None, lambda: func(None, **params))
 
+        # emit audit log for success (do not let logging failure break the response)
+        try:
+            logging_utils.log_action("asgi", "call_tool", {"tool": name, "params": params}, {"status": "ok", "result": jsonable_encoder(result)})
+        except Exception:
+            logger.exception("Failed to emit audit log for successful tool call")
+
         return {"status": "ok", "result": jsonable_encoder(result)}
     except Exception as e:
         logger.exception("Error calling tool %s", name)
+
         # Map canonical exceptions to HTTP status codes and include stable error_code
         def _map_exc(exc: Exception) -> Tuple[int, Dict[str, Any]]:
             if isinstance(exc, InvalidParamsError):
@@ -153,9 +189,12 @@ async def call_tool(name: str, request: Request) -> Any:
             return 500, {"message": str(exc), "error_code": "internal_error"}
 
         status_code, payload = _map_exc(e)
-        # audit log the failure
+        body = {"status": "error", **payload}
+
+        # audit log the failure (best-effort)
         try:
-            log_action("asgi", "call_tool_error", {"tool": name, "params": params}, payload)
+            logging_utils.log_action("asgi", "call_tool_error", {"tool": name, "params": params}, body)
         except Exception:
             logger.exception("Failed to emit audit log for tool error")
-        raise HTTPException(status_code=status_code, detail=payload)
+
+        return JSONResponse(status_code=status_code, content=jsonable_encoder(body))

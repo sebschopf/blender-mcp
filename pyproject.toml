@@ -24,6 +24,10 @@ pytest = "^8.0"
 # pre-commit 4.x may not be available in older Poetry repos/environments; pin to 3.x for broader compatibility.
 pre-commit = "^3.4"
 types-requests = "^2.31.0"
+fastapi = "^0.95"
+starlette = "^0.28"
+httpx = "^0.24"
+pytest-asyncio = "^0.21"
 
 [tool.poetry.scripts]
 blender-mcp = "blender_mcp.server:main"

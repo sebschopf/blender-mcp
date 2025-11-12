@@ -2,7 +2,10 @@ import importlib
 import sys
 import types
 
+import pytest
+
 from blender_mcp.services import scene
+from blender_mcp.errors import ExternalServiceError, HandlerError
 
 
 def test_get_scene_info_no_bpy(monkeypatch):
@@ -12,10 +15,8 @@ def test_get_scene_info_no_bpy(monkeypatch):
     # so remove key entirely
     monkeypatch.delitem(sys.modules, "bpy", raising=False)
 
-    res = scene.get_scene_info()
-    assert isinstance(res, dict)
-    assert res.get("status") == "error"
-    assert "Blender (bpy) not available" in res.get("message", "")
+    with pytest.raises(ExternalServiceError):
+        scene.get_scene_info()
 
 
 def _make_fake_bpy():

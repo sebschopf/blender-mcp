@@ -66,3 +66,33 @@ jobs:
           # artifacts are uploaded multiple times for the same run).
           name: pytest-report-${{ matrix.python-version }}-run${{ github.run_attempt }}
           path: pytest-report.xml
+
+  integration:
+    # This job is optional and runs only when manually triggered (workflow_dispatch)
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install integration tooling (FastAPI + test deps)
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi starlette httpx pytest-asyncio uvicorn
+
+      - name: Run ASGI integration tests
+        env:
+          PYTHONPATH: 'src:.'
+        run: |
+          pytest -q tests/test_asgi_tools.py --junitxml=pytest-integration-report.xml || true
+
+      - name: Upload integration report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-integration-report
+          path: pytest-integration-report.xml

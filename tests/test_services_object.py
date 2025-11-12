@@ -2,18 +2,19 @@ import importlib
 import sys
 import types
 
+import pytest
+
 from blender_mcp.services import object as svc_object
+from blender_mcp.errors import ExternalServiceError
 
 
 def test_get_object_info_no_bpy(monkeypatch):
     # Ensure bpy is not importable
-    monkeypatch.setitem(sys.modules, "bpy", None)
     monkeypatch.delitem(sys.modules, "bpy", raising=False)
+    importlib.reload(svc_object)
 
-    res = svc_object.get_object_info({"name": "Cube"})
-    assert isinstance(res, dict)
-    assert res.get("status") == "error"
-    assert "Blender" in res.get("message", "") or res.get("message") is not None
+    with pytest.raises(ExternalServiceError):
+        svc_object.get_object_info({"name": "Cube"})
 
 
 def _make_fake_bpy():

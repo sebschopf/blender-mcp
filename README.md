@@ -34,6 +34,8 @@ python -m pip install -U pytest
 $env:PYTHONPATH = 'src'; python -m pytest -q
 ```
 
+Note: Dans GitHub Actions la variable `PYTHONPATH` est définie comme `src:.` (séparateur `:` sur runners Linux) pour garantir que le répertoire racine du dépôt est également accessible pendant les tests. Localement, `PYTHONPATH='src'` (PowerShell : `$env:PYTHONPATH = 'src'`) suffit et correspond aux exemples fournis dans la documentation.
+
 Configuration VS Code
 - Un fichier `.vscode/settings.json` a été ajouté pour activer la découverte pytest dans l'IDE.
 - Un `pytest.ini` est présent pour uniformiser la découverte des tests.

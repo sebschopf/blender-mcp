@@ -15,6 +15,8 @@ import importlib
 import logging
 from typing import Any, Dict, Optional
 
+from blender_mcp.errors import ExternalServiceError, HandlerError
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,26 +35,26 @@ def get_viewport_screenshot(params: Optional[Dict[str, Any]] = None) -> Dict[str
         bpy = importlib.import_module("bpy")
     except Exception:
         logger.debug("bpy not available when calling get_viewport_screenshot")
-        return {"status": "error", "message": "Blender (bpy) not available"}
+        raise ExternalServiceError("Blender (bpy) not available")
 
     # attempt to use a small well-defined helper implemented in the addon
     capture = getattr(bpy, "capture_viewport_bytes", None)
     if capture is None or not callable(capture):
         logger.debug("bpy.capture_viewport_bytes not available")
-        return {
-            "status": "error",
-            "message": "capture_viewport_bytes not available on bpy",
-        }
+        raise ExternalServiceError("capture_viewport_bytes not available on bpy")
 
     try:
         img_bytes = capture()
         if not isinstance(img_bytes, (bytes, bytearray)):
-            return {"status": "error", "message": "capture returned non-bytes"}
+            raise ExternalServiceError("capture returned non-bytes")
         b64 = base64.b64encode(bytes(img_bytes)).decode("ascii")
         return {"status": "success", "image_base64": b64}
+    except ExternalServiceError:
+        raise
     except Exception as e:
         logger.exception("error capturing viewport")
-        return {"status": "error", "message": str(e)}
+        # wrap handler exceptions for adapters
+        raise HandlerError("get_viewport_screenshot", e)
 
 
 __all__ = ["get_viewport_screenshot"]
