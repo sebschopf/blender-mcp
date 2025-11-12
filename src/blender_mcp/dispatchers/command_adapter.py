@@ -7,15 +7,11 @@ normalization, error mapping and response shaping.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Dict, Optional
 
 from ..types import DispatcherResult
 from .abc import AbstractDispatcher
-
-# PolicyChecker should return None when allowed, or a string message when
-# the policy disallows the action. The adapter treats any returned string as
-# an error message to be surfaced to the caller.
-PolicyChecker = Callable[[str, Dict[str, Any]], Optional[str]]
+from .policies import PolicyChecker
 
 
 class CommandAdapter:

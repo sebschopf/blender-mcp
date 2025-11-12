@@ -7,6 +7,21 @@ testing and policy-wiring.
 from __future__ import annotations
 
 from typing import Any, Callable, List
+from typing import Dict
+
+
+def call_gemini_cli(user_req: str, use_api: bool = False):
+    """Placeholder for the Gemini client call; tests monkeypatch this.
+
+    Kept in this module so the BridgeService can default to using the
+    project-level stub. Tests should monkeypatch `bridge.call_gemini_cli`.
+    """
+    raise NotImplementedError("call_gemini_cli should be provided by environment/tests")
+
+
+def call_mcp_tool(tool: str, params: Dict[str, Any]):
+    """Placeholder for a function that calls an MCP tool remotely; tests monkeypatch this."""
+    raise NotImplementedError("call_mcp_tool should be provided by environment/tests")
 
 
 class BridgeService:
