@@ -2,6 +2,7 @@ import base64
 import sys
 import types
 
+from blender_mcp.errors import ExternalServiceError
 from blender_mcp.services.screenshot import get_viewport_screenshot
 
 
@@ -26,5 +27,7 @@ def test_get_viewport_screenshot_with_bpy(monkeypatch):
 def test_get_viewport_screenshot_no_bpy():
     if "bpy" in sys.modules:
         del sys.modules["bpy"]
-    resp = get_viewport_screenshot()
-    assert resp["status"] == "error"
+    import pytest
+
+    with pytest.raises(ExternalServiceError):
+        get_viewport_screenshot()

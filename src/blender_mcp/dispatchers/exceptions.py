@@ -5,8 +5,6 @@ reusable by other modules.
 """
 from __future__ import annotations
 
-from typing import Any
-
 
 class HandlerNotFound(Exception):
     """Raised when a dispatch target cannot be found."""

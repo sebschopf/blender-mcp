@@ -2,20 +2,25 @@ import importlib
 import sys
 import types
 
+import pytest
+
+from blender_mcp.errors import ExternalServiceError, HandlerError, InvalidParamsError
 from blender_mcp.services import object as obj_service
 
 
 def test_get_object_info_missing_name():
-    res = obj_service.get_object_info({})
-    assert res.get("status") == "error"
+    try:
+        obj_service.get_object_info({})
+        assert False, "expected InvalidParamsError"
+    except InvalidParamsError:
+        pass
 
 
 def test_get_object_info_no_bpy(monkeypatch):
     monkeypatch.delitem(sys.modules, "bpy", raising=False)
     importlib.reload(obj_service)
-    res = obj_service.get_object_info({"name": "Cube"})
-    assert res.get("status") == "error"
-    assert "Blender (bpy) not available" in res.get("message", "")
+    with pytest.raises(ExternalServiceError):
+        obj_service.get_object_info({"name": "Cube"})
 
 
 def _make_fake_obj(name, typ, loc=None):
@@ -54,7 +59,8 @@ def test_get_object_info_not_found(monkeypatch):
     fake.data = types.SimpleNamespace(objects=[_make_fake_obj("Cube", "MESH")])
     monkeypatch.setitem(sys.modules, "bpy", fake)
     importlib.reload(obj_service)
+    import pytest
 
-    res = obj_service.get_object_info({"name": "DoesNotExist"})
-    assert res.get("status") == "error"
-    assert "not found" in res.get("message", "")
+    with pytest.raises(HandlerError) as excinfo:
+        obj_service.get_object_info({"name": "DoesNotExist"})
+    assert "not found" in str(excinfo.value.original)

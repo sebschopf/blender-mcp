@@ -1,10 +1,10 @@
-# Archive → Implementation mapping
+## Archive → Implementation mapping
 
 This document maps the legacy archive symbols described in `docs/archive/symbole_addon.md` and `docs/archive/symbole_server.md` to the current implementation in `src/blender_mcp`.
 
 Notes:
 - Many legacy functions were split into smaller modules (`services/*`, `sketchfab.py`, `polyhaven.py`, `hyper3d.py`, `server.py`, `server_shim.py`).
-- Where a private helper was renamed, I noted the new location and the approximate equivalent name.
+- Where a private helper was renamed, the new location and approximate equivalent name are noted.
 
 ## Addon symbols
 - BlenderMCPServer
@@ -47,7 +47,30 @@ Notes:
 
 ## Server / connection symbols
 - BlenderConnection / connect / disconnect / send_command / receive_full_response
-  This file has been archived and moved to `docs/archive/archive_symbol_mapping.md`.
-
-  See `docs/archive/archive_symbol_mapping.md` for the preserved content.
+  - Canonical implementations:
+    - `src/blender_mcp/connection_core.py::BlenderConnection`
+    - `src/blender_mcp/connection.py::BlenderConnection` (secondary)
   - Service-side adapters and facade:
+    - `src/blender_mcp/services/connection/network.py`
+    - `src/blender_mcp/services/connection/facade.py`
+
+- DEFAULT_HOST / DEFAULT_PORT
+  - Defined in `src/blender_mcp/connection_core.py` and `src/blender_mcp/connection.py`.
+
+- _process_bbox
+  - Present in `src/blender_mcp/server.py` (exported)
+
+- server main / entrypoints
+  - `src/blender_mcp/server.py` and `src/blender_mcp/server_shim.py` provide runtime entry points. `asgi.py` adapts to ASGI when used.
+
+## Other notes
+- Central session factory
+  - Implemented at `src/blender_mcp/http.py::get_session()` and `reset_session()`; services were incrementally migrated (e.g., `sketchfab.py`, `services/addon/polyhaven.py`) to accept or use the shared session.
+
+- Download helpers
+  - `src/blender_mcp/downloaders.py` provides `download_bytes()` with retries/backoff; many callers now prefer it for downloads.
+
+- UI
+  - Panel and operators: `src/blender_mcp/blender_ui.py` (Start/Stop server operators now respect `AddonPreferences` and use the embedded server adapter lazily).
+
+If you want, I can convert this to a more machine-readable table or add links to exact line numbers.

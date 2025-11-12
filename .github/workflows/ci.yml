@@ -7,10 +7,58 @@ on:
     branches: [ main ]
 
 jobs:
-  checks:
+  ruff:
+    name: Lint (ruff)
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      matrix:
+        python-version: [3.11, 3.12]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install ruff
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff==0.12.4
+
+      - name: Run ruff
+        run: |
+          ruff check --exclude "src/blender_mcp/archive/**" src tests
+
+  mypy:
+    name: Typecheck (mypy)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11, 3.12]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install mypy and stubs
+        run: |
+          python -m pip install --upgrade pip
+          pip install mypy==1.11.0 types-requests types-urllib3
+
+      - name: Run mypy
+        run: |
+          mypy src --exclude "src/blender_mcp/archive/.*"
+
+  pytest:
+    name: Tests (pytest)
+    runs-on: ubuntu-latest
+    strategy:
       matrix:
         python-version: [3.11, 3.12]
 
@@ -30,29 +78,14 @@ jobs:
           restore-keys: |
             pip-${{ runner.os }}-${{ matrix.python-version }}-
 
-      - name: Install tooling
+      - name: Install test tooling and deps
         run: |
           python -m pip install --upgrade pip
-          # Pin dev tooling versions for CI stability. Update these when bumping CI images.
-          # Install ruff, mypy and pytest plus common third-party type stubs required by mypy
-          # Also install runtime deps needed by tests (requests)
-          pip install ruff==0.12.4 mypy==1.11.0 pytest==7.4.2 types-requests types-urllib3 requests
-
-      - name: Lint (ruff)
-        run: |
-          # Exclude legacy archive snapshots which are not valid Python packages
-          # and intentionally kept for history/reference.
-          ruff check --exclude "src/blender_mcp/archive/**" src tests
-
-      - name: Typecheck (mypy)
-        run: |
-          # Exclude archive snapshots from typechecking (partial/legacy code)
-          mypy src --exclude "src/blender_mcp/archive/.*"
+          # pytest and runtime deps; include ASGI test stack so tests/test_asgi_tools.py runs
+          pip install pytest==7.4.2 requests fastapi starlette httpx pytest-asyncio
 
       - name: Run tests (pytest)
         env:
-          # Ensure both the package `src` and repository root are on sys.path
-          # so top-level modules like `addon.py` can be imported during tests.
           PYTHONPATH: 'src:.'
         run: |
           pytest -q --junitxml=pytest-report.xml
@@ -60,9 +93,35 @@ jobs:
       - name: Upload pytest report
         uses: actions/upload-artifact@v4
         with:
-          # Include the matrix python-version plus the run attempt so artifact
-          # names are unique across parallel matrix jobs and repeated runs
-          # (prevents 409 Conflict and reduces chance of collisions when
-          # artifacts are uploaded multiple times for the same run).
           name: pytest-report-${{ matrix.python-version }}-run${{ github.run_attempt }}
           path: pytest-report.xml
+
+  # Optional integration job kept for manual runs if desired
+  integration:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    needs: pytest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install integration tooling (FastAPI + test deps)
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi starlette httpx pytest-asyncio uvicorn
+
+      - name: Run ASGI integration tests
+        env:
+          PYTHONPATH: 'src:.'
+        run: |
+          pytest -q tests/test_asgi_tools.py --junitxml=pytest-integration-report.xml || true
+
+      - name: Upload integration report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-integration-report
+          path: pytest-integration-report.xml

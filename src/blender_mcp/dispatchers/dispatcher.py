@@ -11,16 +11,20 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional
 
+from ..errors import (
+    HandlerError as CanonicalHandlerError,
+)
+from ..errors import (
+    HandlerNotFoundError as CanonicalHandlerNotFoundError,
+)
 from ..types import DispatcherResult
 from .abc import AbstractDispatcher
-from .bridge import BridgeService
+from .bridge import BridgeService, call_gemini_cli, call_mcp_tool
 from .command_adapter import CommandAdapter
-from .policies import PolicyChecker
+from .compat import CommandDispatcher as _CommandDispatcherCompat
 from .executor import HandlerExecutor
+from .policies import PolicyChecker
 from .registry import HandlerRegistry
-from .exceptions import HandlerNotFound, HandlerError
-from .defaults import register_default_handlers
-from .bridge import call_gemini_cli, call_mcp_tool
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +92,9 @@ class Dispatcher(AbstractDispatcher):
             # wrap in HandlerError for compatibility with code that expects
             # handler exceptions to be wrapped
             logger.exception("handler %s raised", name)
-            raise HandlerError(name, exc) from exc
+            # Raise the canonical HandlerError so higher layers (adapters)
+            # can map it consistently.
+            raise CanonicalHandlerError(name, exc) from exc
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
@@ -107,10 +113,16 @@ class Dispatcher(AbstractDispatcher):
         try:
             return self._executor.execute_with_timeout(handler, params, timeout=timeout)
         except TimeoutError:
+            # Keep behavior expected by unit tests: raise the builtin
+            # TimeoutError to callers of dispatch_with_timeout.
             logger.error("handler %s timed out after %s", name, timeout)
             raise
 
-    def dispatch_command(self, command: Dict[str, Any], policy_check: Optional[PolicyChecker] = None) -> DispatcherResult:
+    def dispatch_command(
+        self,
+        command: Dict[str, Any],
+        policy_check: Optional[PolicyChecker] = None,
+    ) -> DispatcherResult:
         """Deprecated: delegate to CommandAdapter for normalization.
 
         Kept for backward compatibility; behavior unchanged — the
@@ -156,14 +168,16 @@ CommandDispatcher: type[Any] = Dispatcher
 __all__.append("CommandDispatcher")
 
 # Re-export exception types for backward compatibility
+# Bind backwards-compatible names to the canonical exceptions so imports
+# like `from blender_mcp.dispatchers.dispatcher import HandlerError` still work.
+HandlerNotFound = CanonicalHandlerNotFoundError
+HandlerError = CanonicalHandlerError
 __all__.extend(["HandlerNotFound", "HandlerError"])
 
 
-# Compatibility command-style dispatcher expected by older tests/tools
-# Compatibility wrapper moved to `compat.py` and re-exported below for
-# backward compatibility.
-from .compat import CommandDispatcher as _CommandDispatcherCompat
-
+# Compatibility command-style dispatcher expected by older tests/tools; the
+# compat wrapper is imported above and re-exported below for backward
+# compatibility.
 CommandDispatcher = _CommandDispatcherCompat
 if "CommandDispatcher" not in __all__:
     __all__.append("CommandDispatcher")
