@@ -9,39 +9,49 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FutTimeout
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Dict, List, Optional
 
 from ..types import DispatcherResult
+from .abc import AbstractDispatcher
+from .bridge import BridgeService
+from .command_adapter import CommandAdapter
+from .policies import PolicyChecker
+from .executor import HandlerExecutor
+from .registry import HandlerRegistry
+from .exceptions import HandlerNotFound, HandlerError
+from .defaults import register_default_handlers
+from .bridge import call_gemini_cli, call_mcp_tool
 
 logger = logging.getLogger(__name__)
 
 
 # Backwards-compatible simple exception types used by some tests/modules
-class HandlerNotFound(Exception):
-    """Raised when a dispatch target cannot be found."""
-
-
-class HandlerError(Exception):
-    """Wraps exceptions raised by handlers.
-
-    Attributes:
-        name: the handler name that raised
-        original: the original exception instance
-    """
-
-    def __init__(self, name: str, original: Exception) -> None:
-        super().__init__(f"Handler '{name}' raised {original!r}")
-        self.name = name
-        self.original = original
+# Exceptions moved to `exceptions.py` and imported above to keep
+# this module focused on dispatch logic.
 
 
 Handler = Callable[[Dict[str, Any]], Any]
 
 
-class Dispatcher:
-    def __init__(self) -> None:
-        self._handlers: Dict[str, Handler] = {}
+class Dispatcher(AbstractDispatcher):
+    def __init__(
+        self,
+        *,
+        executor_factory: Optional[Callable[[], ThreadPoolExecutor]] = None,
+        policy_check: Optional[PolicyChecker] = None,
+    ) -> None:
+        """Create a Dispatcher.
+
+        executor_factory: optional callable that returns a ThreadPoolExecutor
+        (or context-manager compatible object). If provided, it's used by
+        `dispatch_with_timeout` to create executors, allowing callers to
+        inject test doubles or alternative executors.
+        """
+        self._registry = HandlerRegistry()
+        self._executor_factory = executor_factory
+        self._executor = HandlerExecutor(executor_factory)
+        # optional policy checker callable wired into CommandAdapter
+        self._policy_check = policy_check
 
     def register(self, name: str, fn: Handler, *, overwrite: bool = False) -> None:
         """Register a handler by name.
@@ -50,26 +60,24 @@ class Dispatcher:
         existing name will raise ValueError (audit-friendly). Set
         `overwrite=True` to replace existing handlers.
         """
-        if name in self._handlers and not overwrite:
-            raise ValueError(f"handler already registered for {name}")
-        self._handlers[name] = fn
+        self._registry.register(name, fn, overwrite=overwrite)
         logger.debug("registered handler %s (overwrite=%s)", name, overwrite)
 
     def unregister(self, name: str) -> None:
         """Remove a handler if present (no-op if missing)."""
-        self._handlers.pop(name, None)
+        self._registry.unregister(name)
         logger.debug("unregistered handler %s", name)
 
     def list_handlers(self) -> List[str]:
         """Return a sorted list of registered handler names."""
-        return sorted(self._handlers.keys())
+        return self._registry.list_handlers()
 
     def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Call the handler named `name` with `params` and return its result.
 
         If the handler is not found, returns None.
         """
-        fn = self._handlers.get(name)
+        fn = self._registry.get(name)
         if fn is None:
             logger.debug("no handler for %s", name)
             return None
@@ -84,51 +92,35 @@ class Dispatcher:
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
-        if name not in self._handlers:
+        if self._registry.get(name) is None:
             logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
 
     def dispatch_with_timeout(self, name: str, params: Optional[Dict[str, Any]] = None, timeout: float = 5.0) -> Any:
         """Call handler with a timeout (seconds). Raises TimeoutError on timeout."""
-        if name not in self._handlers:
+        if self._registry.get(name) is None:
             raise KeyError(name)
-        handler = self._handlers[name]
-        with ThreadPoolExecutor(max_workers=1) as ex:
-            fut = ex.submit(handler, params or {})
-            try:
-                return fut.result(timeout=timeout)
-            except FutTimeout as e:
-                logger.error("handler %s timed out after %s", name, timeout)
-                raise TimeoutError(f"handler {name} timed out after {timeout} seconds") from e
-
-    def dispatch_command(self, command: Dict[str, Any]) -> DispatcherResult:
-        """Adapter to accept command dicts and return normalized responses.
-
-        Expected shape: {"type": <str>, "params": {...}}
-        Returns: {"status":"success","result":...} or {"status":"error","message":...}
-        """
-        # command is expected to be a mapping-like object; normalize access
-        if not isinstance(command, dict):
-            return {"status": "error", "message": "Invalid command format"}
-
-        cmd_type_raw = command.get("type") or command.get("tool")
-        if not isinstance(cmd_type_raw, str):
-            return {"status": "error", "message": "Invalid or missing command type"}
-        cmd_type = cmd_type_raw
-
-        params_raw = command.get("params", {}) or {}
-        params: Dict[str, Any] = params_raw if isinstance(params_raw, dict) else {}
-
-        if cmd_type not in self._handlers:
-            return {"status": "error", "message": f"Unknown command type: {cmd_type}"}
-
+        handler = self._registry.get(name)
+        assert handler is not None
+        # Delegate execution to HandlerExecutor (strategy encapsulated)
         try:
-            result = self._handlers[cmd_type](params)
-            return {"status": "success", "result": result}
-        except Exception as e:
-            logger.exception("error while executing handler %s", cmd_type)
-            return {"status": "error", "message": str(e)}
+            return self._executor.execute_with_timeout(handler, params, timeout=timeout)
+        except TimeoutError:
+            logger.error("handler %s timed out after %s", name, timeout)
+            raise
+
+    def dispatch_command(self, command: Dict[str, Any], policy_check: Optional[PolicyChecker] = None) -> DispatcherResult:
+        """Deprecated: delegate to CommandAdapter for normalization.
+
+        Kept for backward compatibility; behavior unchanged — the
+        implementation now delegates to `CommandAdapter` which houses the
+        normalization and error handling logic.
+        """
+        # allow per-call override of the policy_check; otherwise use the
+        # instance-level policy_check if provided
+        adapter = CommandAdapter(self, policy_check=(policy_check or self._policy_check))
+        return adapter.dispatch_command(command)
 
 
 def register_default_handlers(dispatcher: Dispatcher) -> None:
@@ -163,70 +155,21 @@ __all__ = ["Dispatcher", "register_default_handlers"]
 CommandDispatcher: type[Any] = Dispatcher
 __all__.append("CommandDispatcher")
 
+# Re-export exception types for backward compatibility
+__all__.extend(["HandlerNotFound", "HandlerError"])
+
 
 # Compatibility command-style dispatcher expected by older tests/tools
-class _CommandDispatcherCompat:
-    """Lightweight compatibility wrapper exposing a simple register/dispatch API.
+# Compatibility wrapper moved to `compat.py` and re-exported below for
+# backward compatibility.
+from .compat import CommandDispatcher as _CommandDispatcherCompat
 
-    API:
-      - register(name, handler)
-      - unregister(name)
-      - list_handlers()
-      - dispatch(name, params=None, config=None) -> result
-
-    Handlers registered here are expected to accept (params, config) but
-    wrappers are tolerant and will pass whatever positional args the
-    handler accepts.
-    """
-
-    def __init__(self) -> None:
-        self._handlers: Dict[str, Callable[..., Any]] = {}
-
-    def register(self, name: str, handler: Callable[..., Any]) -> None:
-        self._handlers[name] = handler
-
-    def unregister(self, name: str) -> None:
-        self._handlers.pop(name, None)
-
-    def list_handlers(self) -> List[str]:
-        return sorted(self._handlers.keys())
-
-    def dispatch(
-        self,
-        name: str,
-        params: Optional[Dict[str, Any]] = None,
-        config: Optional[Any] = None,
-    ) -> Any:
-        if name not in self._handlers:
-            raise KeyError(name)
-        handler = self._handlers[name]
-        # Try calling with (params, config), fall back to single-arg or no-arg
-        try:
-            return handler(params, config)
-        except TypeError:
-            try:
-                return handler(params)
-            except TypeError:
-                return handler()
-
-
-# export the compatibility CommandDispatcher name
 CommandDispatcher = _CommandDispatcherCompat
 if "CommandDispatcher" not in __all__:
     __all__.append("CommandDispatcher")
 
 
 # Stubbed external calls - tests will monkeypatch these at runtime
-def call_gemini_cli(user_req: str, use_api: bool = False):
-    """Placeholder for the Gemini client call; tests monkeypatch this."""
-    raise NotImplementedError("call_gemini_cli should be provided by environment/tests")
-
-
-def call_mcp_tool(tool: str, params: Dict[str, Any]):
-    """Placeholder for a function that calls an MCP tool remotely; tests monkeypatch this."""
-    raise NotImplementedError("call_mcp_tool should be provided by environment/tests")
-
-
 def run_bridge(
     user_req: str,
     config: Any,
@@ -235,45 +178,13 @@ def run_bridge(
 ) -> None:
     """Run the Gemini->tool bridging flow.
 
-    This function asks Gemini (via `call_gemini_cli`) to map a user
-    request to either a clarifying question or a tool mapping. If the
-    mapping names a tool registered on `dispatcher`, the corresponding
-    handler is invoked with (params, config). If the mapping specifies
-    a remote MCP tool, `call_mcp_tool` is used.
+    This function delegates to `BridgeService`. The concrete callers
+    are the module-level stubs defined in `bridge.py` so tests can
+    monkeypatch `blender_mcp.dispatchers.bridge.call_gemini_cli` and
+    `blender_mcp.dispatchers.bridge.call_mcp_tool` as needed.
     """
-    resp: Any = call_gemini_cli(user_req, use_api=use_api)
-    while True:
-        # When resp is a mapping, cast it so static analyzers know types
-        if isinstance(resp, dict) and "clarify" in resp:
-            data = cast(Dict[str, Any], resp)
-            prompts_raw = data.get("clarify", []) or []
-            # normalize prompts to list[str]
-            if isinstance(prompts_raw, list):
-                prompts: List[str] = [str(p) for p in prompts_raw]
-            else:
-                prompts = [str(prompts_raw)]
-
-            for p in prompts:
-                try:
-                    ans = input(p + " ")
-                except Exception:
-                    ans = ""
-                resp = call_gemini_cli(ans or user_req, use_api=use_api)
-                # loop continues and will handle the new resp
-        elif isinstance(resp, dict) and "tool" in resp:
-            data = cast(Dict[str, Any], resp)
-            tool_raw = data.get("tool")
-            params_raw = data.get("params", {}) or {}
-            tool = str(tool_raw) if tool_raw is not None else ""
-            params = params_raw if isinstance(params_raw, dict) else {}
-
-            # if the dispatcher knows this tool, call the local handler
-            if tool in dispatcher.list_handlers():
-                dispatcher.dispatch(tool, params, config)
-            else:
-                # otherwise call remote MCP tool
-                call_mcp_tool(tool, params)
-            return
-        else:
-            # nothing to do
-            return
+    # Use the module-level callables (imported from bridge at module import
+    # time) so tests can monkeypatch `dispatcher.call_gemini_cli` and
+    # `dispatcher.call_mcp_tool` easily.
+    service = BridgeService(call_gemini_cli, call_mcp_tool)
+    return service.run(user_req, config, dispatcher, use_api=use_api)

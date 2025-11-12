@@ -2,7 +2,7 @@
 line-length = 120
 
 # Exclude long/complex helper scripts and docs from strict linting for now.
-exclude = ["docs", "scripts", "tools"]
+exclude = ["docs", "scripts", "tools", "src/blender_mcp/archive"]
 
 [lint]
 # Lint selection — keep important categories

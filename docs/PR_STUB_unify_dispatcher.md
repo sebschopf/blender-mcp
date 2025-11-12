@@ -18,3 +18,18 @@ Acceptance criteria
 
 Notes
 - This PR is low-risk for public API, but ensure exports and alias names (e.g., `CommandDispatcher`) are preserved via adapters.
+
+---
+
+Local CI status (executed locally on branch `feat/unify-dispatcher`)
+
+- pytest: full test suite executed; new tests passed locally (`tests/test_dispatcher_unify.py`, `tests/test_simple_dispatcher_compat.py`).
+- ruff: All checks passed!
+- mypy: Success: no issues found in 2 source files
+
+Checklist for reviewers
+
+- [ ] Verify tests in CI (GitHub Actions) pass on PR
+- [ ] Confirm `CommandDispatcher` compatibility is preserved for existing imports
+- [ ] Confirm top-level `simple_dispatcher` imports remain functional
+- [ ] Merge after approval and small changelog note
