@@ -31,7 +31,7 @@ $env:PYTHONPATH = 'src'; python -m pytest -q
 
 ## Conventions propres au projet
 - Modifications de comportement → créer une proposition sous `openspec/changes/<id>/` (voir `openspec/AGENTS.md`).
-- Format des scénarios dans les specs : utilisez `#### Scenario:` (4 #) pour chaque scénario d'acceptation.
+- Format des scénarios dans les specs : utilisez `#### Scenario:` pour chaque scénario d'acceptation.
 - Pattern dispatcher : regarder `src/blender_mcp/dispatcher.py` et `tests/test_dispatcher*` pour voir comment les handlers sont enregistrés et testés.
 - Tests : les modules de test suivent `test_*.py` et `tests/test_services_*.py` pour les services ; mocks de `bpy` via `sys.modules` + `monkeypatch`.
 
@@ -43,6 +43,7 @@ $env:PYTHONPATH = 'src'; python -m pytest -q
 ## Avant d'ouvrir une PR
 1. Relire `openspec/AGENTS.md` si la PR change un comportement/API.
 2. Exécuter `python -m pytest -q` (avec `PYTHONPATH=src`) et corriger les tests cassés.
+	- Note: la CI GitHub Actions utilise `PYTHONPATH: 'src:.'` pour inclure aussi le répertoire racine du dépôt pendant les runs (séparateur `:` sur Linux). Les développeurs peuvent continuer à utiliser `PYTHONPATH=src` localement.
 3. Ajouter/modifier les deltas sous `openspec/changes/<id>/` si nécessaire.
 4. Documenter les fichiers modifiés dans la proposition/PR (ex. `blender_mcp/server.py:ligne`).
 

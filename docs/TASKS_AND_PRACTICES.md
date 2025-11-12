@@ -1,221 +1,278 @@
-# Checklist, bonnes pratiques et contrôles SOLID
 
-But
-----
-Ce document centralise :
-- une liste de tâches actionnable et priorisée pour terminer le portage et la stabilisation du projet ;
-- des bonnes pratiques à appliquer pour chaque tâche (tests, typage, import paresseux, sécurité) ;
-- une checklist de conformité au principe SOLID adaptée au code Python et au projet ;
-- un processus de journalisation des étapes et de validation avant commit.
+# Tasks & Practices — Roadmap claire et exécutable
 
-Organisation des tâches
-----------------------
-Les tâches sont regroupées par domaine : architecture, endpoints, tests, CI, packaging, documentation.
+Ce document est une feuille de route actionnable pour terminer le portage, rendre le code plus SOLID, et maintenir la compatibilité pendant la migration.
 
-Important : chaque tâche doit être accompagnée d'un petit test unitaire (ou d'un test d'intégration léger) et d'une entrée de journal décrivant les fichiers modifiés et la commande pour reproduire les tests.
+## Objectifs principaux
+- Standardiser la gestion d'erreurs (exceptions canoniques dans `src/blender_mcp/errors.py`).
+- Porter les endpoints vers `src/blender_mcp/services/` par petits lots (tests + façades compatibles).
+- Introduire des interfaces légères (Protocols/ABCs) là où c'est utile pour faciliter les tests et l'injection de dépendances.
 
-État canonique et règles d'exécution (rappel)
---------------------------------------------
+### Quick rules
+- Package canonique : `src/blender_mcp/` (les shims à la racine sont rétrocompatibles).
+- Pour les développeurs : utilisez `PYTHONPATH=src` (PowerShell : `$env:PYTHONPATH = 'src'`) quand vous exécutez des tests ou ouvrez une PR.
+	- Note CI : la pipeline GitHub Actions (ubuntu) définit `PYTHONPATH: 'src:.'` pour s'assurer que le repo root est aussi trouvable pendant les tests. Les deux approches sont valides ; préférez `src` localement pour la cohérence des exemples.
 
-- Source canonique du package : `src/blender_mcp/`.
-- Le dossier au niveau racine `blender_mcp/` est un shim legacy utilisé pendant la refactorisation pour conserver la compatibilité des imports dans les tests et scripts. Il ne doit pas être modifié directement pour implémenter de nouvelles fonctionnalités ; toute modification structurante le concernant nécessite une proposition OpenSpec (voir `openspec/AGENTS.md`).
-- Les snapshots historiques dans `src/blender_mcp/archive/` doivent être conservés mais exclus des checks automatiques (lint/type). La configuration actuelle (`mypy.ini`, `.ruff`) doit déjà exclure `archive` — vérifiez avant d'ajouter de nouveaux fichiers.
-- Commande recommandée pour reproduire l'environnement CI localement (PowerShell) :
-
+### Reproduire localement (PowerShell)
 ```powershell
 $env:PYTHONPATH = 'src'
 python -m pytest -q
 Remove-Item Env:\PYTHONPATH
 ```
 
-Utilisez systématiquement `PYTHONPATH=src` dans les scripts locaux ou dans les workflows CI pour s'assurer que la version canonique du package est testée.
+### Structure du document
+- Roadmap priorisée (tâches + pourquoi/quoi/comment)
+- Template par-endpoint (copiable dans PR/ticket)
+- Checklist PR et validation
+- Checklist SOLID & procédure d'audit
+- Journalisation et documentation
+- Machine-readable tasks (YAML) pour automatiser priorisation
 
-Si un import divergent est observé (p.ex. le package résolu depuis la racine au lieu de `src`), exécutez `tools/check_shim_imports.py` pour diagnostiquer la résolution du module.
+----
 
-Liste de tâches principale (à cocher au fur et à mesure)
-----------------------------------------------------
+## Roadmap priorisée (bref)
 
-- [x] Finaliser le workflow CI (GitHub Actions)
-  - Objectif : exécuter `pytest`, `ruff` et `mypy` sur PRs.
-  - Bonnes pratiques : utiliser une matrice Python (3.11+), cache pip, exécuter tests unitaires en parallèle si possible.
-  - Tests : vérifier que `pytest -q` passe localement avant push.
+1. High priority
+	- `get_viewport_screenshot`, `execute_blender_code`, `get_scene_info`, `get_object_info`
+	- Pourquoi : utilisés par l'UI et bridge, impact élevé.
 
-- [x] Affiner la configuration typing/lint
-  - Ajouter `pyproject.toml` / `mypy.ini` / `.ruff.toml` si manquant.
-  - Rendre `mypy` strictité progressive (commencer par `--disallow-untyped-calls` désactivé, puis activer par module).
+2. Medium priority
+	- Integrations I/O : PolyHaven, Sketchfab, Hyper3D
 
-- [ ] Porter restants endpoints (par lots de 3)
-  - Prioriser par fréquence d'utilisation (voir `docs/endpoint_mapping.md`).
-  - Pour chaque endpoint :
-    - créer un service dans `src/blender_mcp/services/` (import paresseux `bpy` si nécessaire),
-    - ajouter tests unitaires (mock `bpy` / mock réseau),
-    - ajouter entrée dans `endpoints.register_builtin_endpoints` et test d'intégration léger.
+3. Low priority
+	- Helpers, debug endpoints, internal tools
 
-- [ ] Ajouter wrappers MCP import-safe
-  - Pour chaque service porté, écrire un wrapper minimal décoré par `@mcp.tool` (ou `@mcp.prompt`) qui appelle le dispatcher.
-  - Wrapper = adaptateur de params + conversion d'erreurs en réponse JSON.
+----
 
-- [ ] Tests d'intégration réseau
-  - Utiliser `socketpair` ou fake-socket pour tester `BlenderConnectionNetwork` send/recv et la ré-assemblage.
-  - Cas testés : fragments, plusieurs messages, timeout, reconnect.
+## Template de tâche / ticket / PR (par endpoint)
 
-- [ ] Audit SOLID et refactor mineur
-  - Exécuter la checklist SOLID (voir ci-dessous) sur les modules modifiés ; corriger violations simples.
-
-- [ ] Documentation / mapping final
-  - Mettre à jour `docs/endpoint_mapping_detailed.md` et `README.md` pour refléter les endpoints portés et leur contrat.
-
-- [ ] Packaging / release readiness
-
-> Note sur le comportement de l'Add-on UI :
-
-Pendant la refactorisation, l'UI de l'add-on a été rendue minimale et n'essaie plus de démarrer/arrêter
-des processus serveur depuis l'intérieur de Blender. Les opérateurs UI basculent seulement un drapeau
-(`blendermcp_server_running`) et affichent une information invitant l'utilisateur à démarrer/arrêter le serveur
-depuis l'extérieur (ex. `start-server.ps1` ou `blender-mcp`). Ceci évite des mélanges de processus et
-rend l'import du module sûr pour CI/tests.
-
-### État de la factorisation (résumé)
-
-Ce qui a déjà été factorisé / stabilisé :
-- `src/blender_mcp/services/` : plusieurs endpoints et helpers ont été extraits en services testables (ex. `object.py`, `scene.py`, `execute.py`, `screenshot.py`).
-- `src/blender_mcp/tools.py` et `src/blender_mcp/integrations.py` : wrappers et façades progressives pour certains handlers.
-- Tests unitaires : nombreux tests ajoutés (mock `bpy`, tests d'intégration légers) — la suite locale passe.
-- Journalisation : `docs/PROJECT_JOURNAL.md` reprend les étapes et les vérifications.
-- CI minimal : `.github/workflows/ci.yml` présent et exécute `ruff`, `mypy` et `pytest` (workflow itératif, permissif pour l'instant).
-
-Ce qui reste à factoriser / porter :
-- `BlenderConnection` (réassembly/chunking, gestion socket) : doit devenir `src/blender_mcp/connection.py` et recevoir des tests simulant fragments et reconnect.
-- `dispatcher` / `command_registry` : implémenter un dispatcher léger (register/list/dispatch) dans `src/blender_mcp/dispatcher.py` et relier `BlenderMCPServer`.
-- Endpoints restants listés dans `docs/endpoint_mapping_detailed.md` : porter par lots, en commençant par `get_viewport_screenshot`, `execute_blender_code`, `get_scene_info` puis intégrations (PolyHaven/Sketchfab/Hyper3D).
-- `src/blender_mcp/server.py` : consolider la façade minimale, retirer duplications et exposer lifecycle testable.
-- Wrappers MCP (`@mcp.tool` / `@mcp.prompt`) : créer adaptateurs import-safe pour chaque service porté.
-- Packaging / release readiness : `pyproject.toml` final, `CHANGELOG.md`, test `pip install .` dans un venv propre.
-
-### Étapes ajoutées (petits jalons)
-- [ ] Implémenter `src/blender_mcp/dispatcher.py` (register/list/dispatch) + tests unitaires (prioritaire)
-- [ ] Implémenter `src/blender_mcp/connection.py` (BlenderConnection testable, reassembly) + tests de chunks (prioritaire)
-- [ ] Préparer une branche PR contenant les changements en cours et le journal (pour revue)
-- [ ] Mettre à jour CI : exiger PYTHONPATH correct dans workflow, ajouter matrix Python 3.11+, et retirer `|| true` une fois la base propre
-- [ ] Ajouter tests d'intégration réseau (socketpair / fake socket) pour la connection
-
-### Statut global et recommandations
-- Statut actuel : progression forte sur la modularisation des services et des tests. Quality gates (ruff/mypy/pytest) passent pour le code actif.
-- Risques immédiats : rester vigilant à ne pas re-modifier les archives (docs/archive) ; veiller à ce que CI utilise le même PYTHONPATH que les runs locaux.
-- Recommandation : prioriser l'implémentation du dispatcher et de la connection (jalons prioritaires) puis porter les endpoints critiques par lots de 3, en journalisant chaque lot.
-
----
-  - Mettre à jour `pyproject.toml`, créer `CHANGELOG.md`, tester `pip install .` dans un venv propre.
-
-
-Bonnes pratiques (règles concrètes)
-----------------------------------
-
-- Import paresseux : ne jamais importer `bpy` au module-level.
-  - Toujours :
-    ```py
-    import importlib
-
-    try:
-        bpy = importlib.import_module('bpy')
-    except Exception:
-        # handle absence in CI/tests
-    ```
-
-- Tests : chaque nouveau service ou endpoint doit avoir :
-  - 1 test unitaire happy-path ;
-  - 1 test d'erreur (paramètres invalides / exception / absence de bpy) ;
-  - pour le code réseau, un test simulant chunks partiels.
-
-- Typage : annoter les fonctions publiques et utiliser types simples (Dict[str, Any]) pour payloads JSON.
-
-- Logging : utiliser `logging.getLogger(__name__)` et logger exceptions via `logger.exception()`.
-
-- Sécurité : pour `execute_blender_code`, documenter clairement qu'il exécute du Python arbitraire et protéger l'usage (UI confirmation, taille max du code, ou usage réservé à opérateurs). Documenter dans `docs/SECURITY.md`.
-
-
-Checklist SOLID adaptée
------------------------
-Pour chaque module / classe, vérifier :
-
-- Single Responsibility (SRP)
-  - Chaque module/fonction a-t-il une responsabilité unique ?
-  - Si une fonction réalise I/O réseau + parsing + logique métier, extraire le parsing et la logique métier dans `services/` et laisser la couche réseau appeler ces services.
-
-- Open/Closed (OCP)
-  - Peut-on ajouter un nouveau service/endpoint sans modifier du code existant ?
-  - Utiliser `Dispatcher.register()` pour ajouter des handlers dynamiquement.
-
-- Liskov Substitution (LSP)
-  - Pour les objets interchangeables (p.ex. wrappers de connection), s'assurer qu'ils respectent la même API et lèvent des exceptions cohérentes.
-
-- Interface Segregation (ISP)
-  - Favoriser petites interfaces (ex : `BlenderConnectionNetwork.send_command()` / `receive_full_response()` plutôt que un monolithe avec dizaines de méthodes inutilisées).
-
-- Dependency Inversion (DIP)
-  - Dépendre d'abstractions (Dispatcher / services) plutôt que d'implémentations concrètes ; injecter la dépendance quand nécessaire pour faciliter les tests.
-
-Procédure d'audit SOLID
-----------------------
-1. Pour chaque fichier modifié, ajouter une courte entrée dans `docs/PROJECT_JOURNAL.md` indiquant le contrôle SOLID rapide (SRP, OCP, DIP). Exemple :
-
-   - fichier: `src/blender_mcp/connection.py` — SRP OK (réassembleur + network wrapper séparés), DIP partiellement (le network wrapper crée un socket internement) — recommandation : injecter le socket factory pour tests réels si besoin.
-
-2. Corriger immédiatement les violations simples (facteur 2-3 lignes) et documenter les décisions pour les violations plus vastes.
-
-
-Organisation de la documentation (tri et clarté)
------------------------------------------------
-
-Structure recommandée du dossier `docs/` :
-
-- `docs/PROJECT_JOURNAL.md` — journal des étapes (obligatoire, format ci‑dessous).
-- `docs/TASKS_AND_PRACTICES.md` — ce fichier (règles & checklist).
-- `docs/endpoint_mapping_detailed.md` — mapping endpoint + statut (porté/pending) et référence à `copy_server.py`.
-- `docs/SECURITY.md` — risques et garde-fous (exécution de code, upload/download).
-- `docs/CONTRIBUTING.md` — guide pour contributeurs (tests, style, commit messages, PR template).
-
-Chaque document doit commencer par : objectif, public cible, commande(s) utiles pour tester (ex : `pytest -q tests/test_x.py`).
-
-
-Journalisation : `docs/PROJECT_JOURNAL.md` (modèle)
--------------------------------------------------
-Chaque entrée doit contenir :
-
-- Date (ISO)
-- Auteur
-- Action (fichiers modifiés, nouveau fichier)
-- Tests exécutés (commande + résultat)
-- Résultat / statut (done/partial/blocker)
-- Notes / décisions (ex : raisons d'un choix d'architecture)
-
-Exemple d'entrée :
+Copiez-coller ce template dans la description du ticket/PR.
 
 ```
-2025-11-08 | sebas
-- Action: Ajout services execute/scene/screenshot, dispatcher et connection reassembler
-- Fichiers: src/blender_mcp/services/execute.py, ...
-- Tests: pytest -q tests/test_services_execute.py -> 3 passed
-- Statut: done
-- Notes: Import paresseux de bpy, wrapper compatibility pour BlenderConnection
+[ ] Porter l'endpoint: <nom_du_endpoint>
+  Pourquoi :
+	 - (ex. testabilité, corriger bug X, standardiser erreurs)
+  Où :
+	 - Cible implémentation : `src/blender_mcp/services/<nom_du_service>.py`
+	 - Façade rétrocompatible (si besoin) : `src/blender_mcp/services/__init__.py` ou top-level shim
+  Contrat / Spec :
+	 - Entrée : params: dict | None (JSON serializable)
+	 - Sortie : JSON-serializable dict (success) OR raise `BlenderMCPError` (see `errors.py`)
+	 - Adapter mapping exception -> `error_code` dans l'adapter (ASGI/dispatcher)
+  Comment (checklist technique) :
+	 - [ ] Écrire un spec court dans `openspec/changes/<id>/` si le contrat change publiquement
+	 - [ ] Implémenter service (lazy import `bpy`)
+	 - [ ] Ajouter tests unitaires : happy-path, error-path (absence de `bpy` / invalid params)
+	 - [ ] Ajouter tests d'intégration légers (dispatcher / wrapper `@mcp.tool`)
+	 - [ ] Ajouter entrée `docs/PROJECT_JOURNAL.md`
+	 - [ ] Ouvrir PR petite (<3 fichiers modifiés) avec la commande pour reproduire tests
 ```
 
+Checklist PR (must pass before merge)
+- Tests unitaires passés localement
+- `mypy` et `ruff` exécutés sur fichiers modifiés
+- Entrée dans `docs/PROJECT_JOURNAL.md`
+- Si contrat public change → ajouter proposition OpenSpec sous `openspec/changes/<id>/`
 
-Validation avant commit
------------------------
-Avant d'ouvrir une PR, vérifier :
+----
 
-1. Tous les tests unitaires passent localement.
-2. Les nouveaux fichiers sont documentés (docstring + tests + note dans le journal).
-3. `pyproject.toml` / tooling minimal présent (ou justifié dans le journal si pas encore configuré).
+## Checklist SOLID adaptée (rapide contrôle)
 
+- SRP (Single Responsibility)
+  - Le module/fonction fait-il une seule chose ? Si non, extraire.
 
-Annexes
--------
-- Commandes utiles de debug :
-  - `python -m pytest tests/test_services_execute.py -q`
-  - `ruff check src tests`
-  - `mypy src --ignore-missing-imports`
+- OCP (Open/Closed)
+  - Peut-on ajouter un handler sans modifier le core ? Utiliser `Dispatcher.register()`.
 
----
-Fin du document.
+- LSP (Liskov Substitution)
+  - Les implémentations interchangeables respectent la même API.
+
+- ISP (Interface Segregation)
+  - Préférer petites interfaces/coeurs testables.
+
+- DIP (Dependency Inversion)
+  - Dépendre d'abstractions (Protocols) ; injecter factories/connexions pour tests.
+
+Procédure d'audit SOLID (par fichier modifié)
+1. Ajouter entrée courte dans `docs/PROJECT_JOURNAL.md` (SRP/OCP/DIP quick status)
+2. Corriger violations simples (< ~10 lignes)
+3. Documenter décisions pour changements plus vastes
+
+----
+
+## Journalisation — modèle d'entrée (obligatoire pour chaque PR)
+
+Format (copier) :
+
+```
+YYYY-MM-DD | auteur
+- Action: porter <endpoint>
+- Fichiers: list...
+- Tests: commande utilisée -> verdict
+- Statut: done/partial/blocker
+- Notes: décisions d'architecture, open questions
+```
+
+----
+
+## Documentation & CI notes
+
+- Ajoutez/tenez à jour : `docs/endpoint_mapping_detailed.md`, `docs/PROJECT_JOURNAL.md`, `docs/SECURITY.md`.
+- CI must run with `PYTHONPATH=src`. Add FastAPI to dev deps if you want ASGI tests to run in CI.
+
+----
+
+## Machine-readable tasks (YAML)
+
+Copiable pour automation / génération d'issues. Modifiez les statuts selon besoin.
+
+```yaml
+tasks:
+  - id: 1
+	 title: porter_object_get_object_info
+	 priority: high
+	 target: src/blender_mcp/services/object.py
+	 status: in-progress
+	 why: "Testability + UI usage"
+  - id: 2
+	 title: porter_execute_blender_code
+	 priority: high
+	 target: src/blender_mcp/services/execute.py
+	 status: todo
+  - id: 3
+	 title: porter_get_viewport_screenshot
+	 priority: high
+	 target: src/blender_mcp/services/screenshot.py
+	 status: todo
+  - id: 10
+	 title: implement_dispatcher
+	 priority: critical
+	 target: src/blender_mcp/dispatcher.py
+	 status: todo
+  - id: 11
+	 title: implement_connection_reassembler
+	 priority: critical
+	 target: src/blender_mcp/connection.py
+	 status: todo
+```
+
+----
+
+## Commandes utiles (PowerShell)
+
+Run tests (entire suite):
+```powershell
+$env:PYTHONPATH = 'src'
+python -m pytest -q
+Remove-Item Env:\PYTHONPATH
+```
+
+Run specific tests:
+```powershell
+$env:PYTHONPATH = 'src'
+python -m pytest tests/test_services_object.py -q
+Remove-Item Env:\PYTHONPATH
+```
+
+Lint & typecheck:
+```powershell
+python -m ruff check src tests
+python -m mypy src --ignore-missing-imports
+```
+
+----
+
+## Toutes les étapes détaillées (checklist granulaire)
+
+Ci‑dessous une checklist exhaustive et ordonnée par priorité/phase. Chaque ligne doit être traitée dans une PR indépendante quand possible (1-3 fichiers modifiés). Pour chaque étape, ajouter une entrée dans `docs/PROJECT_JOURNAL.md` et joindre la commande pour reproduire les tests.
+
+1) Environnement & CI
+	- [x] Vérifier et standardiser `PYTHONPATH=src` dans tous les workflows CI.
+	- [ ] Ajouter FastAPI (et ses dépendances: starlette, pydantic, httpx/tests reqs) en dépendance de développement si on veut exécuter les tests ASGI en CI.
+	- [ ] Ajouter jobs CI pour `ruff`, `mypy`, `pytest` (matrix Python 3.11+).
+	- [ ] Ajouter un job optionnel `integration` qui installe FastAPI et exécute `tests/test_asgi_tools.py`.
+	- [ ] Documenter la commande exacte reproduisant la CI localement dans `DEVELOPER_SETUP.md`.
+
+2) Core infra (peu risqué, prioritaire)
+	- [ ] Finaliser `src/blender_mcp/errors.py` (liste exhaustive d'erreurs et TypedDicts) — vérifier exports.
+	- [ ] Finaliser `src/blender_mcp/types.py` (DispatcherResult, ToolCommand, ToolInfo) et publier les contrats internes.
+	- [ ] Ajouter `src/blender_mcp/logging_utils.py` si absent et l'utiliser uniformément pour l'audit.
+	- [ ] Ajouter tests unitaires pour les helpers (types, error shaping).
+
+3) Dispatcher (critical)
+	- [ ] Implémenter `src/blender_mcp/dispatcher.py` (register/list/dispatch) minimal :
+			- register(name, handler)
+			- list_handlers() -> list[str]
+			- dispatch(name, params) -> DispatcherResult or raise HandlerNotFoundError
+			- map exceptions -> canonical BlenderMCPError where appropriate
+	- [ ] Ajouter tests unitaires : registration, dispatch happy/error, concurrency basic.
+	- [ ] Mettre à jour les tests existants pour consommer l'API dispatcher.
+
+4) Connection / Reassembly (critical)
+	- [ ] Extraire `BlenderConnection` en `src/blender_mcp/connection.py` avec API testable : connect/disconnect/send_command/receive_full_response.
+	- [ ] Implémenter fonction de réassemblage (reassembler) qui accepte fragments et retourne message complet.
+	- [ ] Écrire tests simulant fragments (socketpair / fake socket) : multiple messages / partial / timeout / reconnect.
+	- [ ] Ajouter injection de socket factory pour tests.
+
+5) Services — portage par lots (détaillé)
+	- Règles valides pour chaque endpoint porté :
+		 - service dans `src/blender_mcp/services/<name>.py`
+		 - lazy import `bpy` (importlib) ; sur absence lever `ExternalServiceError`
+		 - lève `InvalidParamsError` pour params invalides
+		 - lève `HandlerError` si l'implémentation appelle addon qui lève
+		 - tests: happy + error (no bpy) + boundary cases
+
+	- Liste d'implémentations prioritaires (chaque sous-étape = PR) :
+	  - [ ] `get_object_info` (exemple PR) — tests unitaires & `object_location*` tests.
+	  - [ ] `execute_blender_code` — sécuriser, tests, doc sécurité.
+	  - [ ] `get_viewport_screenshot` — tests visuels/fake + performance.
+	  - [ ] `get_scene_info` — tests et mapping.
+	  - [ ] `get_scene_materials`, `get_node_helpers` (batch)
+	  - [ ] autres endpoints listés dans `docs/endpoint_mapping_detailed.md` par priorité.
+
+6) Wrappers MCP / mcp.tool decorators
+	- [ ] Pour chaque service porté, écrire un wrapper `@mcp.tool()` qui :
+		 - prend `params` JSON, appelle le service, capture exceptions et renvoie DispatcherResult dict (status/result/message/error_code)
+		 - teste wrapper via TestClient / dispatcher unit tests
+	- [ ] Garder les façades top-level (`src/blender_mcp/services/__init__.py`) ré-exportant les services pour compatibilité.
+
+7) Adapters (ASGI / CLI)
+	- [ ] Stabiliser `src/blender_mcp/asgi.py` :
+		 - lifespan startup/shutdown robuste
+		 - mapping exceptions -> (HTTP status, error_code) et JSONResponse
+		 - audit log on success/error
+	- [ ] Ajouter tests ASGI (TestClient) pour tous les cas d'erreur canonique.
+	- [ ] Créer/valider un adapter CLI si nécessaire (pour debug/manual invocation).
+
+8) Integrations réseau (I/O heavy)
+	- [ ] Isoler les helpers réseau (downloaders, polyhaven, sketchfab, hyper3d) dans `src/blender_mcp/integrations/`.
+	- [ ] S'assurer que ces fonctions lèvent `ExternalServiceError` sur échec réseau.
+	- [ ] Tests unitaires mockant `requests` / sessions ; tests d'intégration optionnels contre des endpoints stubs.
+
+9) Tests & qualité
+	- [ ] Augmenter la couverture sur services portés (happy + error + edge cases).
+	- [ ] Créer tests d'intégration réseau pour `BlenderConnection` reassembly.
+	- [ ] Linter (`ruff`) & typecheck (`mypy`) vert pour fichiers modifiés.
+
+10) Documentation & OpenSpec
+	- [ ] Mettre à jour `docs/endpoint_mapping_detailed.md` après chaque lot.
+	- [ ] Pour tout changement de contrat public (payload ou `error_code`), créer `openspec/changes/<id>/` avec spec et scénarios d'acceptation, puis `openspec validate --strict`.
+	- [ ] Tenir `docs/PROJECT_JOURNAL.md` à jour (format prescrit).
+
+11) Packaging & release
+	- [ ] Finaliser `pyproject.toml` (versions, extras [dev] incl FastAPI), verrouiller dépendances si nécessaire.
+	- [ ] Test `pip install .` in clean venv and run smoke tests.
+	- [ ] Rédiger `CHANGELOG.md` pour le lot de modifications.
+
+12) PR process & merge guard
+	- PR size limit : 1 concept (max 3 files) per PR.
+	- Always include:
+		 - Tests that demonstrate behavior.
+		 - `docs/PROJECT_JOURNAL.md` entry.
+		 - Commands to reproduce tests locally.
+	- Require: successful `pytest`, `mypy` (for modified files), `ruff` in CI.
+
+13) Post-merge / follow-ups
+	- [ ] Remove façade shims only after all callers/tests have migrated.
+	- [ ] Run scheduled pass to convert remaining tests that expect dict-style errors to raising exceptions.
+	- [ ] Periodic audit (monthly) of SOLID checklist for modules modified since last audit.

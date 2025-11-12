@@ -1,3 +1,5 @@
+ARCHIVED: assistant preferences have been moved to `docs/archive/assistant_preferences.md`.
+See `docs/archive/assistant_preferences.md` for the preserved content.
 # Préférences de l'assistant
 
 Ce fichier indique les préférences locales pour l'assistant automatisé utilisé durant le développement.

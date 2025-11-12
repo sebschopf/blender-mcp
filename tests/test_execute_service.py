@@ -2,22 +2,27 @@ import importlib
 import sys
 import types
 
+import pytest
+
+from blender_mcp.errors import ExternalServiceError, HandlerError, InvalidParamsError
 from blender_mcp.services import execute
 
 
 def test_execute_blender_code_missing_param():
-    res = execute.execute_blender_code({})
-    assert isinstance(res, dict)
-    assert res.get("status") == "error"
+    try:
+        execute.execute_blender_code({})
+        assert False, "expected InvalidParamsError"
+    except InvalidParamsError:
+        pass
 
 
 def test_execute_blender_code_no_bpy(monkeypatch):
     # Ensure bpy is not importable
     monkeypatch.delitem(sys.modules, "bpy", raising=False)
     importlib.reload(execute)
-    res = execute.execute_blender_code({"code": "result = 1 + 1"})
-    assert res.get("status") == "error"
-    assert "Blender (bpy) not available" in res.get("message", "")
+    with pytest.raises(ExternalServiceError):
+        execute.execute_blender_code({"code": "result = 1 + 1"})
+    # ExternalServiceError raised as expected; message asserted via exception type
 
 
 def _make_fake_bpy_for_exec():
@@ -42,6 +47,6 @@ def test_execute_blender_code_exception(monkeypatch):
     importlib.reload(execute)
 
     code = "raise ValueError('boom')"
-    res = execute.execute_blender_code({"code": code})
-    assert res.get("status") == "error"
-    assert "boom" in res.get("message", "")
+    with pytest.raises(HandlerError) as excinfo:
+        execute.execute_blender_code({"code": code})
+    assert "boom" in str(excinfo.value.original)

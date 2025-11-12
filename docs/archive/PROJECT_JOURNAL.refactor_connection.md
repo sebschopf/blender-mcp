@@ -1,5 +1,3 @@
-ARCHIVED: this journal entry has been moved to `docs/archive/PROJECT_JOURNAL.refactor_connection.md`.
-See `docs/archive/PROJECT_JOURNAL.refactor_connection.md` for the preserved content.
 2025-11-09 | sebas
 - Action: SOLID refactor — split `connection` into `services/connection` modules
 - Fichiers ajoutés/modifiés:

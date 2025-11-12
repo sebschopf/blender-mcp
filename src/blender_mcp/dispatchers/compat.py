@@ -13,15 +13,15 @@ from typing import Any, Callable, Dict, List
 class _CommandDispatcherCompat:
 	"""Lightweight compatibility wrapper exposing a simple register/dispatch API.
 
-	API:
-	  - register(name, handler)
-	  - unregister(name)
-	  - list_handlers()
-	  - dispatch(name, params=None, config=None) -> result
+		API:
+			- register(name, handler)
+			- unregister(name)
+			- list_handlers()
+			- dispatch(name, params=None, config=None) -> result
 
-	Handlers registered here are expected to accept (params, config) but
-	wrappers are tolerant and will pass whatever positional args the
-	handler accepts.
+		Handlers registered here are expected to accept (params, config) but
+		wrappers are tolerant and will pass whatever positional args the
+		handler accepts.
 	"""
 
 	def __init__(self) -> None:

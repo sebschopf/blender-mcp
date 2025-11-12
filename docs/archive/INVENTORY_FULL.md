@@ -1,5 +1,3 @@
-ARCHIVED: this inventory snapshot has been moved to `docs/archive/INVENTORY_FULL.md`.
-See `docs/archive/INVENTORY_FULL.md` for the preserved content.
 # Inventory Full — src/blender_mcp (détail)
 
 Ce document contient la liste complète des fichiers trouvés sous `src/blender_mcp` et du shim racine `blender_mcp/`, avec une recommandation rapide pour consolidation, un indicateur de risque, et s'il faut préparer une proposition OpenSpec.
@@ -14,7 +12,7 @@ Format: Path | Rôle estimé | Recommandation courte | Risque | OpenSpec
 | `src/blender_mcp/server.py` | Impl serveur canonique (lifecycle, handlers) | Consolider ici; ajouter tests d'API et lifecycle | High | Yes (if API change) |
 | `src/blender_mcp/server_shim.py` | Shim interne / compat | Regrouper sous `compat/` et rendre import-safe | Medium | Possibly |
 | `src/blender_mcp/servers/__init__.py` | Package servers | Clarifier exports; minimal init | Low | No |
-| `src/blender_mcp/servers/shim.py` | Shim pour servers package | Consolider dans `compat/` ou documenter | Medium | Possibly |
+| `src/blender_mcp/servers/shim.py` | Shim pour servers package | Consolider dans `compat/` et rendre import-safe | Medium | Possibly |
 | `src/blender_mcp/servers/server.py` | Impl servers spécifique | Fusionner/réexporter depuis `src/blender_mcp/server.py` | High | Possibly |
 | `src/blender_mcp/servers/embedded_adapter.py` | Adaptateur embedded | Ajouter tests; extraire interface testable | Medium | No |
 | `src/blender_mcp/server.py` | (duplicate path entry) | See canonical server note above | High | Possibly |
@@ -46,7 +44,6 @@ Format: Path | Rôle estimé | Recommandation courte | Risque | OpenSpec
 | `src/blender_mcp/dispatchers/command_dispatcher.py` | Dispatcher (command style) | Consolidate interface; add tests | Medium | No |
 | `src/blender_mcp/dispatchers/dispatcher.py` | Dispatcher core | Keep canonical; add docs and tests | High | No |
 | `src/blender_mcp/dispatchers/simple_dispatcher.py` | Simple dispatcher (compat) | Keep as compat; add tests | Medium | No |
-| `src/blender_mcp/dispatchers/__init__.py` | Dispatchers package root | Keep minimal exports | Low | No |
 | `src/blender_mcp/archive/simple_dispatcher.py` | Archive snapshot | Preserve in archive; exclude from lint/type | Low | No |
 | `src/blender_mcp/archive/server_shim.py` | Archive snapshot shim | Preserve; do not modify | Low | No |
 | `src/blender_mcp/archive/server.py` | Archive server snapshot | Preserve; do not modify | Low | No |
@@ -56,7 +53,6 @@ Format: Path | Rôle estimé | Recommandation courte | Risque | OpenSpec
 | `src/blender_mcp/archive/connection.py` | Archive connection snapshot | Preserve only; excluded | Low | No |
 | `src/blender_mcp/archive/command_dispatcher.py` | Archive command dispatcher | Preserve | Low | No |
 | `src/blender_mcp/archive/blender_ui.py` | Archive blender_ui snapshot | Preserve | Low | No |
-| `src/blender_mcp/archive/blender_codegen.py` | Archive codegen | Preserve | Low | No |
 | `src/blender_mcp/archive/addon_handlers.py` | Archive addon handlers | Preserve | Low | No |
 | `src/blender_mcp/blender_ui/__init__.py` | Addon UI package init | Keep import-safe | Low | No |
 | `src/blender_mcp/blender_ui/props.py` | UI props | Keep import-safe | Low | No |
@@ -95,4 +91,3 @@ Format: Path | Rôle estimé | Recommandation courte | Risque | OpenSpec
 | `src/blender_mcp/services/addon/objects.py` | Addon objects helpers | Keep import-safe | Low | No |
 | `src/blender_mcp/services/addon/execution.py` | Addon execution helpers | Keep import-safe; tests | Low | No |
 | `src/blender_mcp/services/addon/constants.py` | Addon constants | Keep | Low | No |
-

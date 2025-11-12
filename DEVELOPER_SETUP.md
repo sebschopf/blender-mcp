@@ -25,6 +25,8 @@ python -m pip install -U pytest ruff mypy types-requests requests
 $env:PYTHONPATH = 'src'; python -m pytest -q
 ```
 
+Note: Dans CI (GitHub Actions) `PYTHONPATH` est défini en `src:.` pour garantir que le repo root est accessible pendant les tests. Localement, `$env:PYTHONPATH = 'src'` reste la pratique recommandée.
+
 4. Install pre-commit hooks (recommended)
 
 ```powershell

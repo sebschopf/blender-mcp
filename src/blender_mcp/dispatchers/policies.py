@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, Optional, Sequence
 
-
 # PolicyChecker returns None when allowed, or a string message when denied.
 PolicyChecker = Callable[[str, Dict[str, Any]], Optional[str]]
 
@@ -31,7 +30,10 @@ def deny_all(_: str, __: Dict[str, Any], *, reason: str = "denied by policy") ->
     return reason
 
 
-def role_based(allowed_roles: Sequence[str], role_getter: Callable[[Dict[str, Any]], Optional[str]] = lambda p: p.get("role")) -> PolicyChecker:
+def role_based(
+    allowed_roles: Sequence[str],
+    role_getter: Optional[Callable[[Dict[str, Any]], Optional[str]]] = None,
+) -> PolicyChecker:
     """Factory that returns a PolicyChecker allowing commands only for given roles.
 
     role_getter: extracts a role string from params. If no role is found
@@ -39,6 +41,12 @@ def role_based(allowed_roles: Sequence[str], role_getter: Callable[[Dict[str, An
     """
 
     allowed_set = set(allowed_roles)
+
+    if role_getter is None:
+        def _default_role_getter(p: Dict[str, Any]) -> Optional[str]:
+            return p.get("role")
+
+        role_getter = _default_role_getter
 
     def _checker(_: str, params: Dict[str, Any]) -> Optional[str]:
         role = role_getter(params)
