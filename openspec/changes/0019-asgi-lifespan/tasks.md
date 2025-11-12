@@ -1,0 +1,5 @@
+- [ ] 1. Update `src/blender_mcp/asgi.py` to use `lifespan` and remove `@app.on_event("startup")` handler
+- [ ] 2. Update `.github/workflows/ci.yml` to add optional `integration` job for ASGI tests
+- [ ] 3. Add dev dependencies `fastapi`, `starlette`, `httpx`, `pytest-asyncio` to `pyproject.toml`
+- [ ] 4. Add or update `tests/test_asgi_tools.py` to cover tool call success/error/timeout and audit logging
+- [ ] 5. Validate this change with `openspec validate --strict 0019-asgi-lifespan` and reference in PR
