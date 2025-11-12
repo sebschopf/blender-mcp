@@ -11,9 +11,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional
 
-from ..errors import (
-    ExecutionTimeoutError,
-)
+
 from ..errors import (
     HandlerError as CanonicalHandlerError,
 )
@@ -116,10 +114,10 @@ class Dispatcher(AbstractDispatcher):
         try:
             return self._executor.execute_with_timeout(handler, params, timeout=timeout)
         except TimeoutError:
+            # Keep behavior expected by unit tests: raise the builtin
+            # TimeoutError to callers of dispatch_with_timeout.
             logger.error("handler %s timed out after %s", name, timeout)
-            # Normalize timeout into a canonical ExecutionTimeoutError so callers
-            # can map to stable error codes.
-            raise ExecutionTimeoutError()
+            raise
 
     def dispatch_command(
         self,

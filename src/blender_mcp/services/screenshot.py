@@ -35,6 +35,10 @@ def get_viewport_screenshot(params: Optional[Dict[str, Any]] = None) -> Dict[str
         bpy = importlib.import_module("bpy")
     except Exception:
         logger.debug("bpy not available when calling get_viewport_screenshot")
+        # When the Blender Python API is not present, treat this as an
+        # ExternalServiceError so callers can distinguish runtime vs
+        # functional errors. Tests expect this exception in the
+        # headless environment used by CI.
         raise ExternalServiceError("Blender (bpy) not available")
 
     # attempt to use a small well-defined helper implemented in the addon
