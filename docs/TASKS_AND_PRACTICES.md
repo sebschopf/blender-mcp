@@ -20,6 +20,49 @@ python -m pytest -q
 Remove-Item Env:\PYTHONPATH
 ```
 
+## Environnement de développement (parité CI)
+
+Pour éviter les écarts entre les runs locaux et CI, suivez ces recommandations pour installer un environnement local qui reflète la pipeline GitHub Actions :
+
+- Python : la CI exécute une matrice sur 3.11 et 3.12. Pour reproduire le run principal, utilisez Python 3.11.
+- Outils & versions pinned (installés par le workflow CI) :
+	- ruff==0.12.4
+	- mypy==1.11.0
+	- pytest==7.4.2
+	- types-requests, types-urllib3
+	- requests
+	- fastapi, starlette, httpx, pytest-asyncio (pour les tests ASGI)
+
+Commandes rapides (PowerShell) pour créer un venv et installer les versions CI-pinned :
+
+```powershell
+# Crée et active un virtualenv (doit utiliser Python 3.11 si tu veux la parité exacte)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Met à jour pip et installe les outils pinés exactement comme en CI
+python -m pip install --upgrade pip
+pip install ruff==0.12.4 mypy==1.11.0 pytest==7.4.2 types-requests types-urllib3 requests fastapi==0.95 starlette==0.28 httpx==0.24 pytest-asyncio==0.21
+
+# Positionner PYTHONPATH pour la session PowerShell (séparateur Windows = ;)
+$Env:PYTHONPATH = 'src;.'
+
+# Lancer la suite (mêmes étapes que CI)
+ruff check --exclude "src/blender_mcp/archive/**" src tests
+mypy src --exclude "src/blender_mcp/archive/.*"
+pytest -q --junitxml=pytest-report.xml
+```
+
+Notes et conseils:
+- Si vous utilisez Poetry, préférez `poetry install --with dev` pour reproduire la résolution exacte des dépendances définies dans `pyproject.toml`.
+- Vérifiez les versions locales utiles :
+	- `python --version`
+	- `ruff --version`
+	- `mypy --version`
+	- `pytest --version`
+- CI sets PYTHONPATH to `src:.` (colon on Linux) in the workflow matrix jobs; locally use `'src'` or `'src;.'` on Windows as shown.
+
+Si tu veux, je peux ajouter un script `scripts/verify_local_ci.ps1` qui exécute ces étapes automatiquement dans un venv et vérifie les versions (je peux le committer dans le repo).
 ### Structure du document
 - Roadmap priorisée (tâches + pourquoi/quoi/comment)
 - Template par-endpoint (copiable dans PR/ticket)
@@ -188,7 +231,7 @@ Ci‑dessous une checklist exhaustive et ordonnée par priorité/phase. Chaque l
 
 1) Environnement & CI
 	- [x] Vérifier et standardiser `PYTHONPATH=src` dans tous les workflows CI.
-	- [ ] Ajouter FastAPI (et ses dépendances: starlette, pydantic, httpx/tests reqs) en dépendance de développement si on veut exécuter les tests ASGI en CI.
+	- [x] Ajouter FastAPI (et ses dépendances: starlette, pydantic, httpx/tests reqs) en dépendance de développement si on veut exécuter les tests ASGI en CI.
 	- [ ] Ajouter jobs CI pour `ruff`, `mypy`, `pytest` (matrix Python 3.11+).
 	- [ ] Ajouter un job optionnel `integration` qui installe FastAPI et exécute `tests/test_asgi_tools.py`.
 	- [ ] Documenter la commande exacte reproduisant la CI localement dans `DEVELOPER_SETUP.md`.
