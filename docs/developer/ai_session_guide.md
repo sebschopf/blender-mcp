@@ -84,13 +84,24 @@ CI (GitHub Actions): matrice Python 3.11 + 3.12; jobs: ruff, mypy, pytest; optio
   - Erreur: `{"status":"error","message":<str>,"error_code":<ErrorCode>}`
 - Aucune logique ne doit inférer `error_code` depuis `message`.
 - Ajout de code erreur → modifier `ErrorCode`, `error_code_for_exception`, ajouter test mapping.
-
+Sous‑section: Politiques (PolicyChecker)
+- Contrat `PolicyChecker`: `(cmd_type: str, params: Dict[str, Any]) -> Optional[str]`.
+  - Retourne `None` pour autoriser, une chaîne non vide pour refuser.
+  - Lever `PolicyDeniedError` est également supporté (mappé en `policy_denied`).
+- Priorité: la policy passée per‑call à `Dispatcher.dispatch_command(..., policy_check=...)` PRIME sur celle fournie au constructeur `Dispatcher(policy_check=...)`.
+- Mapping des refus: `{"status":"error","message":"Blocked by policy: <raison>","error_code":"policy_denied"}` (ou message de l’exception si `PolicyDeniedError`).
+- Helpers dispo: `allow_all`, `deny_all`, `and_`, `or_`, `role_based` (voir `blender_mcp.dispatchers.policies`).
+- Référence: Issue #23 — Refactor SOLID du dispatcher (injection PolicyChecker) https://github.com/sebschopf/blender-mcp/issues/23
 ---
 ## 6. SOLID Compliance (Checklist exécutable)
 | Principe | État | Action | Priorité |
 |----------|------|--------|----------|
 | SRP | Façade connexion multi-mode mélange 3 rôles | Scinder en `SocketConnection`, `NetworkConnection`, `JSONReassembler` | Medium |
+<<<<<<< HEAD
 | OCP | Ajout service modifie endpoints/tools divers | Utiliser `services/registry.py` et centraliser | High |
+=======
+| OCP | Ajout service modifie endpoints/tools divers | Utiliser `services/registry.py` et centraliser | High |
+>>>>>>> origin/feature/port-refactor-2025-11-08
 | LSP | `send_command` output variable (dict vs result) | Normaliser pour toujours renvoyer dict | High |
 | ISP | OK sur `SocketLike` | Maintenir interfaces petites | Low |
 | DIP | Parser/framing/policy non injectés | Introduire `strategies/` + injection dispatcher | Medium |
@@ -300,3 +311,5 @@ Ce guide doit rester court, concret et mis à jour après chaque phase majeure. 
 - 2025-11-13: MAJ normalisation `send_command` (implémentée, PR #22). Focus déplacé vers refactor dispatcher + dépréciation shims.
 - 2025-11-13: MAJ Phase 2 fusionnée (registre services/tools opérationnel, fallback Dispatcher). Prochain focus: `send_command` + refactor dispatcher + dépréciation shims.
 - 2025-11-13: Version initiale (standardisation erreurs, dispatcher, connexion shim).
+- 2025-11-13: Version initiale (standardisation erreurs, dispatcher, connexion shim).
+- 2025-11-13: Ajout de la note sur la priorité per‑call du `policy_check` et le mapping `policy_denied` (réf. Issue #23).
