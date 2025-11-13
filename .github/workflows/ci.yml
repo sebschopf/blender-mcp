@@ -4,7 +4,9 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    # Run CI for PRs targeting any branch (not only main),
+    # so feature-to-feature PRs are validated as well.
+    branches: [ '**' ]
 
 jobs:
   ruff:
