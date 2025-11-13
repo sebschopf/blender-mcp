@@ -5,6 +5,21 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 
 ---
 - 2025-11-13 | automation
+- Action: Normalisation `send_command` (retour dict complet) + spec OpenSpec
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/services/connection/network_core.py (retourne toujours `{status, result|message, error_code?}`)
+	- openspec/changes/2025-11-13-send-command-normalization/spec.md (scénarios/compat)
+	- tests/test_connection_reassembly.py, tests/test_connection.py, tests/test_services_execute.py (adaptations)
+- Tests:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_connection_reassembly.py tests/test_connection.py tests/test_services_execute.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Lint/Type:
+	- `ruff check src tests`
+	- `mypy src --exclude "src/blender_mcp/archive/.*"`
+- Statut: done
+- Notes: Aligne `services.connection` sur `connection_core`. Plus de levée `RuntimeError` à ce niveau; les couches supérieures gèrent le mapping d’erreurs.
+
+---
+- 2025-11-13 | automation
 - Action: Portage Sketchfab search/download (services) + enregistrement registre
 - Fichiers modifiés:
 	- src/blender_mcp/services/sketchfab.py (ajout services canoniques search/download)

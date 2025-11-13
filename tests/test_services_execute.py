@@ -58,4 +58,6 @@ def test_send_command_over_network(monkeypatch):
 
     res = send_command_over_network("localhost", 9999, "ping", {"a": 1})
     assert isinstance(res, dict)
-    assert res.get("msg") == "pong"
+    # Normalisé: réponse complète avec status et result
+    assert res.get("status") in ("ok", "success")
+    assert res.get("result", {}).get("msg") == "pong"

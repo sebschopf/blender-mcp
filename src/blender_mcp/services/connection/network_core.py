@@ -137,17 +137,8 @@ class NetworkCore:
     def send_command(self, command_type: str, params: Optional[Dict[str, Any]] = None) -> Any:
         # Prefer core implementation if available
         if self._core is not None:
-            resp = self._core.send_command(command_type, params)  # type: ignore[attr-defined]
-            # Use duck-typing to avoid static-analyzer warnings when the
-            # core implementation is statically typed as a mapping.
-            if hasattr(resp, "get"):
-                # mypy/Pylance can't always infer this as a Mapping; silence
-                # with a narrow assignment while keeping runtime-safety.
-                r = resp  # type: ignore[assignment]
-                if r.get("status") == "error":
-                    raise RuntimeError(r.get("message", "error from peer"))
-                return r.get("result", resp)
-            return resp
+            # Normalisation: toujours retourner le dict complet tel que reçu.
+            return self._core.send_command(command_type, params)  # type: ignore[attr-defined]
 
         if not self.sock and not self.connect():
             raise ConnectionError("Not connected")
@@ -156,13 +147,8 @@ class NetworkCore:
         try:
             assert self.sock is not None
             self.sock.sendall(data)
-            resp = self.receive_full_response()
-            if hasattr(resp, "get"):
-                r = resp  # type: ignore[assignment]
-                if r.get("status") == "error":
-                    raise RuntimeError(r.get("message", "error from peer"))
-                return r.get("result", resp)
-            return resp
+            # Normalisation: toujours retourner le dict complet tel que reçu.
+            return self.receive_full_response()
         except Exception:
             self.sock = None
             logger.exception("send_command failed")
