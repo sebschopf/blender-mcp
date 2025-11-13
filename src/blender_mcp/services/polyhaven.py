@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Optional
+from blender_mcp.errors import ExternalServiceError, InvalidParamsError
 
 from .addon.polyhaven import (
     download_polyhaven_asset as _addon_download_polyhaven_asset,
@@ -20,6 +21,28 @@ from .addon.polyhaven import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def get_polyhaven_categories(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Service: fetch PolyHaven categories with canonical contract.
+
+    Expects params: {"asset_type": str | None}
+    Returns: {"status":"success","result":{"categories":{...}}}
+
+    Errors:
+    - InvalidParamsError: asset_type provided but not a string
+    - ExternalServiceError: network/API failure
+    """
+    p = params or {}
+    asset_type = p.get("asset_type")
+    if asset_type is not None and not isinstance(asset_type, str):
+        raise InvalidParamsError("'asset_type' must be a string if provided")
+    try:
+        data = fetch_categories(asset_type=asset_type or "hdris")
+        cats = data.get("categories") or {}
+        return {"status": "success", "result": {"categories": cats}}
+    except Exception as e:
+        raise ExternalServiceError(str(e))
 
 
 def get_categories(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

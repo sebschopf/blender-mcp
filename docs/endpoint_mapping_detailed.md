@@ -8,13 +8,13 @@ Generated automatically. Statut initial: `pending` (à porter).
 | @tool | `get_object_info` | `(ctx, object_name)` | 258 | Get detailed information about a specific object in the Blender scene. | ported |
 | @tool | `get_viewport_screenshot` | `(ctx, max_size)` | 276 | Capture a screenshot of the current Blender 3D viewport. | ported |
 | @tool | `execute_blender_code` | `(ctx, code)` | 319 | Execute arbitrary Python code in Blender. Make sure to do it step-by-step by breaking it into smaller chunks. | ported |
-| @tool | `get_polyhaven_categories` | `(ctx, asset_type)` | 336 | Get a list of categories for a specific asset type on Polyhaven. | pending |
+| @tool | `get_polyhaven_categories` | `(ctx, asset_type)` | 336 | Get a list of categories for a specific asset type on Polyhaven. | ported |
 | @tool | `search_polyhaven_assets` | `(ctx, asset_type, categories)` | 368 | Search for assets on Polyhaven with optional filtering. | pending |
 | @tool | `download_polyhaven_asset` | `(ctx, asset_id, asset_type, resolution, file_format)` | 417 | Download and import a Polyhaven asset into Blender. | pending |
 | @tool | `set_texture` | `(ctx, object_name, texture_id)` | 468 | Apply a previously downloaded Polyhaven texture to an object. | pending |
 | @tool | `get_polyhaven_status` | `(ctx)` | 527 | Check if PolyHaven integration is enabled in Blender. | pending |
 | @tool | `get_hyper3d_status` | `(ctx)` | 545 | Check if Hyper3D Rodin integration is enabled in Blender. | pending |
-| @tool | `get_sketchfab_status` | `(ctx)` | 565 | Check if Sketchfab integration is enabled in Blender. | pending |
+| @tool | `get_sketchfab_status` | `(ctx)` | 565 | Check if Sketchfab integration is enabled in Blender. | ported |
 | @tool | `search_sketchfab_models` | `(ctx, query, categories, count, downloadable)` | 583 | Search for models on Sketchfab with optional filtering. | pending |
 | @tool | `download_sketchfab_model` | `(ctx, uid)` | 660 | Download and import a Sketchfab model by its UID. | pending |
 | @tool | `generate_hyper3d_model_via_text` | `(ctx, text_prompt, bbox_condition)` | 712 | Generate 3D asset using Hyper3D by giving description of the desired asset, and import the asset into Blender. | pending |

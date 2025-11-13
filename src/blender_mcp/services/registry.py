@@ -54,6 +54,9 @@ register_service("get_object_info", object_service.get_object_info)
 register_service("get_viewport_screenshot", screenshot_service.get_viewport_screenshot)
 # Portage validé: exécution de code Blender
 register_service("execute_blender_code", execute_service.execute_blender_code)
+# Portage validé: PolyHaven categories (service canonical)
+register_service("get_polyhaven_categories", polyhaven.get_polyhaven_categories)
+register_service("get_sketchfab_status", sketchfab.get_sketchfab_status_service)
 
 
 def _get_polyhaven_categories(asset_type: str = "hdris") -> Dict[str, Any]:

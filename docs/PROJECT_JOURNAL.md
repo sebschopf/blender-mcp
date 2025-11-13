@@ -5,6 +5,34 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 
 ---
 - 2025-11-13 | automation
+- Action: Portage `get_sketchfab_status` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/sketchfab.py (service canonical params→status/result)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_sketchfab_service_status.py (sans réseau: no key, with key, invalid param)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_sketchfab_service_status.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Le service ne lève pas pour statut “disabled”; il retourne toujours success avec {enabled,message} (pas de dict d'erreur).
+
+---
+- 2025-11-13 | automation
+- Action: Portage `get_polyhaven_categories` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/polyhaven.py (ajout service exceptions-first)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_polyhaven_service.py (succès, invalid params, erreur réseau)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_polyhaven_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Service renvoie `status: success` et lève `InvalidParamsError` / `ExternalServiceError`.
+
+---
+- 2025-11-13 | automation
 - Action: Spécification sécurité `execute_blender_code` (OpenSpec)
 - Fichiers modifiés/ajoutés:
 	- openspec/changes/2025-11-13-execute-security/spec.md (policy + scénarios)
