@@ -15,7 +15,9 @@ from typing import Any, AsyncIterator, Dict
 from .services.connection import BlenderConnection  # facade with multi-mode support
 
 try:  # prefer canonical core accessor if available
+    # isort: off
     from .connection_core import get_blender_connection, server_lifespan as _core_lifespan  # type: ignore
+    # isort: on
 except Exception:  # fallback: lightweight lifespan using facade
     get_blender_connection = None  # type: ignore
 
