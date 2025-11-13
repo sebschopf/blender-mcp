@@ -4,18 +4,17 @@ This module is a relocated copy of the top-level `blender_mcp.dispatcher`.
 Relative imports have been adjusted so this file lives inside the
 `blender_mcp.dispatchers` package.
 """
+# isort: skip_file
 
 from __future__ import annotations
 
-import logging
-import inspect
 from concurrent.futures import ThreadPoolExecutor
+import inspect
+import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from ..errors import (
     HandlerError as CanonicalHandlerError,
-)
-from ..errors import (
     HandlerNotFoundError as CanonicalHandlerNotFoundError,
 )
 from ..types import DispatcherResult
