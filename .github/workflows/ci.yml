@@ -4,7 +4,9 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    # Run CI for PRs targeting any branch (not only main),
+    # so feature-to-feature PRs are validated as well.
+    branches: [ '**' ]
 
 jobs:
   ruff:
@@ -96,32 +98,8 @@ jobs:
           name: pytest-report-${{ matrix.python-version }}-run${{ github.run_attempt }}
           path: pytest-report.xml
 
-  # Optional integration job kept for manual runs if desired
-  integration:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    needs: pytest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-
-      - name: Install integration tooling (FastAPI + test deps)
-        run: |
-          python -m pip install --upgrade pip
-          pip install fastapi starlette httpx pytest-asyncio uvicorn
-
-      - name: Run ASGI integration tests
-        env:
-          PYTHONPATH: 'src:.'
-        run: |
-          pytest -q tests/test_asgi_tools.py --junitxml=pytest-integration-report.xml || true
-
-      - name: Upload integration report
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-integration-report
-          path: pytest-integration-report.xml
+  # Note: ASGI test dependencies (fastapi, starlette, httpx, pytest-asyncio)
+  # are installed in the main `pytest` job so `tests/test_asgi_tools.py` is
+  # executed as part of the standard test run. The previous optional
+  # `integration` job was removed to keep CI simpler and ensure ASGI tests
+  # are validated on every PR/push.

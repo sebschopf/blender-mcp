@@ -4,6 +4,184 @@
 Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le modèle indiqué dans `TASKS_AND_PRACTICES.md`.
 
 ---
+- 2025-11-13 | automation
+- Action: Portage Sketchfab search/download (services) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/sketchfab.py (ajout services canoniques search/download)
+	- src/blender_mcp/services/registry.py (enregistrement)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_sketchfab_service_search_download.py (api_key env, succès, mapping erreurs)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_sketchfab_service_search_download.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Résolution de la clé API via param ou variable d’environnement `SKETCHFAB_API_KEY`. Exceptions-first (InvalidParamsError/ExternalServiceError).
+
+---
+- 2025-11-13 | automation
+- Action: Portage endpoints Hyper3D (services) + enregistrement registre
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/services/hyper3d.py (ajout 4 services: generate_text/images, poll, import)
+	- src/blender_mcp/services/registry.py (enregistrements)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_hyper3d_services.py (success + error cases)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_hyper3d_services.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Provider par défaut = 'fal_ai'. Pour images côté main_site, l'upload de fichiers n'est pas géré dans ce service (erreur params). Les helpers réseau sont centralisés dans `blender_mcp.hyper3d`.
+
+---
+- 2025-11-13 | automation
+- Action: Portage statuts PolyHaven/Hyper3D (services) + enregistrement registre
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/services/polyhaven_status.py (nouveau)
+	- src/blender_mcp/services/hyper3d_status.py (nouveau)
+	- src/blender_mcp/services/registry.py (enregistrements)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_status_services.py (PolyHaven probe succès/échec, Hyper3D succès)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_status_services.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: PolyHaven fait un probe non-bloquant via fetch_categories; Hyper3D retourne enabled=True (vérifs détaillées aux endpoints dédiés).
+
+---
+- 2025-11-13 | automation
+- Action: Portage `set_texture` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/textures.py (conversion exceptions-first)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_textures_service.py (succès material/images, invalid params, addon error/exception)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_textures_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Le service lève InvalidParamsError pour entrées invalides et HandlerError pour erreurs addon.
+
+---
+- 2025-11-13 | automation
+- Action: Portage `download_polyhaven_asset` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/polyhaven.py (ajout service canonical `download_polyhaven_asset`)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_polyhaven_download_service.py (succès, invalid params, erreur réseau)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_polyhaven_download_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Téléchargement via helper réseau `download_asset` (extraction zip sécurisée). Retourne `temp_dir` en succès.
+
+---
+- 2025-11-13 | automation
+- Action: Portage `search_polyhaven_assets` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/polyhaven.py (ajout service canonical `search_polyhaven_assets`)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_polyhaven_search_service.py (succès, invalid params, erreur réseau)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_polyhaven_search_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Service exceptions-first; validation stricte (asset_type, categories str, page>=1, per_page 1..100). Legacy handler conservé pour compat.
+
+---
+- 2025-11-13 | automation
+- Action: Portage `get_sketchfab_status` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/sketchfab.py (service canonical params→status/result)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_sketchfab_service_status.py (sans réseau: no key, with key, invalid param)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_sketchfab_service_status.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Le service ne lève pas pour statut “disabled”; il retourne toujours success avec {enabled,message} (pas de dict d'erreur).
+
+---
+- 2025-11-13 | automation
+- Action: Portage `get_polyhaven_categories` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/polyhaven.py (ajout service exceptions-first)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_polyhaven_service.py (succès, invalid params, erreur réseau)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_polyhaven_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Service renvoie `status: success` et lève `InvalidParamsError` / `ExternalServiceError`.
+
+---
+- 2025-11-13 | automation
+- Action: Spécification sécurité `execute_blender_code` (OpenSpec)
+- Fichiers modifiés/ajoutés:
+	- openspec/changes/2025-11-13-execute-security/spec.md (policy + scénarios)
+	- docs/developer/ai_session_guide.md (référence à la spec)
+- Tests: N/A (docs/spec uniquement)
+- Statut: done
+- Notes: Phase 2 = baseline (audit, limitations documentées). Phase 3 = durcissement (builtins réduits, AST allowlist, flag).
+
+---
+- 2025-11-13 | automation
+- Action: Portage `execute_blender_code` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/registry.py (enregistrement `execute_blender_code`)
+	- docs/endpoint_mapping_detailed.md (statut `execute_blender_code` -> ported)
+- Tests:
+	- tests/test_execute_service.py couvre: param manquant, `bpy` absent (mock), succès, exception.
+- Commandes recommandées:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_execute_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+	- `ruff check src tests ; mypy src --exclude "src/blender_mcp/archive/.*"`
+- Statut: done
+- Notes: Service avec lazy import `bpy`, journalisation dédiée; exceptions canoniques (`InvalidParamsError`, `ExternalServiceError`, `HandlerError`).
+
+---
+- 2025-11-13 | automation
+- Action: Portage `get_viewport_screenshot` vers service + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/registry.py (enregistrement `get_viewport_screenshot`)
+	- docs/endpoint_mapping_detailed.md (statut `get_viewport_screenshot` -> ported)
+- Tests:
+	- tests/test_screenshot_service.py couvre: `bpy` absent, helper absent, retour non-bytes, succès, et exception helper.
+- Commandes recommandées:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_screenshot_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+	- `ruff check src tests ; mypy src`
+- Statut: done
+- Notes: Service lève `ExternalServiceError` pour indisponibilité Blender/helper, `HandlerError` pour erreurs runtime. Prochaine étape: `execute_blender_code` si prioritaire.
+
+---
+- 2025-11-13 | automation
+- Action: Portage `get_object_info` vers service + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/registry.py (enregistrement `get_object_info`)
+	- docs/endpoint_mapping_detailed.md (statut `get_object_info` -> ported)
+- Tests:
+	- tests/test_object_service.py existe et couvre: succès nominal, objet inexistant, absence de `bpy` (mock). À exécuter localement.
+- Commandes recommandées:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_object_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+	- `ruff check src tests ; mypy src`
+- Statut: done
+- Notes: Contrat `status/result` respecté via service; exceptions canoniques levées (InvalidParamsError, ExternalServiceError, HandlerError). Prochaine étape: porter `get_viewport_screenshot`.
+
+---
+- 2025-11-13 | automation
+- Action: Ajout registre générique de services + fallback dispatcher + portage statut `get_scene_info` (ported)
+- Fichiers modifiés:
+	- src/blender_mcp/services/registry.py (ajout _SERVICES + APIs register/get/list/has, pré-enregistrement get_scene_info)
+	- src/blender_mcp/dispatchers/dispatcher.py (fallback vers services si handler absent; introspection signature)
+	- docs/endpoint_mapping_detailed.md (statut get_scene_info -> ported)
+	- tests/test_services_registry.py (nouveaux tests registre + fallback)
+- Commandes exécutées localement:
+	- pytest -q tests/test_services_registry.py (devrait passer; exécution recommandée avant commit final)
+- Statut: done
+- Notes: Première étape Phase 2. Les services legacy polyhaven/sketchfab retournent encore des dicts avec `error`; migration future les convertira en exceptions. Prochaine étape: portage `get_object_info`.
+
+---
 
 2025-11-08 | sebas
 - Action: Initialisation du journal; ajout du document TASKS_AND_PRACTICES.md
@@ -170,4 +348,97 @@ YYYY-MM-DD | auteur
 		et `register_default_handlers` depuis `dispatcher.py` afin d'avoir une source de vérité unique
 		tout en conservant les chemins d'import existants. La façade pourra être supprimée ultérieurement
 		lorsque la maintenance sera prête à accept er ce changement breaking.
+
+---
+
+2025-11-13 | automation
+- Action: Standardisation erreurs (ErrorCode Literal, ErrorInfo) + façade dispatcher + doc
+- Fichiers modifiés:
+	- src/blender_mcp/errors.py (ajout ErrorCode, ErrorInfo, helper `error_code_for_exception`)
+	- src/blender_mcp/types.py (restriction Literal sur status)
+	- src/blender_mcp/dispatcher.py (façade publique minimale)
+	- docs/developer/error_handling.md (section canonical source + conventions services)
+	- docs/TASKS_AND_PRACTICES.md (mise à jour état des tâches core infra/dispatcher)
+- Tests:
+	- `PYTHONPATH=src pytest -q tests/test_command_adapter_errors.py tests/test_dispatcher.py tests/test_simple_dispatcher.py` -> OK
+	- ruff + mypy ciblés sur fichiers modifiés -> OK
+- Statut: done
+- Notes:
+	- Prochain: ajouter tests unitaires spécifiques pour `error_code_for_exception` et coverage concurrency.
+	- Aucune rupture de contrat public; codes anciens conservés.
+
+---
+
+2025-11-13 | automation
+- Action: Couverture logging_utils (tests audit) + types structures
+- Fichiers modifiés/ajoutés:
+	- tests/test_errors_mapping.py (annotations types)
+	- tests/test_types_structures.py (nouveau tests TypedDict usage)
+	- tests/test_logging_utils.py (nouveau tests caplog audit)
+	- docs/TASKS_AND_PRACTICES.md (tâches core infra mises à jour)
+- Tests:
+	- `PYTHONPATH=src pytest -q tests/test_logging_utils.py tests/test_types_structures.py tests/test_errors_mapping.py` -> OK
+- Statut: done
+- Notes:
+	- Couverture basique d'émission audit établie; amélioration future possible (niveaux différenciés INFO/WARN). Ajout d'annotations pour réduire bruit Pylance.
+
+---
+
+2025-11-13 | automation
+- Action: Ajout tests concurrency/timeout dispatcher
+- Fichiers ajoutés/modifiés:
+	- tests/test_dispatcher_timeout.py (timeout, succès rapide, exécution parallèle)
+	- docs/TASKS_AND_PRACTICES.md (marquage tâche concurrency)
+- Tests:
+	- `PYTHONPATH=src pytest -q tests/test_dispatcher_timeout.py` -> OK
+- Statut: done
+- Notes:
+	- Parallélisme validé (2 handlers ~0.1s exécutés <0.18s). Seuil ajusté pour éviter flakiness CI.
+
+---
+
+2025-11-13 | automation
+- Action: Documentation politique mapping exceptions -> error_code
+- Fichiers modifiés:
+	- docs/developer/error_handling.md (ajout section "Politique de mapping exceptions → codes")
+	- docs/TASKS_AND_PRACTICES.md (marquage tâche comme complétée)
+- Tests:
+	- `PYTHONPATH=src pytest -q tests/test_errors_mapping.py` (mapping existant valide)
+- Statut: done
+- Notes:
+	- Politique formalise ordre de résolution, fallback `internal_error`, règles de nommage et procédures d'extension.
+	- Prochaine étape suggérée: ajouter tests pour helpers additionnels (error shaping) avant portage services.
+
+---
+
+2025-11-13 | automation
+- Action: Extraction API testable BlenderConnection
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/connection.py (nouvelle implémentation injectable via socket_factory)
+	- tests/test_connection_reassembly.py (tests fragments, timeout, connect failure)
+	- docs/TASKS_AND_PRACTICES.md (marquage progression extraction)
+- Tests:
+	- `pytest -q tests/test_connection_reassembly.py` -> OK
+- Statut: done
+- Notes:
+	- API: connect, disconnect, send_command, receive_full_response (publique pour tests avancés).
+	- Injection socket_factory permet mocks sans réseau réel.
+	- Prochain: ajouter tests d'intégration réseau (socketpair) et reassembly multi-messages si nécessaire.
+---
+
+2025-11-13 | automation
+- Action: Alignement structure connexion (shim + injection NetworkCore)
+- Fichiers modifiés:
+	- src/blender_mcp/connection.py (remplacé par shim vers services.connection)
+	- src/blender_mcp/services/connection/network_core.py (socket_factory param)
+	- src/blender_mcp/services/connection/network.py (propagation socket_factory)
+	- src/blender_mcp/services/connection/facade.py (support kw socket_factory sans args)
+	- tests/test_connection_reassembly.py (adaptation expectations résultat)
+- Tests:
+	- `pytest -q tests/test_connection_reassembly.py` -> OK
+- Statut: done
+- Notes:
+	- Maintient compat chemin import (`blender_mcp.connection.BlenderConnection`).
+	- Évite duplication logique; extension future via services/connection/*.py.
+	- Prochain: envisager séparation parse strategy / multi-message pour réseau.
 

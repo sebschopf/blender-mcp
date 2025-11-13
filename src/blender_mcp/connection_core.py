@@ -82,7 +82,7 @@ class BlenderConnection:
     def send_command(self, command_type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if not self.sock and not self.connect():
             raise ConnectionError("Not connected to Blender")
-        payload = {"type": command_type, "params": params or {}}
+        payload: Dict[str, Any] = {"type": command_type, "params": params or {}}
         assert self.sock is not None
         try:
             self.sock.sendall(json.dumps(payload).encode("utf-8"))

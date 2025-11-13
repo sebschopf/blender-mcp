@@ -297,22 +297,23 @@ Remove-Item Env:\PYTHONPATH
 ```
 
 2) Core infra (peu risqué, prioritaire)
-	- [ ] Finaliser `src/blender_mcp/errors.py` (liste exhaustive d'erreurs et TypedDicts) — vérifier exports.
-	- [ ] Finaliser `src/blender_mcp/types.py` (DispatcherResult, ToolCommand, ToolInfo) et publier les contrats internes.
-	- [ ] Ajouter `src/blender_mcp/logging_utils.py` si absent et l'utiliser uniformément pour l'audit.
+	- [x] Finaliser `src/blender_mcp/errors.py` (liste exhaustive d'erreurs, `ErrorCode`, `ErrorInfo`, helper mapping) — exports vérifiés.
+	- [x] Finaliser `src/blender_mcp/types.py` (`DispatcherResult.status` restreint à Literal, ToolCommand, ToolInfo).
+	- [x] Ajouter façade `src/blender_mcp/dispatcher.py` (ré-export public propre).
+	- [x] Ajouter tests unitaires dédiés pour `error_code_for_exception` et types.
+	- [x] Ajouter `src/blender_mcp/logging_utils.py` si absent et l'utiliser uniformément pour l'audit (déjà présent, couverture test ajoutée).
 	- [ ] Ajouter tests unitaires pour les helpers (types, error shaping).
 
 3) Dispatcher (critical)
-	- [ ] Implémenter `src/blender_mcp/dispatcher.py` (register/list/dispatch) minimal :
-			- register(name, handler)
-			- list_handlers() -> list[str]
-			- dispatch(name, params) -> DispatcherResult or raise HandlerNotFoundError
-			- map exceptions -> canonical BlenderMCPError where appropriate
-	- [ ] Ajouter tests unitaires : registration, dispatch happy/error, concurrency basic.
-	- [ ] Mettre à jour les tests existants pour consommer l'API dispatcher.
+	- [x] Façade minimale `src/blender_mcp/dispatcher.py` (ré-export interne) créée.
+	- [x] Tests de base (registration, dispatch happy/error) passent via suites existantes.
+	- [x] Concurrency basic (timeout / thread executor) tests ajoutés (`tests/test_dispatcher_timeout.py`).
+	- [x] Documenter politique de mapping exceptions -> codes (section ajoutée dans `docs/developer/error_handling.md`).
 
 4) Connection / Reassembly (critical)
 	- [ ] Extraire `BlenderConnection` en `src/blender_mcp/connection.py` avec API testable : connect/disconnect/send_command/receive_full_response.
+	- [x] Implémentation testable `BlenderConnection` ajoutée (`src/blender_mcp/connection.py`) + tests fragment/timeout (`tests/test_connection_reassembly.py`).
+	- [x] Refactor shim: délégation vers `services/connection` + injection `socket_factory` dans `NetworkCore`.
 	- [ ] Implémenter fonction de réassemblage (reassembler) qui accepte fragments et retourne message complet.
 	- [ ] Écrire tests simulant fragments (socketpair / fake socket) : multiple messages / partial / timeout / reconnect.
 	- [ ] Ajouter injection de socket factory pour tests.
@@ -356,6 +357,18 @@ Remove-Item Env:\PYTHONPATH
 	- [ ] Augmenter la couverture sur services portés (happy + error + edge cases).
 	- [ ] Créer tests d'intégration réseau pour `BlenderConnection` reassembly.
 	- [ ] Linter (`ruff`) & typecheck (`mypy`) vert pour fichiers modifiés.
+
+### Backlog rapide — Lint-only (à traiter dans un lot dédié)
+
+- `I001` imports à organiser:
+	- `src/blender_mcp/connection.py`
+	- `src/blender_mcp/dispatchers/dispatcher.py`
+- `F811` redéfinition/doublon d'import dans tests:
+	- `tests/test_services_registry.py` (double import de `registry`)
+- Commandes utiles (ciblées):
+	- `ruff check src/blender_mcp/connection.py --fix`
+	- `ruff check src/blender_mcp/dispatchers/dispatcher.py --fix`
+	- Ajuster l'import en doublon dans `tests/test_services_registry.py`
 
 10) Documentation & OpenSpec
 	- [ ] Mettre à jour `docs/endpoint_mapping_detailed.md` après chaque lot.

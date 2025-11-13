@@ -4,17 +4,17 @@ This module is a relocated copy of the top-level `blender_mcp.dispatcher`.
 Relative imports have been adjusted so this file lives inside the
 `blender_mcp.dispatchers` package.
 """
+# isort: skip_file
 
 from __future__ import annotations
 
-import logging
 from concurrent.futures import ThreadPoolExecutor
+import inspect
+import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from ..errors import (
     HandlerError as CanonicalHandlerError,
-)
-from ..errors import (
     HandlerNotFoundError as CanonicalHandlerNotFoundError,
 )
 from ..types import DispatcherResult
@@ -83,6 +83,21 @@ class Dispatcher(AbstractDispatcher):
         """
         fn = self._registry.get(name)
         if fn is None:
+            # Fallback: essayer un service générique enregistré
+            try:
+                # Explicitly annotate to satisfy mypy when assigning None in except path
+                service_registry: Any
+                from ..services import registry as service_registry  # lazy import pour éviter cycles
+            except Exception:  # pragma: no cover - import error improbable
+                service_registry = None
+            if service_registry and service_registry.has_service(name):
+                service = service_registry.get_service(name)
+                logger.debug("dispatch fallback to service %s", name)
+                try:
+                    return self._invoke_service(service, params or {})
+                except Exception as exc:
+                    logger.exception("service %s raised", name)
+                    raise CanonicalHandlerError(name, exc) from exc
             logger.debug("no handler for %s", name)
             return None
         logger.debug("dispatching handler %s with params=%s", name, params)
@@ -99,6 +114,13 @@ class Dispatcher(AbstractDispatcher):
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
         if self._registry.get(name) is None:
+            # also check service registry before failing
+            try:
+                from ..services import registry as service_registry
+                if service_registry.has_service(name):
+                    return self.dispatch(name, params)
+            except Exception:
+                pass
             logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
@@ -133,6 +155,35 @@ class Dispatcher(AbstractDispatcher):
         # instance-level policy_check if provided
         adapter = CommandAdapter(self, policy_check=(policy_check or self._policy_check))
         return adapter.dispatch_command(command)
+
+    # --- Internal helpers ---
+    def _invoke_service(self, service: Any, params: Dict[str, Any]) -> Any:
+        """Best-effort invocation of a service function en fonction de sa signature.
+
+        Règles simples:
+        - Si la fonction attend un seul paramètre: lui passer `params`.
+        - Sinon: faire correspondre chaque paramètre par nom via `params.get(name)`.
+        - Paramètres obligatoires manquants -> ValueError.
+        """
+        sig = inspect.signature(service)
+        if len(sig.parameters) == 1:
+            sole = next(iter(sig.parameters.values()))
+            if sole.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
+                return service(params)
+        # Build kwargs mapping
+        kwargs = {}
+        missing = []
+        for p in sig.parameters.values():
+            if p.kind not in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
+                continue
+            if p.name in params:
+                kwargs[p.name] = params[p.name]
+            else:
+                if p.default is inspect._empty:
+                    missing.append(p.name)
+        if missing:
+            raise ValueError(f"missing required params for service {service.__name__}: {', '.join(missing)}")
+        return service(**kwargs)
 
 
 def register_default_handlers(dispatcher: Dispatcher) -> None:
