@@ -22,10 +22,14 @@ import os
 from typing import Any, Dict
 
 from ..command_dispatcher import CommandDispatcher
+from . import execute as execute_service
+from . import hyper3d as hyper3d_service
 from . import object as object_service
 from . import polyhaven, scene, sketchfab
-from . import execute as execute_service
 from . import screenshot as screenshot_service
+from . import textures as textures_service
+from .hyper3d_status import get_hyper3d_status_service
+from .polyhaven_status import get_polyhaven_status_service
 
 # --- Nouveau registre générique de services ---
 _SERVICES: dict[str, Any] = {}
@@ -56,7 +60,18 @@ register_service("get_viewport_screenshot", screenshot_service.get_viewport_scre
 register_service("execute_blender_code", execute_service.execute_blender_code)
 # Portage validé: PolyHaven categories (service canonical)
 register_service("get_polyhaven_categories", polyhaven.get_polyhaven_categories)
+register_service("search_polyhaven_assets", polyhaven.search_polyhaven_assets)
+register_service("download_polyhaven_asset", polyhaven.download_polyhaven_asset)
 register_service("get_sketchfab_status", sketchfab.get_sketchfab_status_service)
+register_service("search_sketchfab_models", sketchfab.search_sketchfab_models)
+register_service("download_sketchfab_model", sketchfab.download_sketchfab_model)
+register_service("set_texture", textures_service.set_texture)
+register_service("get_polyhaven_status", get_polyhaven_status_service)
+register_service("get_hyper3d_status", get_hyper3d_status_service)
+register_service("generate_hyper3d_model_via_text", hyper3d_service.generate_hyper3d_model_via_text)
+register_service("generate_hyper3d_model_via_images", hyper3d_service.generate_hyper3d_model_via_images)
+register_service("poll_rodin_job_status", hyper3d_service.poll_rodin_job_status)
+register_service("import_generated_asset", hyper3d_service.import_generated_asset)
 
 
 def _get_polyhaven_categories(asset_type: str = "hdris") -> Dict[str, Any]:
