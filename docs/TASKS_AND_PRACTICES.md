@@ -313,6 +313,7 @@ Remove-Item Env:\PYTHONPATH
 4) Connection / Reassembly (critical)
 	- [ ] Extraire `BlenderConnection` en `src/blender_mcp/connection.py` avec API testable : connect/disconnect/send_command/receive_full_response.
 	- [x] Implémentation testable `BlenderConnection` ajoutée (`src/blender_mcp/connection.py`) + tests fragment/timeout (`tests/test_connection_reassembly.py`).
+	- [x] Refactor shim: délégation vers `services/connection` + injection `socket_factory` dans `NetworkCore`.
 	- [ ] Implémenter fonction de réassemblage (reassembler) qui accepte fragments et retourne message complet.
 	- [ ] Écrire tests simulant fragments (socketpair / fake socket) : multiple messages / partial / timeout / reconnect.
 	- [ ] Ajouter injection de socket factory pour tests.

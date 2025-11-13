@@ -49,7 +49,8 @@ def test_send_command_reassembles_fragments():
     conn = BlenderConnection(socket_factory=factory)
     assert conn.connect() is True
     result = conn.send_command("echo", {"value": 42})
-    assert result == payload
+    # Network facade returns the 'result' field directly on success
+    assert result == 42
 
 
 def test_send_command_timeout_partial_json():

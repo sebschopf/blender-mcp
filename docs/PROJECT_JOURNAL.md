@@ -246,4 +246,21 @@ YYYY-MM-DD | auteur
 	- API: connect, disconnect, send_command, receive_full_response (publique pour tests avancés).
 	- Injection socket_factory permet mocks sans réseau réel.
 	- Prochain: ajouter tests d'intégration réseau (socketpair) et reassembly multi-messages si nécessaire.
+---
+
+2025-11-13 | automation
+- Action: Alignement structure connexion (shim + injection NetworkCore)
+- Fichiers modifiés:
+	- src/blender_mcp/connection.py (remplacé par shim vers services.connection)
+	- src/blender_mcp/services/connection/network_core.py (socket_factory param)
+	- src/blender_mcp/services/connection/network.py (propagation socket_factory)
+	- src/blender_mcp/services/connection/facade.py (support kw socket_factory sans args)
+	- tests/test_connection_reassembly.py (adaptation expectations résultat)
+- Tests:
+	- `pytest -q tests/test_connection_reassembly.py` -> OK
+- Statut: done
+- Notes:
+	- Maintient compat chemin import (`blender_mcp.connection.BlenderConnection`).
+	- Évite duplication logique; extension future via services/connection/*.py.
+	- Prochain: envisager séparation parse strategy / multi-message pour réseau.
 
