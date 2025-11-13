@@ -171,3 +171,21 @@ YYYY-MM-DD | auteur
 		tout en conservant les chemins d'import existants. La façade pourra être supprimée ultérieurement
 		lorsque la maintenance sera prête à accept er ce changement breaking.
 
+---
+
+2025-11-13 | automation
+- Action: Standardisation erreurs (ErrorCode Literal, ErrorInfo) + façade dispatcher + doc
+- Fichiers modifiés:
+	- src/blender_mcp/errors.py (ajout ErrorCode, ErrorInfo, helper `error_code_for_exception`)
+	- src/blender_mcp/types.py (restriction Literal sur status)
+	- src/blender_mcp/dispatcher.py (façade publique minimale)
+	- docs/developer/error_handling.md (section canonical source + conventions services)
+	- docs/TASKS_AND_PRACTICES.md (mise à jour état des tâches core infra/dispatcher)
+- Tests:
+	- `PYTHONPATH=src pytest -q tests/test_command_adapter_errors.py tests/test_dispatcher.py tests/test_simple_dispatcher.py` -> OK
+	- ruff + mypy ciblés sur fichiers modifiés -> OK
+- Statut: done
+- Notes:
+	- Prochain: ajouter tests unitaires spécifiques pour `error_code_for_exception` et coverage concurrency.
+	- Aucune rupture de contrat public; codes anciens conservés.
+

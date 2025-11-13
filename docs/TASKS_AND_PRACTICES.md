@@ -297,19 +297,18 @@ Remove-Item Env:\PYTHONPATH
 ```
 
 2) Core infra (peu risqué, prioritaire)
-	- [ ] Finaliser `src/blender_mcp/errors.py` (liste exhaustive d'erreurs et TypedDicts) — vérifier exports.
-	- [ ] Finaliser `src/blender_mcp/types.py` (DispatcherResult, ToolCommand, ToolInfo) et publier les contrats internes.
-	- [ ] Ajouter `src/blender_mcp/logging_utils.py` si absent et l'utiliser uniformément pour l'audit.
+	- [x] Finaliser `src/blender_mcp/errors.py` (liste exhaustive d'erreurs, `ErrorCode`, `ErrorInfo`, helper mapping) — exports vérifiés.
+	- [x] Finaliser `src/blender_mcp/types.py` (`DispatcherResult.status` restreint à Literal, ToolCommand, ToolInfo).
+	- [x] Ajouter façade `src/blender_mcp/dispatcher.py` (ré-export public propre).
+	- [ ] Ajouter tests unitaires dédiés pour `error_code_for_exception` et types (à planifier).
+	- [ ] Ajouter `src/blender_mcp/logging_utils.py` si absent et l'utiliser uniformément pour l'audit (déjà présent, vérifier couverture).
 	- [ ] Ajouter tests unitaires pour les helpers (types, error shaping).
 
 3) Dispatcher (critical)
-	- [ ] Implémenter `src/blender_mcp/dispatcher.py` (register/list/dispatch) minimal :
-			- register(name, handler)
-			- list_handlers() -> list[str]
-			- dispatch(name, params) -> DispatcherResult or raise HandlerNotFoundError
-			- map exceptions -> canonical BlenderMCPError where appropriate
-	- [ ] Ajouter tests unitaires : registration, dispatch happy/error, concurrency basic.
-	- [ ] Mettre à jour les tests existants pour consommer l'API dispatcher.
+	- [x] Façade minimale `src/blender_mcp/dispatcher.py` (ré-export interne) créée.
+	- [x] Tests de base (registration, dispatch happy/error) passent via suites existantes.
+	- [ ] Concurrency basic (timeout / thread executor) tests dédiés à ajouter.
+	- [ ] Documenter politique de mapping exceptions -> codes (déplacé dans `docs/developer/error_handling.md`).
 
 4) Connection / Reassembly (critical)
 	- [ ] Extraire `BlenderConnection` en `src/blender_mcp/connection.py` avec API testable : connect/disconnect/send_command/receive_full_response.

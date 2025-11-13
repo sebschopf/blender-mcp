@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, NotRequired, TypedDict
+from typing import Any, Dict, List, Literal, NotRequired, TypedDict
 
 
 class ToolCommand(TypedDict, total=False):
@@ -23,7 +23,7 @@ class DispatcherResult(TypedDict, total=False):
     - error path:   {"status":"error","message":...}
     """
 
-    status: NotRequired[str]
+    status: NotRequired[Literal["success", "error"]]
     result: NotRequired[Any]
     message: NotRequired[str]
     # stable machine-readable error code added for normalized error handling
