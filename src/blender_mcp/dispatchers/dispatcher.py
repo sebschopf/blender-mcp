@@ -130,7 +130,7 @@ class Dispatcher(AbstractDispatcher):
             return _wrapped
         return None
 
-    def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:  # noqa: C901
         """Call the handler named `name` with `params` and return its result.
 
         If the handler is not found, returns None.

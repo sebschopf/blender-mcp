@@ -1,8 +1,8 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 from blender_mcp.dispatchers.dispatcher import Dispatcher
-from blender_mcp.dispatchers.strategies import HandlerResolutionStrategy, PolicyStrategy
 from blender_mcp.dispatchers.policies import PolicyChecker
+from blender_mcp.dispatchers.strategies import HandlerResolutionStrategy, PolicyStrategy
 
 
 class CustomHandlerResolution(HandlerResolutionStrategy):

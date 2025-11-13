@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any, Dict
-
 from blender_mcp.dispatchers.dispatcher import Dispatcher
 from blender_mcp.services import registry
 

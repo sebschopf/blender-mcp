@@ -1,6 +1,6 @@
-from .handler_resolution import HandlerResolutionStrategy, DefaultHandlerResolutionStrategy
-from .policy import PolicyStrategy, DefaultPolicyStrategy
+from .handler_resolution import DefaultHandlerResolutionStrategy, HandlerResolutionStrategy
 from .instrumentation import InstrumentationStrategy, NoOpInstrumentationStrategy
+from .policy import DefaultPolicyStrategy, PolicyStrategy
 
 __all__ = [
     "HandlerResolutionStrategy",

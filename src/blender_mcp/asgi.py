@@ -1,7 +1,8 @@
+# isort: skip_file
 import asyncio
-import os
 import inspect
 import logging
+import os
 import threading
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Tuple, cast
@@ -11,18 +12,15 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from . import logging_utils
-
 # Import the server module; it defines `mcp` and helpers but does not call run()
 from . import server as srv
 from .errors import (
     ExecutionTimeoutError,
     ExternalServiceError,
+    HandlerError as CanonicalHandlerError,
     HandlerNotFoundError,
     InvalidParamsError,
     PolicyDeniedError,
-)
-from .errors import (
-    HandlerError as CanonicalHandlerError,
 )
 
 logger = logging.getLogger("BlenderMCPASGI")

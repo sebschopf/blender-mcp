@@ -11,10 +11,10 @@ temporairement pour compatibilité et sera retiré dans un cycle futur.
 from __future__ import annotations
 
 import json
+import warnings as _warnings
 from typing import Any, Dict, Optional
 
 import requests
-import warnings as _warnings
 
 _warnings.warn(
     "blender_mcp.sketchfab est déprécié; utiliser blender_mcp.services.sketchfab.",

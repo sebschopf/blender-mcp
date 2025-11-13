@@ -5,12 +5,18 @@ extending dispatcher behavior. The default simply calls the checker if set.
 """
 from __future__ import annotations
 
+# isort: skip_file
+
 from typing import Any, Dict, Optional
 
 from ..policies import PolicyChecker
 
 class PolicyStrategy:
-    def check(self, checker: Optional[PolicyChecker], command: Dict[str, Any]) -> Optional[str]:  # pragma: no cover - interface
+    def check(
+        self,
+        checker: Optional[PolicyChecker],
+        command: Dict[str, Any],
+    ) -> Optional[str]:  # pragma: no cover - interface
         raise NotImplementedError
 
 

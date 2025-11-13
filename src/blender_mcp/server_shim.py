@@ -4,8 +4,9 @@ Implementation moved to `blender_mcp.servers.shim` to consolidate server
 code under one package. This façade keeps existing imports working.
 """
 
-from .servers.shim import BlenderMCPServer, _process_bbox  # noqa: F401
 import warnings as _warnings
+
+from .servers.shim import BlenderMCPServer, _process_bbox  # noqa: F401
 
 _warnings.warn(
 	"blender_mcp.server_shim is deprecated; use blender_mcp.servers.shim instead.",

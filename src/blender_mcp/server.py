@@ -4,8 +4,9 @@ Expose the historically-imported names while the real code lives under
 ``blender_mcp.servers``.
 """
 
-from .servers.server import BlenderMCPServer, _process_bbox  # noqa: F401
 import warnings as _warnings
+
+from .servers.server import BlenderMCPServer, _process_bbox  # noqa: F401
 
 _warnings.warn(
 	"blender_mcp.server is a compatibility façade; import from blender_mcp.servers.server instead.",

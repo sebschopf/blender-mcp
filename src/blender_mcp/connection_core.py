@@ -12,9 +12,9 @@ import json
 import logging
 import os
 import socket
+import warnings as _warnings
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict, Optional
-import warnings as _warnings
 
 logger = logging.getLogger(__name__)
 

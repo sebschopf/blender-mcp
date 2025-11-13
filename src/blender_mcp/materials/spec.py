@@ -6,7 +6,9 @@ from provided texture maps.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Sequence, Union, Callable, Tuple
+# isort: skip_file
+
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 from ..node_helpers import (
     displacement_node,

@@ -12,10 +12,10 @@ from __future__ import annotations
 
 import json
 import tempfile
+import warnings as _warnings
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
-import warnings as _warnings
 
 _warnings.warn(
     "blender_mcp.hyper3d est déprécié; utiliser blender_mcp.services.hyper3d.",
