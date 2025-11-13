@@ -166,6 +166,21 @@ class Dispatcher(AbstractDispatcher):
         # delegate handler resolution to strategy (preserves existing logic)
         fn = self._handler_resolution_strategy.resolve(self, name)
         if fn is None:
+            # Fallback: essayer un service générique enregistré
+            try:
+                # Explicitly annotate to satisfy mypy when assigning None in except path
+                service_registry: Any
+                from ..services import registry as service_registry  # lazy import pour éviter cycles
+            except Exception:  # pragma: no cover - import error improbable
+                service_registry = None
+            if service_registry and service_registry.has_service(name):
+                service = service_registry.get_service(name)
+                logger.debug("dispatch fallback to service %s", name)
+                try:
+                    return self._invoke_service(service, params or {})
+                except Exception as exc:
+                    logger.exception("service %s raised", name)
+                    raise CanonicalHandlerError(name, exc) from exc
             logger.debug("no handler for %s", name)
             return None
         logger.debug("dispatching %s with params=%s", name, params)
@@ -187,6 +202,13 @@ class Dispatcher(AbstractDispatcher):
         """Like `dispatch` but raises KeyError if the handler is missing."""
         fn = self._handler_resolution_strategy.resolve(self, name)
         if fn is None:
+            # also check service registry before failing
+            try:
+                from ..services import registry as service_registry
+                if service_registry.has_service(name):
+                    return self.dispatch(name, params)
+            except Exception:
+                pass
             logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
@@ -253,15 +275,24 @@ class Dispatcher(AbstractDispatcher):
             if sole.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
                 return service(params)
         # Build kwargs mapping
+<<<<<<< HEAD
         kwargs: Dict[str, Any] = {}
         missing: List[str] = []
+=======
+        kwargs = {}
+        missing = []
+>>>>>>> 4144bbd (Phase 2 — Registry + portage endpoints)
         for p in sig.parameters.values():
             if p.kind not in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
                 continue
             if p.name in params:
                 kwargs[p.name] = params[p.name]
             else:
+<<<<<<< HEAD
                 if p.default is inspect.Signature.empty:
+=======
+                if p.default is inspect._empty:
+>>>>>>> 4144bbd (Phase 2 — Registry + portage endpoints)
                     missing.append(p.name)
         if missing:
             raise ValueError(f"missing required params for service {service.__name__}: {', '.join(missing)}")
