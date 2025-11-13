@@ -76,31 +76,42 @@ class Dispatcher(AbstractDispatcher):
         """Return a sorted list of registered handler names."""
         return self._registry.list_handlers()
 
+    def _resolve_handler_or_service(self, name: str) -> Optional[Handler]:
+        """Return a callable for a registered handler or wrap a service fallback.
+
+        - If a handler is registered under `name`, return it as-is.
+        - Else if a service exists in the services registry, return a thin
+          wrapper that invokes the service via `_invoke_service`.
+        - Else return None.
+        """
+        fn = self._registry.get(name)
+        if fn is not None:
+            return fn
+        try:
+            # Lazy import to avoid import cycles at module import time
+            from ..services import registry as service_registry  # type: ignore
+        except Exception:  # pragma: no cover - import error improbable
+            return None
+        if service_registry and service_registry.has_service(name):
+            service = service_registry.get_service(name)
+
+            def _wrapped(params: Dict[str, Any]) -> Any:
+                return self._invoke_service(service, params)
+
+            logger.debug("resolved service fallback for %s", name)
+            return _wrapped
+        return None
+
     def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Call the handler named `name` with `params` and return its result.
 
         If the handler is not found, returns None.
         """
-        fn = self._registry.get(name)
+        fn = self._resolve_handler_or_service(name)
         if fn is None:
-            # Fallback: essayer un service générique enregistré
-            try:
-                # Explicitly annotate to satisfy mypy when assigning None in except path
-                service_registry: Any
-                from ..services import registry as service_registry  # lazy import pour éviter cycles
-            except Exception:  # pragma: no cover - import error improbable
-                service_registry = None
-            if service_registry and service_registry.has_service(name):
-                service = service_registry.get_service(name)
-                logger.debug("dispatch fallback to service %s", name)
-                try:
-                    return self._invoke_service(service, params or {})
-                except Exception as exc:
-                    logger.exception("service %s raised", name)
-                    raise CanonicalHandlerError(name, exc) from exc
             logger.debug("no handler for %s", name)
             return None
-        logger.debug("dispatching handler %s with params=%s", name, params)
+        logger.debug("dispatching %s with params=%s", name, params)
         try:
             return fn(params or {})
         except Exception as exc:
@@ -113,14 +124,8 @@ class Dispatcher(AbstractDispatcher):
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
-        if self._registry.get(name) is None:
-            # also check service registry before failing
-            try:
-                from ..services import registry as service_registry
-                if service_registry.has_service(name):
-                    return self.dispatch(name, params)
-            except Exception:
-                pass
+        fn = self._resolve_handler_or_service(name)
+        if fn is None:
             logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
