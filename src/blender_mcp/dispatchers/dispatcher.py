@@ -130,6 +130,7 @@ class Dispatcher(AbstractDispatcher):
             return _wrapped
         return None
 
+<<<<<<< HEAD
     def _instrument_start(self, name: str, params: Optional[Dict[str, Any]]) -> float:
         if self._instrumentation is None:
             return 0.0
@@ -158,33 +159,27 @@ class Dispatcher(AbstractDispatcher):
         except Exception:
             pass
 
+=======
+>>>>>>> 3b7e081 (refactor(dispatcher): itération 1 (factorisation résolution handler/service))
     def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Call the handler named `name` with `params` and return its result.
 
         If the handler is not found, returns None.
         """
+<<<<<<< HEAD
         # delegate handler resolution to strategy (preserves existing logic)
         fn = self._handler_resolution_strategy.resolve(self, name)
+=======
+        fn = self._resolve_handler_or_service(name)
+>>>>>>> 3b7e081 (refactor(dispatcher): itération 1 (factorisation résolution handler/service))
         if fn is None:
-            # Fallback: essayer un service générique enregistré
-            try:
-                # Explicitly annotate to satisfy mypy when assigning None in except path
-                service_registry: Any
-                from ..services import registry as service_registry  # lazy import pour éviter cycles
-            except Exception:  # pragma: no cover - import error improbable
-                service_registry = None
-            if service_registry and service_registry.has_service(name):
-                service = service_registry.get_service(name)
-                logger.debug("dispatch fallback to service %s", name)
-                try:
-                    return self._invoke_service(service, params or {})
-                except Exception as exc:
-                    logger.exception("service %s raised", name)
-                    raise CanonicalHandlerError(name, exc) from exc
             logger.debug("no handler for %s", name)
             return None
         logger.debug("dispatching %s with params=%s", name, params)
+<<<<<<< HEAD
         start_ts = self._instrument_start(name, params)
+=======
+>>>>>>> 3b7e081 (refactor(dispatcher): itération 1 (factorisation résolution handler/service))
         try:
             result = fn(params or {})
             self._instrument_success(name, result, start_ts)
@@ -200,6 +195,7 @@ class Dispatcher(AbstractDispatcher):
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
+<<<<<<< HEAD
         fn = self._handler_resolution_strategy.resolve(self, name)
         if fn is None:
             # also check service registry before failing
@@ -275,24 +271,16 @@ class Dispatcher(AbstractDispatcher):
             if sole.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
                 return service(params)
         # Build kwargs mapping
-<<<<<<< HEAD
         kwargs: Dict[str, Any] = {}
         missing: List[str] = []
-=======
-        kwargs = {}
-        missing = []
->>>>>>> 4144bbd (Phase 2 — Registry + portage endpoints)
         for p in sig.parameters.values():
             if p.kind not in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
                 continue
             if p.name in params:
                 kwargs[p.name] = params[p.name]
             else:
-<<<<<<< HEAD
                 if p.default is inspect.Signature.empty:
-=======
-                if p.default is inspect._empty:
->>>>>>> 4144bbd (Phase 2 — Registry + portage endpoints)
+                if p.default is inspect.Signature.empty:
                     missing.append(p.name)
         if missing:
             raise ValueError(f"missing required params for service {service.__name__}: {', '.join(missing)}")
