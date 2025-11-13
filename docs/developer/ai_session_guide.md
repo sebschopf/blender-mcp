@@ -85,6 +85,15 @@ CI (GitHub Actions): matrice Python 3.11 + 3.12; jobs: ruff, mypy, pytest; optio
 - Aucune logique ne doit inférer `error_code` depuis `message`.
 - Ajout de code erreur → modifier `ErrorCode`, `error_code_for_exception`, ajouter test mapping.
 
+Sous‑section: Politiques (PolicyChecker)
+- Contrat `PolicyChecker`: `(cmd_type: str, params: Dict[str, Any]) -> Optional[str]`.
+  - Retourne `None` pour autoriser, une chaîne non vide pour refuser.
+  - Lever `PolicyDeniedError` est également supporté (mappé en `policy_denied`).
+- Priorité: la policy passée per‑call à `Dispatcher.dispatch_command(..., policy_check=...)` PRIME sur celle fournie au constructeur `Dispatcher(policy_check=...)`.
+- Mapping des refus: `{"status":"error","message":"Blocked by policy: <raison>","error_code":"policy_denied"}` (ou message de l’exception si `PolicyDeniedError`).
+- Helpers dispo: `allow_all`, `deny_all`, `and_`, `or_`, `role_based` (voir `blender_mcp.dispatchers.policies`).
+- Référence: Issue #23 — Refactor SOLID du dispatcher (injection PolicyChecker) https://github.com/sebschopf/blender-mcp/issues/23
+
 ---
 ## 6. SOLID Compliance (Checklist exécutable)
 | Principe | État | Action | Priorité |
@@ -292,3 +301,4 @@ Ce guide doit rester court, concret et mis à jour après chaque phase majeure. 
 ---
 ## 18. Changelog interne du guide
 - 2025-11-13: Version initiale (standardisation erreurs, dispatcher, connexion shim).
+- 2025-11-13: Ajout de la note sur la priorité per‑call du `policy_check` et le mapping `policy_denied` (réf. Issue #23).
