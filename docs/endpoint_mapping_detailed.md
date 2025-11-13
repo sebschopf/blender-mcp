@@ -7,7 +7,7 @@ Generated automatically. Statut initial: `pending` (à porter).
 | @tool | `get_scene_info` | `(ctx)` | 245 | Get detailed information about the current Blender scene | ported |
 | @tool | `get_object_info` | `(ctx, object_name)` | 258 | Get detailed information about a specific object in the Blender scene. | ported |
 | @tool | `get_viewport_screenshot` | `(ctx, max_size)` | 276 | Capture a screenshot of the current Blender 3D viewport. | ported |
-| @tool | `execute_blender_code` | `(ctx, code)` | 319 | Execute arbitrary Python code in Blender. Make sure to do it step-by-step by breaking it into smaller chunks. | pending |
+| @tool | `execute_blender_code` | `(ctx, code)` | 319 | Execute arbitrary Python code in Blender. Make sure to do it step-by-step by breaking it into smaller chunks. | ported |
 | @tool | `get_polyhaven_categories` | `(ctx, asset_type)` | 336 | Get a list of categories for a specific asset type on Polyhaven. | pending |
 | @tool | `search_polyhaven_assets` | `(ctx, asset_type, categories)` | 368 | Search for assets on Polyhaven with optional filtering. | pending |
 | @tool | `download_polyhaven_asset` | `(ctx, asset_id, asset_type, resolution, file_format)` | 417 | Download and import a Polyhaven asset into Blender. | pending |

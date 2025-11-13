@@ -358,6 +358,18 @@ Remove-Item Env:\PYTHONPATH
 	- [ ] Créer tests d'intégration réseau pour `BlenderConnection` reassembly.
 	- [ ] Linter (`ruff`) & typecheck (`mypy`) vert pour fichiers modifiés.
 
+### Backlog rapide — Lint-only (à traiter dans un lot dédié)
+
+- `I001` imports à organiser:
+	- `src/blender_mcp/connection.py`
+	- `src/blender_mcp/dispatchers/dispatcher.py`
+- `F811` redéfinition/doublon d'import dans tests:
+	- `tests/test_services_registry.py` (double import de `registry`)
+- Commandes utiles (ciblées):
+	- `ruff check src/blender_mcp/connection.py --fix`
+	- `ruff check src/blender_mcp/dispatchers/dispatcher.py --fix`
+	- Ajuster l'import en doublon dans `tests/test_services_registry.py`
+
 10) Documentation & OpenSpec
 	- [ ] Mettre à jour `docs/endpoint_mapping_detailed.md` après chaque lot.
 	- [ ] Pour tout changement de contrat public (payload ou `error_code`), créer `openspec/changes/<id>/` avec spec et scénarios d'acceptation, puis `openspec validate --strict`.

@@ -5,6 +5,20 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 
 ---
 - 2025-11-13 | automation
+- Action: Portage `execute_blender_code` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/registry.py (enregistrement `execute_blender_code`)
+	- docs/endpoint_mapping_detailed.md (statut `execute_blender_code` -> ported)
+- Tests:
+	- tests/test_execute_service.py couvre: param manquant, `bpy` absent (mock), succès, exception.
+- Commandes recommandées:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_execute_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+	- `ruff check src tests ; mypy src --exclude "src/blender_mcp/archive/.*"`
+- Statut: done
+- Notes: Service avec lazy import `bpy`, journalisation dédiée; exceptions canoniques (`InvalidParamsError`, `ExternalServiceError`, `HandlerError`).
+
+---
+- 2025-11-13 | automation
 - Action: Portage `get_viewport_screenshot` vers service + enregistrement registre
 - Fichiers modifiés:
 	- src/blender_mcp/services/registry.py (enregistrement `get_viewport_screenshot`)
