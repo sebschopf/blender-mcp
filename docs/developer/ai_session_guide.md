@@ -4,7 +4,7 @@ Ce fichier est conçu pour (re)donner rapidement à un assistant AI (ChatGPT / G
 
 ---
 ## 1. TL;DR (Résumé immédiat)
-Architecture en refactorisation: séparation claire entre core (erreurs, dispatcher, connexion), services (logique métier), adapters (ASGI / embedded), UI Blender, clients (LLM/MCP). Objectif: éliminer les duplications (dispatchers multiples, server shims, services racine vs services/), uniformiser contrat de réponse (`status`, `result`, `error_code`). Registre unique en place; prochain focus: normalisation `send_command`, refactor SOLID du dispatcher, dépréciation des shims.
+Architecture en refactorisation: séparation claire entre core (erreurs, dispatcher, connexion), services (logique métier), adapters (ASGI / embedded), UI Blender, clients (LLM/MCP). Objectif: éliminer les duplications (dispatchers multiples, server shims, services racine vs services/), uniformiser contrat de réponse (`status`, `result`, `error_code`). Registre unique en place; normalisation `send_command` implémentée (PR #22). Prochain focus: refactor SOLID du dispatcher, dépréciation des shims.
 
 ---
 ## 2. Couches d'Architecture (Modèle cible)
@@ -33,19 +33,18 @@ Terminés:
 - Documentation politique mapping exceptions.
 - Registre unique services/tools (`src/blender_mcp/services/registry.py`) + fallback dans le Dispatcher.
 - Premiers endpoints portés dans `services/` et enregistrés: `scene`, `object`, `screenshot`, `execute`, `polyhaven.*`, `sketchfab.*`, `hyper3d.*`.
+ - Normalisation `send_command` (services.connection) → retour dict complet; spec OpenSpec ajoutée; tests adaptés (PR #22).
 
 Partiellement faits / À finaliser:
-- Uniformisation contrat `send_command` (toujours dict: `{status, result|message, error_code}`).
 - Séparation façade connexion multi-mode en classes SRP (optionnel).
 - Dépréciation modules dupliqués (simple_dispatcher, server shims, services racine). 
 
 À venir (phases):
-1. Normalisation `send_command` (contrat unique) — spec OpenSpec si breaking.
-2. Refactor SOLID du dispatcher (isoler stratégies/executor/adapters) sans rupture publique.
-3. Deprecation warnings systématiques + plan de retrait des shims (suppression après 2 cycles).
-4. Migration résiduelle des services racine vers `services/` si restant.
-5. Refactor connexion (classes séparées) si nécessaire stricte SRP.
-6. Injection strategies (policy / parser / framing) dans dispatcher.
+1. Refactor SOLID du dispatcher (isoler stratégies/executor/adapters) sans rupture publique.
+2. Deprecation warnings systématiques + plan de retrait des shims (suppression après 2 cycles).
+3. Migration résiduelle des services racine vers `services/` si restant.
+4. Refactor connexion (classes séparées) si nécessaire stricte SRP.
+5. Injection strategies (policy / parser / framing) dans dispatcher.
 
 ---
 ## 4. Workflow Local (PowerShell / Windows)
@@ -225,11 +224,10 @@ Note: Si tu préfères ne pas créer d'autres fichiers, conserve ces commandes d
 
 ---
 ## 15. Prochaine Action Recommandée (si aucune autre instruction)
-Phase suivante: normalisation et durcissement du chemin critique.
-- Spécifier (OpenSpec) si nécessaire la normalisation `send_command` → contrat dict unique.
-- Implémenter la normalisation dans `CommandAdapter` + tests de non‑régression.
-- Amorcer refactor SOLID du dispatcher (sans rupture) et ajouter warnings de dépréciation côté shims.
-- Poursuivre/terminer la migration des services restants et mettre à jour la cartographie endpoints.
+Phase suivante: refactor SOLID du dispatcher + dépréciations.
+- Extraire/clarifier stratégies d’exécution/policy dans le dispatcher (itération 1, sans rupture publique).
+- Ajouter warnings de dépréciation pour les shims encore chargés; planifier suppression après 2 cycles.
+- Poursuivre/terminer la migration des services restants; maintenir à jour `docs/endpoint_mapping_detailed.md`.
 
 ---
 ## 15b. Référence Endpoints / Portage
@@ -299,5 +297,6 @@ Ce guide doit rester court, concret et mis à jour après chaque phase majeure. 
 
 ---
 ## 18. Changelog interne du guide
+- 2025-11-13: MAJ normalisation `send_command` (implémentée, PR #22). Focus déplacé vers refactor dispatcher + dépréciation shims.
 - 2025-11-13: MAJ Phase 2 fusionnée (registre services/tools opérationnel, fallback Dispatcher). Prochain focus: `send_command` + refactor dispatcher + dépréciation shims.
 - 2025-11-13: Version initiale (standardisation erreurs, dispatcher, connexion shim).
