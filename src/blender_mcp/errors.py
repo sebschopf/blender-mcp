@@ -6,7 +6,7 @@ error codes while preserving backward-compatible human messages.
 """
 from __future__ import annotations
 
-from typing import Any, Optional, TypedDict
+from typing import Any, Literal, Optional, TypedDict
 
 
 class BlenderMCPError(Exception):
@@ -65,6 +65,41 @@ class ErrorResult(TypedDict, total=True):
     error_code: str
 
 
+# Canonical set de codes d'erreur machine-readable.
+ErrorCode = Literal[
+    "invalid_command",
+    "invalid_command_type",
+    "policy_denied",
+    "not_found",
+    "invalid_params",
+    "timeout",
+    "handler_error",
+    "external_error",
+    "internal_error",
+]
+
+
+class ErrorInfo(TypedDict, total=True):
+    message: str
+    error_code: ErrorCode
+
+
+def error_code_for_exception(exc: BlenderMCPError) -> ErrorCode:
+    if isinstance(exc, InvalidParamsError):
+        return "invalid_params"
+    if isinstance(exc, HandlerNotFoundError):
+        return "not_found"
+    if isinstance(exc, PolicyDeniedError):
+        return "policy_denied"
+    if isinstance(exc, ExecutionTimeoutError):
+        return "timeout"
+    if isinstance(exc, HandlerError):
+        return "handler_error"
+    if isinstance(exc, ExternalServiceError):
+        return "external_error"
+    return "internal_error"
+
+
 __all__ = [
     "BlenderMCPError",
     "InvalidParamsError",
@@ -75,4 +110,7 @@ __all__ = [
     "HandlerError",
     "SuccessResult",
     "ErrorResult",
+    "ErrorCode",
+    "ErrorInfo",
+    "error_code_for_exception",
 ]

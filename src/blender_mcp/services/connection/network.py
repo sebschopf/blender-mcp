@@ -22,8 +22,8 @@ class BlenderConnectionNetwork:
     maintain.
     """
 
-    def __init__(self, host: str = "localhost", port: int = 9876) -> None:
-        self._core = NetworkCore(host=host, port=port)
+    def __init__(self, host: str = "localhost", port: int = 9876, *, socket_factory=None) -> None:
+        self._core = NetworkCore(host=host, port=port, socket_factory=socket_factory)
 
     def connect(self) -> bool:
         return self._core.connect()

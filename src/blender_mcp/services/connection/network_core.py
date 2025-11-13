@@ -38,14 +38,16 @@ class NetworkCore:
     sock: Optional[socket.socket]
     _core: Optional[Any]
 
-    def __init__(self, host: str = "localhost", port: int = 9876) -> None:
+    def __init__(self, host: str = "localhost", port: int = 9876, *, socket_factory: Optional[Any] = None) -> None:
         self.host = host
         self.port = port
         self.sock = None
         self._core = None
+        self._socket_factory = socket_factory  # optional override for raw socket creation
 
     def connect(self) -> bool:
-        if CoreBlenderConnection is not None:
+        # If a socket factory is injected, prefer raw socket path (skip core)
+        if self._socket_factory is None and CoreBlenderConnection is not None:
             if self._core is not None:
                 return True
             try:
@@ -66,7 +68,10 @@ class NetworkCore:
         if self.sock:
             return True
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if self._socket_factory is not None:
+                s = self._socket_factory()
+            else:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
             self.sock = s
             logger.info("Connected to %s:%s", self.host, self.port)

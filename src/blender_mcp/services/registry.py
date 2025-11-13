@@ -1,15 +1,77 @@
-"""Register default service handlers into a CommandDispatcher.
+"""Service & Handler Registry (hybrid legacy + nouvelle API).
 
-This module exposes a single helper `register_default_handlers(dispatcher)`
-which registers handlers for PolyHaven and Sketchfab operations so the MCP
-server can perform network actions directly when commands arrive.
+Historique:
+Ce module enregistrait seulement des handlers réseau (PolyHaven, Sketchfab)
+directement dans un `CommandDispatcher`, en retournant des dicts contenant
+éventuellement une clé `error`. Le modèle cible supprime ce pattern au
+profit d'un registre générique de services qui lèvent des exceptions
+standardisées, laissant l'adapter formater la réponse.
+
+Transition:
+Nous conservons les fonctions d'enregistrement legacy (`register_default_handlers`)
+pour compatibilité, tout en ajoutant un registre générique `_SERVICES` avec
+`register_service`, `get_service`, `list_services`, `has_service`.
+
+Nouveau contrat service:
+- Les services enregistrés via `register_service` ne doivent pas retourner
+    de dict contenant une clé `error` pour conditions normales : ils lèvent
+    des exceptions (Mapper par l'adapter plus haut niveau).
 """
 
 import os
 from typing import Any, Dict
 
 from ..command_dispatcher import CommandDispatcher
-from . import polyhaven, sketchfab
+from . import execute as execute_service
+from . import hyper3d as hyper3d_service
+from . import object as object_service
+from . import polyhaven, scene, sketchfab
+from . import screenshot as screenshot_service
+from . import textures as textures_service
+from .hyper3d_status import get_hyper3d_status_service
+from .polyhaven_status import get_polyhaven_status_service
+
+# --- Nouveau registre générique de services ---
+_SERVICES: dict[str, Any] = {}
+
+def register_service(name: str, fn: Any) -> None:
+    """Enregistrer une fonction de service générique.
+
+    Overwrite implicite (nous privilégions idempotence pour phase migration).
+    """
+    _SERVICES[name] = fn
+
+def get_service(name: str) -> Any:
+    return _SERVICES.get(name)
+
+def list_services() -> list[str]:
+    return sorted(_SERVICES.keys())
+
+def has_service(name: str) -> bool:
+    return name in _SERVICES
+
+# Pré-enregistrer le service existant de scène (portage validé)
+register_service("get_scene_info", scene.get_scene_info)
+# Portage validé: service objet
+register_service("get_object_info", object_service.get_object_info)
+# Portage validé: service capture viewport
+register_service("get_viewport_screenshot", screenshot_service.get_viewport_screenshot)
+# Portage validé: exécution de code Blender
+register_service("execute_blender_code", execute_service.execute_blender_code)
+# Portage validé: PolyHaven categories (service canonical)
+register_service("get_polyhaven_categories", polyhaven.get_polyhaven_categories)
+register_service("search_polyhaven_assets", polyhaven.search_polyhaven_assets)
+register_service("download_polyhaven_asset", polyhaven.download_polyhaven_asset)
+register_service("get_sketchfab_status", sketchfab.get_sketchfab_status_service)
+register_service("search_sketchfab_models", sketchfab.search_sketchfab_models)
+register_service("download_sketchfab_model", sketchfab.download_sketchfab_model)
+register_service("set_texture", textures_service.set_texture)
+register_service("get_polyhaven_status", get_polyhaven_status_service)
+register_service("get_hyper3d_status", get_hyper3d_status_service)
+register_service("generate_hyper3d_model_via_text", hyper3d_service.generate_hyper3d_model_via_text)
+register_service("generate_hyper3d_model_via_images", hyper3d_service.generate_hyper3d_model_via_images)
+register_service("poll_rodin_job_status", hyper3d_service.poll_rodin_job_status)
+register_service("import_generated_asset", hyper3d_service.import_generated_asset)
 
 
 def _get_polyhaven_categories(asset_type: str = "hdris") -> Dict[str, Any]:
@@ -104,3 +166,12 @@ def register_default_handlers(dispatcher: CommandDispatcher) -> None:
     dispatcher.register("get_sketchfab_status", _get_sketchfab_status)
     dispatcher.register("search_sketchfab_models", _search_sketchfab_models)
     dispatcher.register("download_sketchfab_model", _download_sketchfab_model)
+
+__all__ = [
+    "register_default_handlers",
+    # nouveau registre
+    "register_service",
+    "get_service",
+    "list_services",
+    "has_service",
+]

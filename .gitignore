@@ -1,3 +1,24 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Logs
+*.log
+# Log spécifique local généré par l'exécution Blender MCP
+blender_mcp_execute.log
+
+# pytest
+.pytest_cache/
+
+# mypy cache
+.mypy_cache/
+
+# Editor
+.vscode/
 # Python-generated files
 __pycache__/
 *.py[oc]

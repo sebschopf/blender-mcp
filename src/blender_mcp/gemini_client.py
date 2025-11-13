@@ -43,12 +43,12 @@ def find_inner_json(obj: Any) -> Any | None:
         if "tool" in obj:
             return obj
         for v in obj.values():
-            found = find_inner_json(v)
+            found = find_inner_json(cast(Any, v))
             if found is not None:
                 return found
     if isinstance(obj, list):
         for v in obj:
-            found = find_inner_json(v)
+            found = find_inner_json(cast(Any, v))
             if found is not None:
                 return found
     return None
@@ -62,6 +62,7 @@ def _extract_first_json_from_string(s: str) -> Optional[ToolCommand]:
     m = re.search(r"(\{[\s\S]*\})", s)
     if m:
         try:
+            parsed: Any = None
             parsed = json.loads(m.group(1))
             if isinstance(parsed, dict):
                 return cast(ToolCommand, parsed)
