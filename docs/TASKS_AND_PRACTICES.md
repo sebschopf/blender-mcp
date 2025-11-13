@@ -307,7 +307,7 @@ Remove-Item Env:\PYTHONPATH
 3) Dispatcher (critical)
 	- [x] Façade minimale `src/blender_mcp/dispatcher.py` (ré-export interne) créée.
 	- [x] Tests de base (registration, dispatch happy/error) passent via suites existantes.
-	- [ ] Concurrency basic (timeout / thread executor) tests dédiés à ajouter.
+	- [x] Concurrency basic (timeout / thread executor) tests ajoutés (`tests/test_dispatcher_timeout.py`).
 	- [ ] Documenter politique de mapping exceptions -> codes (déplacé dans `docs/developer/error_handling.md`).
 
 4) Connection / Reassembly (critical)

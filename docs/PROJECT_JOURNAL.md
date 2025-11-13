@@ -204,3 +204,16 @@ YYYY-MM-DD | auteur
 - Notes:
 	- Couverture basique d'émission audit établie; amélioration future possible (niveaux différenciés INFO/WARN). Ajout d'annotations pour réduire bruit Pylance.
 
+---
+
+2025-11-13 | automation
+- Action: Ajout tests concurrency/timeout dispatcher
+- Fichiers ajoutés/modifiés:
+	- tests/test_dispatcher_timeout.py (timeout, succès rapide, exécution parallèle)
+	- docs/TASKS_AND_PRACTICES.md (marquage tâche concurrency)
+- Tests:
+	- `PYTHONPATH=src pytest -q tests/test_dispatcher_timeout.py` -> OK
+- Statut: done
+- Notes:
+	- Parallélisme validé (2 handlers ~0.1s exécutés <0.18s). Seuil ajusté pour éviter flakiness CI.
+
