@@ -189,3 +189,18 @@ YYYY-MM-DD | auteur
 	- Prochain: ajouter tests unitaires spécifiques pour `error_code_for_exception` et coverage concurrency.
 	- Aucune rupture de contrat public; codes anciens conservés.
 
+---
+
+2025-11-13 | automation
+- Action: Couverture logging_utils (tests audit) + types structures
+- Fichiers modifiés/ajoutés:
+	- tests/test_errors_mapping.py (annotations types)
+	- tests/test_types_structures.py (nouveau tests TypedDict usage)
+	- tests/test_logging_utils.py (nouveau tests caplog audit)
+	- docs/TASKS_AND_PRACTICES.md (tâches core infra mises à jour)
+- Tests:
+	- `PYTHONPATH=src pytest -q tests/test_logging_utils.py tests/test_types_structures.py tests/test_errors_mapping.py` -> OK
+- Statut: done
+- Notes:
+	- Couverture basique d'émission audit établie; amélioration future possible (niveaux différenciés INFO/WARN). Ajout d'annotations pour réduire bruit Pylance.
+

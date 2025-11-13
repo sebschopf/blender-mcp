@@ -300,8 +300,8 @@ Remove-Item Env:\PYTHONPATH
 	- [x] Finaliser `src/blender_mcp/errors.py` (liste exhaustive d'erreurs, `ErrorCode`, `ErrorInfo`, helper mapping) — exports vérifiés.
 	- [x] Finaliser `src/blender_mcp/types.py` (`DispatcherResult.status` restreint à Literal, ToolCommand, ToolInfo).
 	- [x] Ajouter façade `src/blender_mcp/dispatcher.py` (ré-export public propre).
-	- [ ] Ajouter tests unitaires dédiés pour `error_code_for_exception` et types (à planifier).
-	- [ ] Ajouter `src/blender_mcp/logging_utils.py` si absent et l'utiliser uniformément pour l'audit (déjà présent, vérifier couverture).
+	- [x] Ajouter tests unitaires dédiés pour `error_code_for_exception` et types.
+	- [x] Ajouter `src/blender_mcp/logging_utils.py` si absent et l'utiliser uniformément pour l'audit (déjà présent, couverture test ajoutée).
 	- [ ] Ajouter tests unitaires pour les helpers (types, error shaping).
 
 3) Dispatcher (critical)
