@@ -308,7 +308,7 @@ Remove-Item Env:\PYTHONPATH
 	- [x] Façade minimale `src/blender_mcp/dispatcher.py` (ré-export interne) créée.
 	- [x] Tests de base (registration, dispatch happy/error) passent via suites existantes.
 	- [x] Concurrency basic (timeout / thread executor) tests ajoutés (`tests/test_dispatcher_timeout.py`).
-	- [ ] Documenter politique de mapping exceptions -> codes (déplacé dans `docs/developer/error_handling.md`).
+	- [x] Documenter politique de mapping exceptions -> codes (section ajoutée dans `docs/developer/error_handling.md`).
 
 4) Connection / Reassembly (critical)
 	- [ ] Extraire `BlenderConnection` en `src/blender_mcp/connection.py` avec API testable : connect/disconnect/send_command/receive_full_response.

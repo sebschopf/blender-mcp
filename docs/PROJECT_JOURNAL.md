@@ -217,3 +217,17 @@ YYYY-MM-DD | auteur
 - Notes:
 	- Parallélisme validé (2 handlers ~0.1s exécutés <0.18s). Seuil ajusté pour éviter flakiness CI.
 
+---
+
+2025-11-13 | automation
+- Action: Documentation politique mapping exceptions -> error_code
+- Fichiers modifiés:
+	- docs/developer/error_handling.md (ajout section "Politique de mapping exceptions → codes")
+	- docs/TASKS_AND_PRACTICES.md (marquage tâche comme complétée)
+- Tests:
+	- `PYTHONPATH=src pytest -q tests/test_errors_mapping.py` (mapping existant valide)
+- Statut: done
+- Notes:
+	- Politique formalise ordre de résolution, fallback `internal_error`, règles de nommage et procédures d'extension.
+	- Prochaine étape suggérée: ajouter tests pour helpers additionnels (error shaping) avant portage services.
+
