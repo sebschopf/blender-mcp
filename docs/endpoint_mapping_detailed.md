@@ -4,8 +4,8 @@ Generated automatically. Statut initial: `pending` (à porter).
 
 | Decorator | Function | Signature | Line | Docstring | Port status |
 |---|---|---:|---:|---|---|
-| @tool | `get_scene_info` | `(ctx)` | 245 | Get detailed information about the current Blender scene | pending |
-| @tool | `get_object_info` | `(ctx, object_name)` | 258 | Get detailed information about a specific object in the Blender scene. | pending |
+| @tool | `get_scene_info` | `(ctx)` | 245 | Get detailed information about the current Blender scene | ported |
+| @tool | `get_object_info` | `(ctx, object_name)` | 258 | Get detailed information about a specific object in the Blender scene. | ported |
 | @tool | `get_viewport_screenshot` | `(ctx, max_size)` | 276 | Capture a screenshot of the current Blender 3D viewport. | pending |
 | @tool | `execute_blender_code` | `(ctx, code)` | 319 | Execute arbitrary Python code in Blender. Make sure to do it step-by-step by breaking it into smaller chunks. | pending |
 | @tool | `get_polyhaven_categories` | `(ctx, asset_type)` | 336 | Get a list of categories for a specific asset type on Polyhaven. | pending |

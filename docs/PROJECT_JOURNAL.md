@@ -4,6 +4,33 @@
 Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le modèle indiqué dans `TASKS_AND_PRACTICES.md`.
 
 ---
+- 2025-11-13 | automation
+- Action: Portage `get_object_info` vers service + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/registry.py (enregistrement `get_object_info`)
+	- docs/endpoint_mapping_detailed.md (statut `get_object_info` -> ported)
+- Tests:
+	- tests/test_object_service.py existe et couvre: succès nominal, objet inexistant, absence de `bpy` (mock). À exécuter localement.
+- Commandes recommandées:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_object_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+	- `ruff check src tests ; mypy src`
+- Statut: done
+- Notes: Contrat `status/result` respecté via service; exceptions canoniques levées (InvalidParamsError, ExternalServiceError, HandlerError). Prochaine étape: porter `get_viewport_screenshot`.
+
+---
+- 2025-11-13 | automation
+- Action: Ajout registre générique de services + fallback dispatcher + portage statut `get_scene_info` (ported)
+- Fichiers modifiés:
+	- src/blender_mcp/services/registry.py (ajout _SERVICES + APIs register/get/list/has, pré-enregistrement get_scene_info)
+	- src/blender_mcp/dispatchers/dispatcher.py (fallback vers services si handler absent; introspection signature)
+	- docs/endpoint_mapping_detailed.md (statut get_scene_info -> ported)
+	- tests/test_services_registry.py (nouveaux tests registre + fallback)
+- Commandes exécutées localement:
+	- pytest -q tests/test_services_registry.py (devrait passer; exécution recommandée avant commit final)
+- Statut: done
+- Notes: Première étape Phase 2. Les services legacy polyhaven/sketchfab retournent encore des dicts avec `error`; migration future les convertira en exceptions. Prochaine étape: portage `get_object_info`.
+
+---
 
 2025-11-08 | sebas
 - Action: Initialisation du journal; ajout du document TASKS_AND_PRACTICES.md
