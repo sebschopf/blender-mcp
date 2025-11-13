@@ -2,6 +2,10 @@
 
 These helpers centralize network requests and downloading so tests can mock
 network I/O without importing the Blender addon.
+
+Deprecated: utiliser ``blender_mcp.services.hyper3d`` pour une interface
+service validée et des erreurs normalisées. Ce module est conservé pour
+compatibilité transitoire et sera retiré dans un cycle futur.
 """
 
 from __future__ import annotations
@@ -11,6 +15,13 @@ import tempfile
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
+import warnings as _warnings
+
+_warnings.warn(
+    "blender_mcp.hyper3d est déprécié; utiliser blender_mcp.services.hyper3d.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 from . import downloaders  # type: ignore
 

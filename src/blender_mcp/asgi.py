@@ -1,4 +1,5 @@
 import asyncio
+import os
 import inspect
 import logging
 import threading
@@ -141,6 +142,19 @@ def make_list_tools(server_module: Any):
                 tools_info.extend(_extract_tools_from_registry(server.mcp))
 
             tools_info.extend(_extract_module_level_tools(server))
+
+            # Optional enrichment: expose services registry entries as tools when enabled.
+            # Controlled via env var to avoid changing default behavior / tests.
+            expose_registry = os.getenv("BLENDER_MCP_EXPOSE_REGISTRY_TOOLS", "").lower() in {"1", "true", "yes"}
+            if expose_registry:
+                try:
+                    from .services import registry as services_registry  # local import to avoid cycles
+
+                    for name in services_registry.list_services():
+                        tools_info.append({"name": name, "source": "services_registry"})
+                except Exception:
+                    # Non-fatal: best-effort enrichment only
+                    logger.exception("Failed to include services registry in /tools list")
 
             return {"status": "ok", "tools": tools_info}
         except Exception as e:

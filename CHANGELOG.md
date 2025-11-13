@@ -2,9 +2,20 @@
 
 ## Unreleased
 
-- tooling: Ignore archive snapshots in linters and mypy
   - `pyproject.toml`: add `src/blender_mcp/archive/**` to `tool.ruff.exclude`
   - `mypy.ini`: add `exclude = src/blender_mcp/archive/.*`
+
+  - `src/blender_mcp/simple_dispatcher.py` → use `blender_mcp.dispatchers`
+  - `src/blender_mcp/command_dispatcher.py` → use `blender_mcp.dispatchers.command_dispatcher`
+  - `src/blender_mcp/server_shim.py` → use `blender_mcp.servers.shim`
+  - `src/blender_mcp/server.py` façade → use `blender_mcp.servers.server`
+  - `src/blender_mcp/connection_core.py` → use `services/connection/network_core.py` and `connection.py`
+  - `blender_mcp/server.py` (repo root shim) → temporary, slated for removal
+  - `src/blender_mcp/polyhaven.py` → use `blender_mcp.services.polyhaven`
+  - `src/blender_mcp/sketchfab.py` → use `blender_mcp.services.sketchfab`
+  - `src/blender_mcp/hyper3d.py` → use `blender_mcp.services.hyper3d`
+  - instrumentation: Add optional `InstrumentationStrategy` to `Dispatcher` (non-breaking extension point for logging/metrics)
+  - security: Baseline safeguards for `execute_blender_code` (audit logger, dry-run env `BLENDER_MCP_EXECUTE_DRY_RUN`, minimal namespace)
 
 Rationale: the in-repo `src/blender_mcp/archive` and `docs/archive` directories contain legacy or partial snapshots that are intentionally kept for historical/reference purposes and are not valid Python packages for static analysis nor linting. Ignoring them avoids false-positive errors in automated checks.
 

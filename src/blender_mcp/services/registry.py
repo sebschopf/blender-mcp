@@ -28,6 +28,7 @@ from . import object as object_service
 from . import polyhaven, scene, sketchfab
 from . import screenshot as screenshot_service
 from . import textures as textures_service
+from .. import prompts as prompts_service
 from .hyper3d_status import get_hyper3d_status_service
 from .polyhaven_status import get_polyhaven_status_service
 
@@ -72,6 +73,8 @@ register_service("generate_hyper3d_model_via_text", hyper3d_service.generate_hyp
 register_service("generate_hyper3d_model_via_images", hyper3d_service.generate_hyper3d_model_via_images)
 register_service("poll_rodin_job_status", hyper3d_service.poll_rodin_job_status)
 register_service("import_generated_asset", hyper3d_service.import_generated_asset)
+# Prompt: asset_creation_strategy (exposé comme service simple, sans params)
+register_service("asset_creation_strategy", prompts_service.asset_creation_strategy)
 
 
 def _get_polyhaven_categories(asset_type: str = "hdris") -> Dict[str, Any]:

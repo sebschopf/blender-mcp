@@ -5,6 +5,28 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 
 ---
 - 2025-11-13 | automation
+- Action: Dépréciation des modules racine services (polyhaven/sketchfab/hyper3d) + instrumentation dispatcher + baseline sécurité execute
+- Fichiers modifiés:
+	- src/blender_mcp/polyhaven.py, src/blender_mcp/sketchfab.py, src/blender_mcp/hyper3d.py (DeprecationWarning import-time)
+	- src/blender_mcp/dispatchers/strategies/instrumentation.py (nouvelle stratégie)
+	- src/blender_mcp/dispatchers/dispatcher.py (hooks instrumentation)
+	- tests/test_dispatcher_instrumentation.py (événements start/success/error/adapter)
+	- src/blender_mcp/services/execute.py (audit logger + dry-run)
+	- tests/test_execute_service.py (ajout test dry-run)
+	- docs/endpoint_mapping_detailed.md (annotations de dépréciation)
+	- docs/developer/ai_session_guide.md (section stratégie instrumentation)
+	- CHANGELOG.md (entrées instrumentation + sécurité)
+- Tests:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_dispatcher_instrumentation.py tests/test_execute_service.py; pytest -q`
+- Statut: done
+- Notes:
+	- Les modules racine servent de façades transitoires; suppression planifiée après 2 cycles (spec calendrier retrait legacy).
+	- InstrumentationStrategy permet extension non-breaking (latence, erreurs) sans polluer logique métier.
+	- Sécurité execute Phase 2: audit + dry-run, durcissement futur (Phase 3) via spec dédiée.
+	- Aucun changement de contrat public; usages existants restent valides.
+	- Prochaines étapes: synchroniser mapping endpoints régulièrement, lancer Phase A transport SRP.
+
+- 2025-11-13 | automation
 - Action: Normalisation `send_command` (retour dict complet) + spec OpenSpec
 - Fichiers modifiés/ajoutés:
 	- src/blender_mcp/services/connection/network_core.py (retourne toujours `{status, result|message, error_code?}`)
@@ -440,20 +462,31 @@ YYYY-MM-DD | auteur
 	- Injection socket_factory permet mocks sans réseau réel.
 	- Prochain: ajouter tests d'intégration réseau (socketpair) et reassembly multi-messages si nécessaire.
 ---
-
-2025-11-13 | automation
-- Action: Alignement structure connexion (shim + injection NetworkCore)
-- Fichiers modifiés:
 	- src/blender_mcp/connection.py (remplacé par shim vers services.connection)
 	- src/blender_mcp/services/connection/network_core.py (socket_factory param)
 	- src/blender_mcp/services/connection/network.py (propagation socket_factory)
 	- src/blender_mcp/services/connection/facade.py (support kw socket_factory sans args)
 	- tests/test_connection_reassembly.py (adaptation expectations résultat)
-- Tests:
 	- `pytest -q tests/test_connection_reassembly.py` -> OK
-- Statut: done
-- Notes:
 	- Maintient compat chemin import (`blender_mcp.connection.BlenderConnection`).
 	- Évite duplication logique; extension future via services/connection/*.py.
 	- Prochain: envisager séparation parse strategy / multi-message pour réseau.
+
+- 2025-11-13 | refactor
+- Action: Scission `materials.py` en package `materials/` (spec pur + création Blender optionnelle) et ajout DeprecationWarning pour shims legacy
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/materials/spec.py (helpers purs: build_material_spec, _build_spec_from_keys)
+	- src/blender_mcp/materials/blender_create.py (create_material_in_blender avec import lazy de bpy)
+	- src/blender_mcp/materials/__init__.py (ré-exports)
+	- src/blender_mcp/materials.py (façade de compatibilité: ré-export vers package)
+	- docs/architecture.md (section Materials)
+	- openspec/changes/2025-11-13-deprecations-legacy-shims/spec.md (plan warnings + retrait N+2)
+	- src/blender_mcp/simple_dispatcher.py, src/blender_mcp/command_dispatcher.py, src/blender_mcp/server_shim.py, src/blender_mcp/server.py, src/blender_mcp/connection_core.py, blender_mcp/server.py (warnings import)
+- Tests:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_materials.py tests/test_deprecations.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Lint/Type:
+	- `ruff check src tests`
+	- `mypy src --exclude "src/blender_mcp/archive/.*"`
+- Statut: done
+- Notes: Back-compat conservée pour `from blender_mcp.materials import ...`. Warnings de dépréciation émis à l'import des shims legacy; suite de tests verte.
 

@@ -92,6 +92,57 @@ Sous‑section: Politiques (PolicyChecker)
 - Mapping des refus: `{"status":"error","message":"Blocked by policy: <raison>","error_code":"policy_denied"}` (ou message de l’exception si `PolicyDeniedError`).
 - Helpers dispo: `allow_all`, `deny_all`, `and_`, `or_`, `role_based` (voir `blender_mcp.dispatchers.policies`).
 - Référence: Issue #23 — Refactor SOLID du dispatcher (injection PolicyChecker) https://github.com/sebschopf/blender-mcp/issues/23
+
+Sous-section: ASGI `/tools` et registre de services
+- Par défaut, `/tools` liste les fonctions module-level exposées par `blender_mcp.server` (tests actuels).
+- Enrichissement optionnel (non-breaking): pour inclure les services du registre dans `/tools`, définir la variable d’environnement `BLENDER_MCP_EXPOSE_REGISTRY_TOOLS=1`.
+  - Implémentation: concatène `services.registry.list_services()` au listing (`source: "services_registry"`).
+  - Motivation: garder le comportement historique par défaut, tout en permettant d’exposer dynamiquement les services quand souhaité.
+  - Tests: `tests/test_asgi_tools.py` reste vert sans flag; pas d’assertion stricte sur le contenu complet du listing.
+Sous-section: Stratégies Dispatcher (injection non-breaking)
+- But: ouvrir le dispatcher à l’extension (OCP) sans modifier sa surface publique.
+- Package: `blender_mcp.dispatchers.strategies` fournit deux interfaces et leurs implémentations par défaut:
+  - `HandlerResolutionStrategy`: résout un nom → callable (défaut = registre puis fallback services via `_resolve_handler_or_service`).
+  - `PolicyStrategy`: applique la policy avant d’invoquer le `CommandAdapter` (défaut = exécuter le `PolicyChecker`).
+- Construction: `Dispatcher(handler_resolution_strategy=..., policy_strategy=...)` (paramètres optionnels; si omis → comportements historiques inchangés).
+- Effet: `dispatch` et `dispatch_strict` délèguent la résolution; `dispatch_command` exécute la stratégie de policy (retour immédiat `policy_denied` si blocage).
+- Exemple minimal:
+```python
+from blender_mcp.dispatchers.dispatcher import Dispatcher
+from blender_mcp.dispatchers.strategies import HandlerResolutionStrategy
+
+class DemoResolution(HandlerResolutionStrategy):
+    def resolve(self, dispatcher, name):  # type: ignore[override]
+        if name.startswith("demo_"):
+            return lambda p: {"status": "success", "result": p.get("x", 0)}
+        return dispatcher._resolve_handler_or_service(name)
+
+d = Dispatcher(handler_resolution_strategy=DemoResolution())
+print(d.dispatch("demo_test", {"x": 5}))  # {'status': 'success', 'result': 5}
+```
+- Tests: `tests/test_dispatcher_strategies.py` (résolution synthétique + blocage policy custom) verts.
+- Avantage futur: instrumentation, framing, parsing pourront s’ajouter via nouvelles stratégies dédiées sans refactor lourd ni duplication.
+Sous-section: Stratégie d'Instrumentation (ajout non-breaking)
+- Objectif: offrir un point d'extension pour observer le cycle de vie des dispatch (start/success/error) et des appels d'adapter sans mêler la logique métier.
+- Interface: `InstrumentationStrategy` avec méthodes `on_dispatch_start(name, params)`, `on_dispatch_success(name, result, elapsed_s)`, `on_dispatch_error(name, error, elapsed_s)`, `on_adapter_invoke(adapter_name, cmd_type, params)`.
+- Injection: `Dispatcher(instrumentation_strategy=...)` (paramètre optionnel; absence = aucun surcoût sauf tests de branche).
+- Comportement: exceptions levées par la stratégie sont ignorées (swallow + log éventuel futur) pour préserver la robustesse.
+- Usage minimal:
+```python
+from blender_mcp.dispatchers.dispatcher import Dispatcher
+from blender_mcp.dispatchers.strategies import InstrumentationStrategy
+
+class Rec(InstrumentationStrategy):
+  def __init__(self): self.events = []
+  def on_dispatch_start(self, n, p): self.events.append(("start", n))
+  def on_dispatch_success(self, n, r, e): self.events.append(("success", e))
+  def on_dispatch_error(self, n, err, e): self.events.append(("error", str(err)))
+  def on_adapter_invoke(self, a, t, p): self.events.append(("adapter", t))
+
+d = Dispatcher(instrumentation_strategy=Rec())
+```
+- Tests: `tests/test_dispatcher_instrumentation.py` vérifie succès, erreur, invocation adapter.
+- Évolution Phase 3: agrégation métriques + export (Prometheus/OpenTelemetry) via implémentation dédiée.
 ---
 ## 6. SOLID Compliance (Checklist exécutable)
 | Principe | État | Action | Priorité |
@@ -129,14 +180,17 @@ def has_service(name: str) -> bool: return name in _SERVICES
 
 ---
 ## 8. Dépréciation (Stratégie)
+Note (2025-11-13): les modules legacy listés ci-dessous émettent désormais un `DeprecationWarning` à l'import pour guider la migration. Voir la spec OpenSpec: `openspec/changes/2025-11-13-deprecations-legacy-shims/spec.md`.
 | Module legacy | Remplacement | Phase retrait | Avertissement |
 |---------------|-------------|---------------|--------------|
 | `simple_dispatcher.py` | `dispatcher.py` | Phase 2 | DeprecationWarning import |
 | `command_dispatcher.py` (racine) | `dispatchers/dispatcher.py` | Phase 2 | idem |
 | `connection_core.py` | `services/connection/network_core.py` | Phase 4 | idem |
-| Services racine (`polyhaven.py`, etc.) | `services/*.py` | Phase 3 | stub + warning |
+| Services racine (`polyhaven.py`, `sketchfab.py`, `hyper3d.py`) | `services/*.py` | Phase 3 | stub + warning (actif) |
 | `server_shim.py` | `servers/shim.py` | Phase 2 | warning + doc |
 | `blender_codegen.py` racine | `codegen/blender_codegen.py` | Phase 5 | stub + warning |
+
+Note additionnelle (2025-11-13, post‑migration): les modules racine `polyhaven.py`, `sketchfab.py` et `hyper3d.py` déclenchent désormais un `DeprecationWarning` à l'import afin d'encourager l'utilisation des services validés sous `blender_mcp.services.*`. Leur suppression est planifiée après deux cycles de release une fois que les appels externes ont été migrés.
 
 Après 2 cycles de release: suppression stubs.
 

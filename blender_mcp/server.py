@@ -10,8 +10,18 @@ from __future__ import annotations
 
 import logging
 from typing import Any, Optional
+import warnings as _warnings
 
 logger = logging.getLogger(__name__)
+
+_warnings.warn(
+    (
+        "The top-level blender_mcp.server shim is temporary and deprecated; "
+        "use blender_mcp.servers.server and related APIs. This shim will be removed."
+    ),
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 try:
     # Prefer the consolidated implementation from the src package. Import the

@@ -50,3 +50,16 @@ def test_execute_blender_code_exception(monkeypatch):
     with pytest.raises(HandlerError) as excinfo:
         execute.execute_blender_code({"code": code})
     assert "boom" in str(excinfo.value.original)
+
+
+def test_execute_blender_code_dry_run(monkeypatch):
+    # Provide fake bpy so availability check passes
+    fake = _make_fake_bpy_for_exec()
+    monkeypatch.setitem(sys.modules, "bpy", fake)
+    monkeypatch.setenv("BLENDER_MCP_EXECUTE_DRY_RUN", "1")
+    importlib.reload(execute)
+
+    code = "result = 'should_not_run'"  # result should not be set in dry-run
+    res = execute.execute_blender_code({"code": code})
+    assert res.get("status") == "ok"
+    assert "dry-run" in res.get("message", "")

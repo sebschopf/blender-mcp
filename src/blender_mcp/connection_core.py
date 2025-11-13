@@ -14,8 +14,18 @@ import os
 import socket
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict, Optional
+import warnings as _warnings
 
 logger = logging.getLogger(__name__)
+
+_warnings.warn(
+    (
+        "blender_mcp.connection_core is deprecated; migrate to "
+        "blender_mcp.services.connection.network_core and blender_mcp.connection."
+    ),
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 DEFAULT_HOST = os.getenv("BLENDER_HOST", "localhost")
 DEFAULT_PORT = int(os.getenv("BLENDER_PORT", 9876))
