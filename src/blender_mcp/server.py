@@ -7,6 +7,13 @@ Expose the historically-imported names while the real code lives under
 import warnings as _warnings
 
 from .servers.server import BlenderMCPServer, _process_bbox  # noqa: F401
+import warnings as _warnings
+
+_warnings.warn(
+	"blender_mcp.server is a compatibility façade; import from blender_mcp.servers.server instead.",
+	DeprecationWarning,
+	stacklevel=2,
+)
 
 _warnings.warn(
 	"blender_mcp.server is a compatibility façade; import from blender_mcp.servers.server instead.",

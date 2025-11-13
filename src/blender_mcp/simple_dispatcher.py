@@ -6,6 +6,13 @@ The implementation is now in ``blender_mcp.dispatchers``.
 import warnings as _warnings
 
 from .dispatchers.simple_dispatcher import Dispatcher, register_default_handlers  # noqa: F401
+import warnings as _warnings
+
+_warnings.warn(
+	"blender_mcp.simple_dispatcher is deprecated; use blender_mcp.dispatchers instead.",
+	DeprecationWarning,
+	stacklevel=2,
+)
 
 _warnings.warn(
 	"blender_mcp.simple_dispatcher is deprecated; use blender_mcp.dispatchers instead.",

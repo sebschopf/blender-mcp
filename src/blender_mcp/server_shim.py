@@ -7,6 +7,13 @@ code under one package. This façade keeps existing imports working.
 import warnings as _warnings
 
 from .servers.shim import BlenderMCPServer, _process_bbox  # noqa: F401
+import warnings as _warnings
+
+_warnings.warn(
+	"blender_mcp.server_shim is deprecated; use blender_mcp.servers.shim instead.",
+	DeprecationWarning,
+	stacklevel=2,
+)
 
 _warnings.warn(
 	"blender_mcp.server_shim is deprecated; use blender_mcp.servers.shim instead.",

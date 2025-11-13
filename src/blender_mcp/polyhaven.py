@@ -15,6 +15,13 @@ import warnings as _warnings
 from typing import Any, Dict, Optional
 
 import requests
+import warnings as _warnings
+
+_warnings.warn(
+    "blender_mcp.polyhaven est déprécié; utiliser blender_mcp.services.polyhaven à la place.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 _warnings.warn(
     "blender_mcp.polyhaven est déprécié; utiliser blender_mcp.services.polyhaven à la place.",

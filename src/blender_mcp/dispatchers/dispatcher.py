@@ -166,37 +166,24 @@ class Dispatcher(AbstractDispatcher):
 
         If the handler is not found, returns None.
         """
-<<<<<<< HEAD
-        # delegate handler resolution to strategy (preserves existing logic)
-        fn = self._handler_resolution_strategy.resolve(self, name)
-=======
         fn = self._resolve_handler_or_service(name)
->>>>>>> 3b7e081 (refactor(dispatcher): itération 1 (factorisation résolution handler/service))
         if fn is None:
             logger.debug("no handler for %s", name)
             return None
         logger.debug("dispatching %s with params=%s", name, params)
-<<<<<<< HEAD
-        start_ts = self._instrument_start(name, params)
-=======
->>>>>>> 3b7e081 (refactor(dispatcher): itération 1 (factorisation résolution handler/service))
         try:
-            result = fn(params or {})
-            self._instrument_success(name, result, start_ts)
-            return result
+            return fn(params or {})
         except Exception as exc:
             # wrap in HandlerError for compatibility with code that expects
             # handler exceptions to be wrapped
             logger.exception("handler %s raised", name)
-            self._instrument_error(name, exc, start_ts)
             # Raise the canonical HandlerError so higher layers (adapters)
             # can map it consistently.
             raise CanonicalHandlerError(name, exc) from exc
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
-<<<<<<< HEAD
-        fn = self._handler_resolution_strategy.resolve(self, name)
+        fn = self._resolve_handler_or_service(name)
         if fn is None:
             # also check service registry before failing
             try:
@@ -279,8 +266,7 @@ class Dispatcher(AbstractDispatcher):
             if p.name in params:
                 kwargs[p.name] = params[p.name]
             else:
-                if p.default is inspect.Signature.empty:
-                if p.default is inspect.Signature.empty:
+                if p.default is inspect._empty:
                     missing.append(p.name)
         if missing:
             raise ValueError(f"missing required params for service {service.__name__}: {', '.join(missing)}")
