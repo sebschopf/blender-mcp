@@ -130,7 +130,35 @@ class Dispatcher(AbstractDispatcher):
             return _wrapped
         return None
 
-    def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:  # noqa: C901
+    def _instrument_start(self, name: str, params: Optional[Dict[str, Any]]) -> float:
+        if self._instrumentation is None:
+            return 0.0
+        try:
+            start = __import__("time").perf_counter()
+            self._instrumentation.on_dispatch_start(name, (params or {}))
+            return start
+        except Exception:
+            return 0.0
+
+    def _instrument_success(self, name: str, result: Any, start_ts: float) -> None:
+        if self._instrumentation is None:
+            return
+        try:
+            elapsed = (__import__("time").perf_counter() - start_ts) if start_ts else 0.0
+            self._instrumentation.on_dispatch_success(name, result, elapsed)
+        except Exception:
+            pass
+
+    def _instrument_error(self, name: str, exc: Exception, start_ts: float) -> None:
+        if self._instrumentation is None:
+            return
+        try:
+            elapsed = (__import__("time").perf_counter() - start_ts) if start_ts else 0.0
+            self._instrumentation.on_dispatch_error(name, exc, elapsed)
+        except Exception:
+            pass
+
+    def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Call the handler named `name` with `params` and return its result.
 
         If the handler is not found, returns None.
@@ -141,38 +169,16 @@ class Dispatcher(AbstractDispatcher):
             logger.debug("no handler for %s", name)
             return None
         logger.debug("dispatching %s with params=%s", name, params)
-        start_ts: float = 0.0
-        if self._instrumentation is not None:
-            try:
-                start_ts = __import__('time').perf_counter()
-                self._instrumentation.on_dispatch_start(name, (params or {}))
-            except Exception:
-                pass  # swallow instrumentation errors
+        start_ts = self._instrument_start(name, params)
         try:
             result = fn(params or {})
-            if self._instrumentation is not None:
-                try:
-                    if start_ts:
-                        elapsed = __import__('time').perf_counter() - start_ts
-                    else:
-                        elapsed = 0.0
-                    self._instrumentation.on_dispatch_success(name, result, elapsed)
-                except Exception:
-                    pass
+            self._instrument_success(name, result, start_ts)
             return result
         except Exception as exc:
             # wrap in HandlerError for compatibility with code that expects
             # handler exceptions to be wrapped
             logger.exception("handler %s raised", name)
-            if self._instrumentation is not None:
-                try:
-                    if start_ts:
-                        elapsed = __import__('time').perf_counter() - start_ts
-                    else:
-                        elapsed = 0.0
-                    self._instrumentation.on_dispatch_error(name, exc, elapsed)
-                except Exception:
-                    pass
+            self._instrument_error(name, exc, start_ts)
             # Raise the canonical HandlerError so higher layers (adapters)
             # can map it consistently.
             raise CanonicalHandlerError(name, exc) from exc
