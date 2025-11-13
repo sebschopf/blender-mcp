@@ -1,5 +1,3 @@
-import importlib
-
 import pytest
 
 from blender_mcp.errors import ExternalServiceError, InvalidParamsError
