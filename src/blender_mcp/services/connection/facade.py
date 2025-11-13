@@ -24,7 +24,7 @@ class BlenderConnection:
     - BlenderConnection() -> reassembler helper (feed_bytes/get_messages)
     """
 
-    def __init__(self, *args: object) -> None:
+    def __init__(self, *args: object, **kwargs: object) -> None:
         # socket-injected mode
         if len(args) == 1 and hasattr(args[0], "recv"):
             self._mode = "socket"
@@ -34,7 +34,13 @@ class BlenderConnection:
         # network mode: host, port
         if len(args) == 2 and isinstance(args[0], str) and isinstance(args[1], int):
             self._mode = "network"
-            self._net = BlenderConnectionNetwork(args[0], args[1])
+            self._net = BlenderConnectionNetwork(args[0], args[1], socket_factory=kwargs.get("socket_factory"))
+            return
+
+        # network mode with defaults but socket_factory kw provided
+        if not args and "socket_factory" in kwargs:
+            self._mode = "network"
+            self._net = BlenderConnectionNetwork(socket_factory=kwargs.get("socket_factory"))
             return
 
         # default: reassembler

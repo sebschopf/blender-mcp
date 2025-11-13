@@ -4,9 +4,11 @@ Court guide d'action pour les agents automatisés travaillant sur le dépôt `bl
 Lis d'abord `openspec/AGENTS.md` et `openspec/project.md` avant toute modification structurelle.
 
 ## Règles rapides (à lire avant de coder)
-- Pour toute modification qui change le comportement ou l'API, suis la procédure OpenSpec : scafolder sous `openspec/changes/<change-id>/` et valide avec `openspec validate --strict`.
-- Exécute les tests localement avant d'ouvrir une PR. Les tests sont sous `tests/` et utilisent `pytest` (voir `pytest.ini`).
-- Les scripts d'aide et exemples PowerShell sont dans `scripts/` (ex. `run_tests.ps1`, `uvicorn_start.ps1`, `run_gemini_bridge.ps1`). Utilise-les pour reproduire les workflows CI localement.
+- Toute modification de comportement/API → procedure OpenSpec: `openspec/changes/<id>/` + `openspec validate --strict`.
+- Toujours valider localement lint/type/tests avant PR (voir commandes ci‑dessous).
+- Préférer des commits/PR petits et thématiques (≤ 3 fichiers code hors tests/docs).
+- Conventions de commit: Conventional Commits en français (`feat(x): …`, `refactor(y): …`, `chore(lint): …`, `docs: …`, `ci: …`).
+- Scripts utiles: `scripts/run_tests.ps1`, `scripts/uvicorn_start.ps1`, `scripts/run_gemini_bridge.ps1`.
 
 ## Architecture — où commencer
 - `addon.py` : point d'entrée Blender (doit rester minimal et import-safe). Voir `blender_mcp.blender_ui` pour l'UI réelle.
@@ -18,10 +20,14 @@ Lis d'abord `openspec/AGENTS.md` et `openspec/project.md` avant toute modificati
 Pourquoi : le projet sépare la définition des endpoints (docs + openspec) de l'implémentation runtime dans `blender_mcp`.
 
 ## Workflows développeur (commandes explicites)
-- Exécution rapide des tests (PowerShell) :
+- Vérifs locales (PowerShell):
 
 ```powershell
-$env:PYTHONPATH = 'src'; python -m pytest -q
+$Env:PYTHONPATH='src'
+ruff check src tests
+mypy src --exclude "src/blender_mcp/archive/.*"
+pytest -q
+Remove-Item Env:PYTHONPATH
 ```
 
 - Scripts utiles :
@@ -30,24 +36,25 @@ $env:PYTHONPATH = 'src'; python -m pytest -q
 	- `scripts/uvicorn_start.ps1` — démarre l'adaptateur ASGI avec uvicorn (si installé). 
 
 ## Conventions propres au projet
-- Modifications de comportement → créer une proposition sous `openspec/changes/<id>/` (voir `openspec/AGENTS.md`).
-- Format des scénarios dans les specs : utilisez `#### Scenario:` pour chaque scénario d'acceptation.
-- Pattern dispatcher : regarder `src/blender_mcp/dispatcher.py` et `tests/test_dispatcher*` pour voir comment les handlers sont enregistrés et testés.
-- Tests : les modules de test suivent `test_*.py` et `tests/test_services_*.py` pour les services ; mocks de `bpy` via `sys.modules` + `monkeypatch`.
+- Spécifications: changements de comportement → `openspec/changes/<id>/` (format scénarios `#### Scenario:`).
+- Dispatcher: si ordre d'import nécessaire, documenter et utiliser `# isort: skip_file` (pas de refactor structurel dans une PR de portage); tests: `tests/test_dispatcher*`.
+- Services: style exceptions-first (lever `InvalidParamsError` / `ExternalServiceError` / `HandlerError`), pas de dict d'erreur; adapter formate `{status, result|message, error_code}` (voir `docs/developer/error_handling.md`).
+- Registre services: enregistrer dans `src/blender_mcp/services/registry.py` et ajouter tests de découverte/dispatch.
+- Tests: `test_*.py`, `tests/test_services_*.py`; mock `bpy` via `sys.modules` + `monkeypatch`.
 
 ## Intégrations et dépendances externes
-- Bridge Gemini / LLM : `scripts/gemini_bridge.py` et `run_gemini_bridge.ps1`.
-- Services externes utilisés dans les tests : PolyHaven, Sketchfab, Hyper3D (voir `tests/test_services_*`).
-- Manifest des dépendances : `pyproject.toml` (Poetry). Les dépendances de dev incluent `pytest`, `ruff`, `mypy`, `black`, `isort`.
+- Bridge Gemini / LLM: `scripts/gemini_bridge.py`, `run_gemini_bridge.ps1`.
+- Services externes tests: PolyHaven, Sketchfab, Hyper3D (`tests/test_services_*`).
+- CI/Deps: voir `pyproject.toml`. CI installe `pytest`, `ruff`, `mypy`, `fastapi`, `starlette`, `httpx`, `pytest-asyncio`.
 
 ## Avant d'ouvrir une PR
-1. Relire `openspec/AGENTS.md` si la PR change un comportement/API.
-2. Exécuter `python -m pytest -q` (avec `PYTHONPATH=src`) et corriger les tests cassés.
-	- Note: la CI GitHub Actions utilise `PYTHONPATH: 'src:.'` pour inclure aussi le répertoire racine du dépôt pendant les runs (séparateur `:` sur Linux). Les développeurs peuvent continuer à utiliser `PYTHONPATH=src` localement.
-3. Ajouter/modifier les deltas sous `openspec/changes/<id>/` si nécessaire.
-4. Documenter les fichiers modifiés dans la proposition/PR (ex. `blender_mcp/server.py:ligne`).
+1. Lint/type/tests OK localement (voir commandes plus haut); corriger les erreurs (imports, lignes longues, types).
+2. Si comportement/API change: créer/mettre à jour une spec sous `openspec/changes/<id>/` et référencer dans la PR.
+3. Mettre à jour la doc (journal, cartographie endpoints) si pertinent.
+4. Commits petits et thématiques avec messages conventionnels; regrouper par domaine (polyhaven, sketchfab, hyper3d, textures, connection, docs, ci, lint).
+5. Ouvrir la PR via `gh`: ajouter label `phase2` et milestone courant; s'assurer que la CI se déclenche (PR vers n'importe quelle branche supportée).
 
 ## Remarques finales
-- Préfère des changements petits, testés et réversibles. Le projet vise une refactorisation stricte (SOLID, rigueur académique) — évite les hacks non documentés.
-- Si tu veux, je peux ajouter un mini-exemple montrant comment enregistrer un nouvel endpoint dans `src/blender_mcp/server.py` et un test minimal associé.
+- Viser SOLID: extraire/refactorer hors PR de portage si impact large; documenter le plan (ex: dispatcher import order gelé temporairement).
+- Tenir `docs/developer/ai_session_guide.md` et `docs/developer/error_handling.md` comme références courantes pour les décisions.
 

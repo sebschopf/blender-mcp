@@ -2,13 +2,25 @@
 
 These helpers keep network & parsing logic separate from Blender-specific
 code so we can unit-test the behaviour without Blender.
+
+Deprecated: use the service-layer helpers under ``blender_mcp.services.polyhaven``.
+They provide validated parameters and canonical response formatting. This
+module remains as a compatibility façade and will be removed in a future
+release cycle.
 """
 
 from __future__ import annotations
 
+import warnings as _warnings
 from typing import Any, Dict, Optional
 
 import requests
+
+_warnings.warn(
+    "blender_mcp.polyhaven est déprécié; utiliser blender_mcp.services.polyhaven à la place.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 # Prefer the shared session headers but keep a module-level default for callers
 _REQ_HEADERS = requests.utils.default_headers()

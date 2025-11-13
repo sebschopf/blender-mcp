@@ -12,10 +12,20 @@ import json
 import logging
 import os
 import socket
+import warnings as _warnings
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict, Optional
 
 logger = logging.getLogger(__name__)
+
+_warnings.warn(
+    (
+        "blender_mcp.connection_core is deprecated; migrate to "
+        "blender_mcp.services.connection.network_core and blender_mcp.connection."
+    ),
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 DEFAULT_HOST = os.getenv("BLENDER_HOST", "localhost")
 DEFAULT_PORT = int(os.getenv("BLENDER_PORT", 9876))
@@ -82,7 +92,7 @@ class BlenderConnection:
     def send_command(self, command_type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if not self.sock and not self.connect():
             raise ConnectionError("Not connected to Blender")
-        payload = {"type": command_type, "params": params or {}}
+        payload: Dict[str, Any] = {"type": command_type, "params": params or {}}
         assert self.sock is not None
         try:
             self.sock.sendall(json.dumps(payload).encode("utf-8"))

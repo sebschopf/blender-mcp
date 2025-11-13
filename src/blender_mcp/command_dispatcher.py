@@ -2,8 +2,15 @@
 
 The implementation lives in ``blender_mcp.dispatchers.command_dispatcher``.
 """
+import warnings as _warnings
 
 from .dispatchers.command_dispatcher import CommandDispatcher  # noqa: F401
+
+_warnings.warn(
+	"blender_mcp.command_dispatcher is deprecated; use blender_mcp.dispatchers.command_dispatcher.",
+	DeprecationWarning,
+	stacklevel=2,
+)
 
 __all__ = ["CommandDispatcher"]
 """Top-level re-export of the `CommandDispatcher` into the new package.

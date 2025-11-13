@@ -150,4 +150,6 @@ def test_send_command_with_fake_socket(monkeypatch):
     assert conn.connect() is True
     res = conn.send_command("test", {"a": 1})
     assert isinstance(res, dict)
-    assert res.get("message") == "ok"
+    # Normalisé: la réponse complète inclut status et result
+    assert res.get("status") in ("ok", "success")
+    assert res.get("result", {}).get("message") == "ok"

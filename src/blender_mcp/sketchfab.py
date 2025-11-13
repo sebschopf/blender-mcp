@@ -2,14 +2,25 @@
 
 These are pure helpers that centralize network I/O and parsing so they can
 be unit-tested independently of the Blender addon.
+
+Deprecated: utiliser désormais ``blender_mcp.services.sketchfab`` pour une
+validation des paramètres et un schéma de réponse canonique. Ce module reste
+temporairement pour compatibilité et sera retiré dans un cycle futur.
 """
 
 from __future__ import annotations
 
 import json
+import warnings as _warnings
 from typing import Any, Dict, Optional
 
 import requests
+
+_warnings.warn(
+    "blender_mcp.sketchfab est déprécié; utiliser blender_mcp.services.sketchfab.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 from . import downloaders  # type: ignore
 

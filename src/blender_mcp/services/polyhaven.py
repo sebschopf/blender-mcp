@@ -9,17 +9,98 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
-from .addon.polyhaven import (
-    download_polyhaven_asset as _addon_download_polyhaven_asset,
-)
-from .addon.polyhaven import (
-    get_polyhaven_categories as _addon_get_polyhaven_categories,
-)
-from .addon.polyhaven import (
-    search_polyhaven_assets as _addon_search_polyhaven_assets,
-)
+from blender_mcp.errors import ExternalServiceError, InvalidParamsError
+
+from .addon.polyhaven import download_polyhaven_asset as _addon_download_polyhaven_asset
+from .addon.polyhaven import get_polyhaven_categories as _addon_get_polyhaven_categories
+from .addon.polyhaven import search_polyhaven_assets as _addon_search_polyhaven_assets
 
 logger = logging.getLogger(__name__)
+
+
+def get_polyhaven_categories(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Service: fetch PolyHaven categories with canonical contract.
+
+    Expects params: {"asset_type": str | None}
+    Returns: {"status":"success","result":{"categories":{...}}}
+
+    Errors:
+    - InvalidParamsError: asset_type provided but not a string
+    - ExternalServiceError: network/API failure
+    """
+    p = params or {}
+    asset_type = p.get("asset_type")
+    if asset_type is not None and not isinstance(asset_type, str):
+        raise InvalidParamsError("'asset_type' must be a string if provided")
+    try:
+        data = fetch_categories(asset_type=asset_type or "hdris")
+        cats = data.get("categories") or {}
+        return {"status": "success", "result": {"categories": cats}}
+    except Exception as e:
+        raise ExternalServiceError(str(e))
+
+
+def search_polyhaven_assets(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Service: search PolyHaven assets with canonical contract.
+
+    Params accepted (all optional unless noted):
+    {
+      "asset_type": str (one of hdris|textures|models|all, default: "all"),
+      "categories": str (comma-separated categories supported by PolyHaven),
+      "page": int (>=1, default: 1),
+      "per_page": int (1..100, default: 50)
+    }
+
+    Returns: {"status":"success","result":{"assets":{...},"total_count":int,"returned_count":int}}
+
+    Errors:
+    - InvalidParamsError: bad type/value for any param
+    - ExternalServiceError: network/API failure
+    """
+    p = params or {}
+    asset_type = p.get("asset_type", "all")
+    categories = p.get("categories")
+    page = p.get("page", 1)
+    per_page = p.get("per_page", 50)
+
+    if not isinstance(asset_type, str):
+        raise InvalidParamsError("'asset_type' must be a string")
+    allowed_types = {"hdris", "textures", "models", "all"}
+    if asset_type not in allowed_types:
+        raise InvalidParamsError(
+            f"'asset_type' invalid: {asset_type}. Must be one of: hdris, textures, models, all"
+        )
+    if categories is not None and not isinstance(categories, str):
+        raise InvalidParamsError("'categories' must be a string if provided")
+    if not isinstance(page, int) or page < 1:
+        raise InvalidParamsError("'page' must be an int >= 1")
+    if not isinstance(per_page, int) or not (1 <= per_page <= 100):
+        raise InvalidParamsError("'per_page' must be an int between 1 and 100")
+
+    try:
+        data = search_assets_network(
+            asset_type=asset_type,
+            categories=categories,
+            page=page,
+            per_page=per_page,
+        )
+    except Exception as e:  # pragma: no cover - defensive boundary
+        raise ExternalServiceError(str(e))
+
+    if data.get("error"):
+        raise ExternalServiceError(str(data.get("error")))
+
+    assets = data.get("assets") or {}
+    total_count = data.get("total_count", 0)
+    returned_count = data.get("returned_count", len(assets))
+    return {
+        "status": "success",
+        "result": {
+            "assets": assets,
+            "total_count": total_count,
+            "returned_count": returned_count,
+        },
+    }
 
 
 def get_categories(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -58,7 +139,7 @@ def download_asset_service(params: Optional[Dict[str, Any]] = None) -> Dict[str,
     p = params or {}
     asset_id = p.get("asset_id")
     asset_type = p.get("asset_type", "models")
-    resolution = p.get("resolution", "1k")
+    resolution = p.get("resolution")
     file_format = p.get("file_format")
 
     if not asset_id:
@@ -75,6 +156,55 @@ def download_asset_service(params: Optional[Dict[str, Any]] = None) -> Dict[str,
         return {"status": "error", "message": addon_resp.get("error")}
 
     return {"status": "success", "result": {"files_data": addon_resp.get("files_data")}}
+
+
+def download_polyhaven_asset(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Service: download a PolyHaven asset archive and extract it safely.
+
+    Params:
+    {
+      "asset_id": str,  (required)
+      "asset_type": "hdris"|"textures"|"models",  (required)
+      "resolution": str (optional, default: "1k"),
+      "file_format": str (optional; default depends on type)
+    }
+
+    Returns: {"status":"success","result":{"temp_dir": str}}
+
+    Errors:
+    - InvalidParamsError: bad/missing params
+    - ExternalServiceError: network or extraction failure
+    """
+    p = params or {}
+    asset_id = p.get("asset_id")
+    asset_type = p.get("asset_type")
+    resolution = p.get("resolution", "1k")
+    file_format = p.get("file_format")
+
+    if not isinstance(asset_id, str) or not asset_id:
+        raise InvalidParamsError("missing or invalid 'asset_id'")
+    if not isinstance(asset_type, str) or asset_type not in {"hdris", "textures", "models"}:
+        raise InvalidParamsError("'asset_type' must be one of: hdris, textures, models")
+    if resolution is not None and not isinstance(resolution, str):
+        raise InvalidParamsError("'resolution' must be a string if provided")
+    if file_format is not None and not isinstance(file_format, str):
+        raise InvalidParamsError("'file_format' must be a string if provided")
+
+    try:
+        res_str: str = resolution or "1k"
+        res = download_asset(
+            asset_id=asset_id,
+            asset_type=asset_type,
+            resolution=res_str,
+            file_format=file_format,
+        )
+    except Exception as e:  # pragma: no cover - defensive
+        raise ExternalServiceError(str(e))
+
+    if res.get("error"):
+        raise ExternalServiceError(str(res.get("error")))
+
+    return {"status": "success", "result": {"temp_dir": res.get("temp_dir")}}
 
 
 def search_assets(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -135,7 +265,9 @@ def download_asset_addon(params: Optional[Dict[str, Any]] = None) -> Dict[str, A
 __all__ = [
     "get_categories",
     "search_assets",
+    "search_polyhaven_assets",
     "download_asset_service",
+    "download_polyhaven_asset",
     "download_asset_addon",
     "format_categories_output",
     "format_search_assets",

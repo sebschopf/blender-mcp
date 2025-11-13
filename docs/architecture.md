@@ -37,6 +37,24 @@ L'objectif est de séparer clairement le code qui dépend de Blender (API `bpy`)
 - `src/blender_mcp/addon_handlers.py`
   - Façade de compatibilité qui ré-exporte des helpers de `services.addon`.
 
+## Materials (structure actuelle)
+
+- Objectif: séparer clairement la génération « pure » d'un graphe de matériau (testable hors Blender) de la création effective dans Blender via `bpy`.
+
+- Arborescence:
+  - `src/blender_mcp/materials/`
+    - `spec.py`: helpers purs
+      - `build_material_spec(images_map, material_name=None)`: produit un dict JSON-serializable (`nodes`, `links`) pour un matériau Principled BSDF à partir des maps.
+      - `_build_spec_from_keys(keys)`: utilitaire pour tests (déduit les slots à partir d'une liste de clés).
+    - `blender_create.py`: intégration Blender optionnelle
+      - `create_material_in_blender(images_map, material_name)`: tente de créer les nœuds dans Blender si `bpy` est disponible; retourne le nom ou `None` sinon.
+    - `__init__.py`: ré-exporte les fonctions ci-dessus.
+  - `src/blender_mcp/materials.py`: façade de compatibilité (ré-export) pour préserver les imports historiques.
+
+- Règles:
+  - Aucun import `bpy` au niveau module dans `materials/spec.py`.
+  - Les tests unitaires ciblent `build_material_spec` et `_build_spec_from_keys` (purs). `create_material_in_blender` peut être validé via mocks si nécessaire.
+
 ## Contrats de service (exemples)
 
 - Convention générale : chaque service retourne un dictionnaire JSON-serializable avec au moins une clé `status` valant `"success"` ou `"error"`.

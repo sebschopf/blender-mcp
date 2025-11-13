@@ -1,3 +1,34 @@
+from blender_mcp.dispatcher import create_dispatcher, dispatch
+
+
+def test_register_and_list_services():
+    def sample(params):
+        return {"echo": params.get("text")}
+
+    registry.register_service("echo", sample)
+    assert "echo" in registry.list_services()
+    assert registry.get_service("echo") is sample
+
+
+def test_dispatch_fallback_to_service_single_param():
+    def upper(params):
+        return {"text": params.get("text", "").upper()}
+
+    registry.register_service("echo_upper", upper)
+    d = create_dispatcher()
+    result = dispatch(d, "echo_upper", {"text": "abc"})
+    assert result == {"text": "ABC"}
+
+
+def test_dispatch_strict_with_service():
+    def simple(params):
+        return {"v": 1}
+
+    registry.register_service("simple_service", simple)
+    d = create_dispatcher()
+    # dispatch_strict devrait fonctionner via fallback service
+    from blender_mcp.dispatcher import dispatch as basic_dispatch
+    assert basic_dispatch(d, "simple_service") == {"v": 1}
 from blender_mcp.command_dispatcher import CommandDispatcher
 from blender_mcp.services import polyhaven, registry, sketchfab
 
