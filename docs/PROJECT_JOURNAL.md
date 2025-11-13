@@ -5,6 +5,20 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 
 ---
 - 2025-11-13 | automation
+- Action: Portage `get_viewport_screenshot` vers service + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/registry.py (enregistrement `get_viewport_screenshot`)
+	- docs/endpoint_mapping_detailed.md (statut `get_viewport_screenshot` -> ported)
+- Tests:
+	- tests/test_screenshot_service.py couvre: `bpy` absent, helper absent, retour non-bytes, succès, et exception helper.
+- Commandes recommandées:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_screenshot_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+	- `ruff check src tests ; mypy src`
+- Statut: done
+- Notes: Service lève `ExternalServiceError` pour indisponibilité Blender/helper, `HandlerError` pour erreurs runtime. Prochaine étape: `execute_blender_code` si prioritaire.
+
+---
+- 2025-11-13 | automation
 - Action: Portage `get_object_info` vers service + enregistrement registre
 - Fichiers modifiés:
 	- src/blender_mcp/services/registry.py (enregistrement `get_object_info`)

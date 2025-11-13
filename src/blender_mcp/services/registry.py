@@ -22,7 +22,13 @@ import os
 from typing import Any, Dict
 
 from ..command_dispatcher import CommandDispatcher
-from . import polyhaven, sketchfab, scene, object as object_service
+from . import (
+    object as object_service,
+    polyhaven,
+    scene,
+    screenshot as screenshot_service,
+    sketchfab,
+)
 
 # --- Nouveau registre générique de services ---
 _SERVICES: dict[str, Any] = {}
@@ -47,6 +53,8 @@ def has_service(name: str) -> bool:
 register_service("get_scene_info", scene.get_scene_info)
 # Portage validé: service objet
 register_service("get_object_info", object_service.get_object_info)
+# Portage validé: service capture viewport
+register_service("get_viewport_screenshot", screenshot_service.get_viewport_screenshot)
 
 
 def _get_polyhaven_categories(asset_type: str = "hdris") -> Dict[str, Any]:
