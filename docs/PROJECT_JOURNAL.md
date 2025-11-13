@@ -231,3 +231,19 @@ YYYY-MM-DD | auteur
 	- Politique formalise ordre de résolution, fallback `internal_error`, règles de nommage et procédures d'extension.
 	- Prochaine étape suggérée: ajouter tests pour helpers additionnels (error shaping) avant portage services.
 
+---
+
+2025-11-13 | automation
+- Action: Extraction API testable BlenderConnection
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/connection.py (nouvelle implémentation injectable via socket_factory)
+	- tests/test_connection_reassembly.py (tests fragments, timeout, connect failure)
+	- docs/TASKS_AND_PRACTICES.md (marquage progression extraction)
+- Tests:
+	- `pytest -q tests/test_connection_reassembly.py` -> OK
+- Statut: done
+- Notes:
+	- API: connect, disconnect, send_command, receive_full_response (publique pour tests avancés).
+	- Injection socket_factory permet mocks sans réseau réel.
+	- Prochain: ajouter tests d'intégration réseau (socketpair) et reassembly multi-messages si nécessaire.
+
