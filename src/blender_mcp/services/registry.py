@@ -29,7 +29,6 @@ from . import object as object_service
 from . import polyhaven, scene, sketchfab
 from . import screenshot as screenshot_service
 from . import textures as textures_service
-from .. import prompts as prompts_service
 from .hyper3d_status import get_hyper3d_status_service
 from .polyhaven_status import get_polyhaven_status_service
 
