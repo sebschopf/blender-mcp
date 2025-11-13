@@ -5,6 +5,16 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 
 ---
 - 2025-11-13 | automation
+- Action: Spécification sécurité `execute_blender_code` (OpenSpec)
+- Fichiers modifiés/ajoutés:
+	- openspec/changes/2025-11-13-execute-security/spec.md (policy + scénarios)
+	- docs/developer/ai_session_guide.md (référence à la spec)
+- Tests: N/A (docs/spec uniquement)
+- Statut: done
+- Notes: Phase 2 = baseline (audit, limitations documentées). Phase 3 = durcissement (builtins réduits, AST allowlist, flag).
+
+---
+- 2025-11-13 | automation
 - Action: Portage `execute_blender_code` (service) + enregistrement registre
 - Fichiers modifiés:
 	- src/blender_mcp/services/registry.py (enregistrement `execute_blender_code`)
