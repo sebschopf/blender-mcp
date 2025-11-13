@@ -3,7 +3,7 @@ import inspect
 import logging
 import threading
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
@@ -135,7 +135,7 @@ def make_list_tools(server_module: Any):
     def list_tools() -> Dict[str, Any]:
         """Return a list of available tools exposed by the MCP server."""
         try:
-            tools_info = []
+            tools_info: List[Dict[str, Any]] = []
             server = server_module
             if hasattr(server, "mcp"):
                 tools_info.extend(_extract_tools_from_registry(server.mcp))
@@ -148,14 +148,23 @@ def make_list_tools(server_module: Any):
             raise HTTPException(status_code=500, detail=str(e))
 
 
+    return list_tools
+
+
 def make_call_tool(server_module: Any):
     async def call_tool(name: str, request: Request) -> Any:
         try:
-            body = await request.json()
+            raw = await request.json()
         except Exception:
+            raw = {}
+
+        # Normalize to a mapping for type checkers
+        if isinstance(raw, dict):
+            body = cast(Dict[str, Any], raw)
+        else:
             body = {}
 
-        params = body.get("params") or {}
+        params = cast(Dict[str, Any], body.get("params") or {})
 
         server = server_module
         func = getattr(server, name, None)
@@ -171,11 +180,12 @@ def make_call_tool(server_module: Any):
 
             encoded = jsonable_encoder(result)
             try:
+                result_payload: Dict[str, Any] = {"status": "ok", "result": encoded}
                 logging_utils.log_action(
                     "asgi",
                     "call_tool",
                     {"tool": name, "params": params},
-                    {"status": "ok", "result": encoded},
+                    result_payload,
                 )
             except Exception:
                 logger.exception("Failed to emit audit log for successful tool call")
@@ -185,7 +195,14 @@ def make_call_tool(server_module: Any):
             logger.exception("Error calling tool %s", name)
 
             status_code, payload = _map_exception_to_http(e)
-            body = {"status": "error", **payload}
+            # Normalize payload to a concrete typed variable for the editor
+            payload_typed: Dict[str, Any] = payload
+            # Build an explicit error body so the editor can infer concrete types
+            body = {
+                "status": "error",
+                "message": str(payload_typed.get("message", "")),
+                "error_code": str(payload_typed.get("error_code", "internal_error")),
+            }
 
             try:
                 logging_utils.log_action(

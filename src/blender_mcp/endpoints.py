@@ -9,7 +9,7 @@ convention).
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 from .services.addon import get_scene_info, get_viewport_screenshot
 from .services.execute import execute_blender_code
@@ -18,7 +18,7 @@ from .services.execute import execute_blender_code
 # Handlers accept a JSON-like parameter mapping (or None) and return any
 # JSON-serializable result. Keeping this broad is pragmatic: services
 # currently accept plain dicts constructed from parsed JSON RPC params.
-Params = Dict[str, Any]
+Params = Optional[Dict[str, Any]]
 Handler = Callable[[Params], Any]
 
 
@@ -31,7 +31,8 @@ def register_builtin_endpoints(register: Callable[[str, Handler], None]) -> None
 
     # thin wrappers in case we need to adapt params in future
     def _execute(params: Params) -> Any:
-        return execute_blender_code(params)
+        # accept None for backwards compatibility and forward an empty dict
+        return execute_blender_code(params or {})
 
     def _scene(params: Params) -> Any:
         # delegate to the compatibility façade (no params expected by the
