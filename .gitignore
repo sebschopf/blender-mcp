@@ -8,6 +8,8 @@ dist/
 
 # Logs
 *.log
+# Log spécifique local généré par l'exécution Blender MCP
+blender_mcp_execute.log
 
 # pytest
 .pytest_cache/
