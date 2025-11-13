@@ -5,6 +5,91 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 
 ---
 - 2025-11-13 | automation
+- Action: Portage Sketchfab search/download (services) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/sketchfab.py (ajout services canoniques search/download)
+	- src/blender_mcp/services/registry.py (enregistrement)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_sketchfab_service_search_download.py (api_key env, succès, mapping erreurs)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_sketchfab_service_search_download.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Résolution de la clé API via param ou variable d’environnement `SKETCHFAB_API_KEY`. Exceptions-first (InvalidParamsError/ExternalServiceError).
+
+---
+- 2025-11-13 | automation
+- Action: Portage endpoints Hyper3D (services) + enregistrement registre
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/services/hyper3d.py (ajout 4 services: generate_text/images, poll, import)
+	- src/blender_mcp/services/registry.py (enregistrements)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_hyper3d_services.py (success + error cases)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_hyper3d_services.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Provider par défaut = 'fal_ai'. Pour images côté main_site, l'upload de fichiers n'est pas géré dans ce service (erreur params). Les helpers réseau sont centralisés dans `blender_mcp.hyper3d`.
+
+---
+- 2025-11-13 | automation
+- Action: Portage statuts PolyHaven/Hyper3D (services) + enregistrement registre
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/services/polyhaven_status.py (nouveau)
+	- src/blender_mcp/services/hyper3d_status.py (nouveau)
+	- src/blender_mcp/services/registry.py (enregistrements)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_status_services.py (PolyHaven probe succès/échec, Hyper3D succès)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_status_services.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: PolyHaven fait un probe non-bloquant via fetch_categories; Hyper3D retourne enabled=True (vérifs détaillées aux endpoints dédiés).
+
+---
+- 2025-11-13 | automation
+- Action: Portage `set_texture` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/textures.py (conversion exceptions-first)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_textures_service.py (succès material/images, invalid params, addon error/exception)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_textures_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Le service lève InvalidParamsError pour entrées invalides et HandlerError pour erreurs addon.
+
+---
+- 2025-11-13 | automation
+- Action: Portage `download_polyhaven_asset` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/polyhaven.py (ajout service canonical `download_polyhaven_asset`)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_polyhaven_download_service.py (succès, invalid params, erreur réseau)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_polyhaven_download_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Téléchargement via helper réseau `download_asset` (extraction zip sécurisée). Retourne `temp_dir` en succès.
+
+---
+- 2025-11-13 | automation
+- Action: Portage `search_polyhaven_assets` (service) + enregistrement registre
+- Fichiers modifiés:
+	- src/blender_mcp/services/polyhaven.py (ajout service canonical `search_polyhaven_assets`)
+	- src/blender_mcp/services/registry.py (enregistrement service)
+	- docs/endpoint_mapping_detailed.md (statut → ported)
+- Tests:
+	- tests/test_polyhaven_search_service.py (succès, invalid params, erreur réseau)
+- Commandes:
+	- `$Env:PYTHONPATH='src'; pytest -q tests/test_polyhaven_search_service.py; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes: Service exceptions-first; validation stricte (asset_type, categories str, page>=1, per_page 1..100). Legacy handler conservé pour compat.
+
+---
+- 2025-11-13 | automation
 - Action: Portage `get_sketchfab_status` (service) + enregistrement registre
 - Fichiers modifiés:
 	- src/blender_mcp/services/sketchfab.py (service canonical params→status/result)
