@@ -1,4 +1,3 @@
-# isort: skip_file
 import asyncio
 import inspect
 import logging
@@ -12,15 +11,16 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from . import logging_utils
-# Import the server module; it defines `mcp` and helpers but does not call run()
-from . import server as srv
+from . import server as srv  # defines `mcp` and helpers but does not call run()
 from .errors import (
     ExecutionTimeoutError,
     ExternalServiceError,
-    HandlerError as CanonicalHandlerError,
     HandlerNotFoundError,
     InvalidParamsError,
     PolicyDeniedError,
+)
+from .errors import (
+    HandlerError as CanonicalHandlerError,
 )
 
 logger = logging.getLogger("BlenderMCPASGI")

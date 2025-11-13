@@ -5,8 +5,6 @@ extending dispatcher behavior. The default simply calls the checker if set.
 """
 from __future__ import annotations
 
-# isort: skip_file
-
 from typing import Any, Dict, Optional
 
 from ..policies import PolicyChecker

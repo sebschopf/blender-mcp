@@ -130,7 +130,6 @@ class Dispatcher(AbstractDispatcher):
             return _wrapped
         return None
 
-<<<<<<< HEAD
     def _instrument_start(self, name: str, params: Optional[Dict[str, Any]]) -> float:
         if self._instrumentation is None:
             return 0.0
@@ -159,8 +158,11 @@ class Dispatcher(AbstractDispatcher):
         except Exception:
             pass
 
+<<<<<<< HEAD
 =======
 >>>>>>> 3b7e081 (refactor(dispatcher): itération 1 (factorisation résolution handler/service))
+=======
+>>>>>>> 4cf36d4 (chore(lint): apply Ruff auto-fix for import ordering in asgi.py and policy strategy)
     def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Call the handler named `name` with `params` and return its result.
 
@@ -171,28 +173,27 @@ class Dispatcher(AbstractDispatcher):
             logger.debug("no handler for %s", name)
             return None
         logger.debug("dispatching %s with params=%s", name, params)
-        try:
-            return fn(params or {})
+<<<<<<< HEAD
+            self._instrument_success(name, result, start_ts)
+            return result
+>>>>>>> 4cf36d4 (chore(lint): apply Ruff auto-fix for import ordering in asgi.py and policy strategy)
         except Exception as exc:
             # wrap in HandlerError for compatibility with code that expects
             # handler exceptions to be wrapped
             logger.exception("handler %s raised", name)
-            # Raise the canonical HandlerError so higher layers (adapters)
-            # can map it consistently.
-            raise CanonicalHandlerError(name, exc) from exc
+<<<<<<< HEAD
+=======
+            self._instrument_error(name, exc, start_ts)
+        start_ts = self._instrument_start(name, params)
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
         fn = self._resolve_handler_or_service(name)
-        if fn is None:
             # also check service registry before failing
             try:
                 from ..services import registry as service_registry
                 if service_registry.has_service(name):
-                    return self.dispatch(name, params)
-            except Exception:
                 pass
-            logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
 
@@ -266,7 +267,7 @@ class Dispatcher(AbstractDispatcher):
             if p.name in params:
                 kwargs[p.name] = params[p.name]
             else:
-                if p.default is inspect._empty:
+                if p.default is inspect.Signature.empty:
                     missing.append(p.name)
         if missing:
             raise ValueError(f"missing required params for service {service.__name__}: {', '.join(missing)}")
