@@ -4,7 +4,7 @@ Ce fichier est conçu pour (re)donner rapidement à un assistant AI (ChatGPT / G
 
 ---
 ## 1. TL;DR (Résumé immédiat)
-Architecture en refactorisation: séparation claire entre core (erreurs, dispatcher, connexion), services (logique métier), adapters (ASGI / embedded), UI Blender, clients (LLM/MCP). Objectif: éliminer les duplications (dispatchers multiples, server shims, services racine vs services/), uniformiser contrat de réponse (`status`, `result`, `error_code`). Prochaine grande étape: consolidation des services et registre unique.
+Architecture en refactorisation: séparation claire entre core (erreurs, dispatcher, connexion), services (logique métier), adapters (ASGI / embedded), UI Blender, clients (LLM/MCP). Objectif: éliminer les duplications (dispatchers multiples, server shims, services racine vs services/), uniformiser contrat de réponse (`status`, `result`, `error_code`). Registre unique en place; prochain focus: normalisation `send_command`, refactor SOLID du dispatcher, dépréciation des shims.
 
 ---
 ## 2. Couches d'Architecture (Modèle cible)
@@ -31,20 +31,21 @@ Terminés:
 - Façade dispatcher unifiée + tests concurrency/timeout.
 - Connexion: shim + injection `socket_factory` + tests fragments/timeout.
 - Documentation politique mapping exceptions.
+- Registre unique services/tools (`src/blender_mcp/services/registry.py`) + fallback dans le Dispatcher.
+- Premiers endpoints portés dans `services/` et enregistrés: `scene`, `object`, `screenshot`, `execute`, `polyhaven.*`, `sketchfab.*`, `hyper3d.*`.
 
 Partiellement faits / À finaliser:
-- Registre unique services/tools (pas encore créé).
-- Uniformisation contrat `send_command` (extraction `result` parfois directe).
+- Uniformisation contrat `send_command` (toujours dict: `{status, result|message, error_code}`).
 - Séparation façade connexion multi-mode en classes SRP (optionnel).
 - Dépréciation modules dupliqués (simple_dispatcher, server shims, services racine). 
 
 À venir (phases):
-1. Deprecation warnings + spec Phase 1 (dispatcher/server).
-2. Registre services/tools + migration des services racine vers `services/`.
-3. Refactor connexion (classes séparées) si nécessaire stricte SRP.
-4. Dossier `integrations/` structuré.
-5. Injection strategies (policy / parser / framing) dans dispatcher.
-6. Retrait stubs legacy après 2 cycles.
+1. Normalisation `send_command` (contrat unique) — spec OpenSpec si breaking.
+2. Refactor SOLID du dispatcher (isoler stratégies/executor/adapters) sans rupture publique.
+3. Deprecation warnings systématiques + plan de retrait des shims (suppression après 2 cycles).
+4. Migration résiduelle des services racine vers `services/` si restant.
+5. Refactor connexion (classes séparées) si nécessaire stricte SRP.
+6. Injection strategies (policy / parser / framing) dans dispatcher.
 
 ---
 ## 4. Workflow Local (PowerShell / Windows)
@@ -90,7 +91,7 @@ CI (GitHub Actions): matrice Python 3.11 + 3.12; jobs: ruff, mypy, pytest; optio
 | Principe | État | Action | Priorité |
 |----------|------|--------|----------|
 | SRP | Façade connexion multi-mode mélange 3 rôles | Scinder en `SocketConnection`, `NetworkConnection`, `JSONReassembler` | Medium |
-| OCP | Ajout service modifie endpoints/tools divers | Créer `services/registry.py` + centraliser | High |
+| OCP | Ajout service modifie endpoints/tools divers | Utiliser `services/registry.py` et centraliser | High |
 | LSP | `send_command` output variable (dict vs result) | Normaliser pour toujours renvoyer dict | High |
 | ISP | OK sur `SocketLike` | Maintenir interfaces petites | Low |
 | DIP | Parser/framing/policy non injectés | Introduire `strategies/` + injection dispatcher | Medium |
@@ -103,15 +104,18 @@ Audit rapide par fichier modifié (PR):
 5. Vérifier absence de parsing heuristique de messages.
 
 ---
-## 7. Registre Services / Tools (Design à implémenter)
-Futur fichier: `src/blender_mcp/services/registry.py`
+## 7. Registre Services / Tools (Implémenté)
+Fichier: `src/blender_mcp/services/registry.py`
 ```python
-_SERVICES: dict[str, callable] = {}
-def register_service(name: str, fn: callable) -> None: _SERVICES[name] = fn
-def list_services() -> list[str]: return sorted(_SERVICES)
-def get_service(name: str): return _SERVICES[name]
+_SERVICES: dict[str, Any] = {}
+def register_service(name: str, fn: Any) -> None: _SERVICES[name] = fn
+def get_service(name: str) -> Any: return _SERVICES.get(name)
+def list_services() -> list[str]: return sorted(_SERVICES.keys())
+def has_service(name: str) -> bool: return name in _SERVICES
 ```
-Adapter: dispatcher utilise `get_service(name)`; ASGI `/tools` mappé depuis ce registre (ou registre spécifique tools).
+- Dispatcher: tente d'abord ses handlers; à défaut, fallback sur le registre (`has_service`/`get_service`) et invoque la fonction via introspection (voir `dispatchers/dispatcher.py::_invoke_service`).
+- Enregistrés à date: `get_scene_info`, `get_object_info`, `get_viewport_screenshot`, `execute_blender_code`, `polyhaven.*`, `sketchfab.*`, `hyper3d.*`.
+- ASGI/tools: exposer la liste via `list_services()` (ou registre spécifique tools si nécessaire).
 
 ---
 ## 8. Dépréciation (Stratégie)
@@ -141,9 +145,9 @@ Après 2 cycles de release: suppression stubs.
 Re-engagement (état général):
 ```
 Tu es assistant sur blender-mcp. Branche active: feature/errors-dispatcher-standardisation.
-Objectif actuel: Phase 2 (registre services). Tâches: créer services/registry.py, adapter dispatcher, ajouter tests.
+Objectif actuel: normaliser send_command + refactor SOLID du dispatcher + déprécier les shims. Tâches: spec si breaking, implémentation non‑rupture, warnings de dépréciation, MAJ docs/tests.
 Contraintes: contrat réponse (status/result/error_code), SOLID, petits PR (<3 fichiers).
-Commence par un plan de tâches, puis crée le fichier, ajoute tests, mets à jour journal.
+Commence par un plan de tâches, puis implémente par petits incréments, ajoute tests, mets à jour journal.
 ```
 
 Demande ciblée (ajout service):
@@ -221,7 +225,11 @@ Note: Si tu préfères ne pas créer d'autres fichiers, conserve ces commandes d
 
 ---
 ## 15. Prochaine Action Recommandée (si aucune autre instruction)
-Phase 2 démarrage: créer `services/registry.py`, y enregistrer services existants (commencer par `scene`, `object`, `execute`), adapter dispatcher pour utiliser ce registre au lieu d’import direct, ajouter tests `test_services_registry.py` (déjà présent? compléter) pour listage et récupération.
+Phase suivante: normalisation et durcissement du chemin critique.
+- Spécifier (OpenSpec) si nécessaire la normalisation `send_command` → contrat dict unique.
+- Implémenter la normalisation dans `CommandAdapter` + tests de non‑régression.
+- Amorcer refactor SOLID du dispatcher (sans rupture) et ajouter warnings de dépréciation côté shims.
+- Poursuivre/terminer la migration des services restants et mettre à jour la cartographie endpoints.
 
 ---
 ## 15b. Référence Endpoints / Portage
@@ -291,4 +299,5 @@ Ce guide doit rester court, concret et mis à jour après chaque phase majeure. 
 
 ---
 ## 18. Changelog interne du guide
+- 2025-11-13: MAJ Phase 2 fusionnée (registre services/tools opérationnel, fallback Dispatcher). Prochain focus: `send_command` + refactor dispatcher + dépréciation shims.
 - 2025-11-13: Version initiale (standardisation erreurs, dispatcher, connexion shim).
