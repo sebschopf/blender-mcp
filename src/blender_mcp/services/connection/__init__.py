@@ -10,6 +10,8 @@ from .framing import LengthPrefixedReassembler
 from .network import BlenderConnectionNetwork
 from .reassembler import ChunkedJSONReassembler
 from .socket_conn import SocketBlenderConnection
+from .receiver import ResponseReceiver
+from .transport import CoreTransport, RawSocketTransport, Transport, select_transport
 
 # Re-export canonical runtime accessor from consolidated implementation
 try:
@@ -26,5 +28,10 @@ __all__ = [
     "SocketBlenderConnection",
     "BlenderConnectionNetwork",
     "BlenderConnection",
+    "ResponseReceiver",
+    "Transport",
+    "RawSocketTransport",
+    "CoreTransport",
+    "select_transport",
     "get_blender_connection",
 ]
