@@ -156,3 +156,21 @@ Objectif: séparer la sélection de transport et la réception/réassemblage du 
   - `tests/test_transport_phase_a.py` couvre la sélection, les timeouts et le réassemblage.
 
 Étapes suivantes possibles (non-breaking): injection optionnelle d'un `Transport` personnalisé dans la façade réseau si besoin, documentation complémentaire et métriques.
+
+### Diagramme (vue d'ensemble)
+
+```mermaid
+sequenceDiagram
+  participant Client as BlenderConnectionNetwork
+  participant Core as NetworkCore
+  participant T as Transport (Core/Raw)
+  participant R as ResponseReceiver
+
+  Client->>Core: send_command(type, params)
+  Core->>T: send_command(type, params)
+  T->>T: sock.sendall(JSON + "\n")
+  T->>R: receive_full_response(sock, timeout)
+  R-->>T: dict (premier objet NDJSON)
+  T-->>Core: dict (réponse normalisée)
+  Core-->>Client: dict (réponse normalisée)
+```
