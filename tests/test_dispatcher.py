@@ -9,6 +9,8 @@ from blender_mcp.dispatchers.dispatcher import (
     Dispatcher,
     HandlerError,
     run_bridge,
+)
+from blender_mcp.dispatchers.dispatcher import (
     register_default_handlers as register_default_handlers_cmd,
 )
 
