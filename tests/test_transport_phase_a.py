@@ -91,6 +91,37 @@ def test_response_receiver_no_data_raises():
         rr.receive_one(EmptySock(), buffer_size=64, timeout=0.1)
 
 
+def test_response_receiver_timeout_value_applied():
+    class TSock:
+        def __init__(self):
+            self.t = None
+            self._data = [b'{"status":"success","result":{"ok":true}}']
+
+        def settimeout(self, t):
+            self.t = t
+
+        def recv(self, n):
+            return self._data.pop(0) if self._data else b""
+
+    rr = ResponseReceiver()
+    sock = TSock()
+    _ = rr.receive_one(sock, buffer_size=64, timeout=2.5)
+    assert sock.t == 2.5
+
+
+def test_response_receiver_socket_error_propagates():
+    class ErrSock:
+        def settimeout(self, t):
+            self.t = t
+
+        def recv(self, n):
+            raise OSError("RST")
+
+    rr = ResponseReceiver()
+    with pytest.raises(OSError):
+        rr.receive_one(ErrSock(), buffer_size=64, timeout=0.2)
+
+
 def test_rawsocket_transport_sends_ndjson(monkeypatch):
     sent = {"data": b""}
 
