@@ -13,7 +13,7 @@ from blender_mcp.dispatchers.dispatcher import (
 from blender_mcp.dispatchers.dispatcher import (
     register_default_handlers as register_default_handlers_cmd,
 )
-from blender_mcp.server_shim import BlenderMCPServer
+from blender_mcp.server import BlenderMCPServer
 from blender_mcp.simple_dispatcher import (
     Dispatcher as SimpleDispatcher,
 )
