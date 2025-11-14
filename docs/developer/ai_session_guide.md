@@ -4,7 +4,7 @@ Ce fichier est conçu pour (re)donner rapidement à un assistant AI (ChatGPT / G
 
 ---
 ## 1. TL;DR (Résumé immédiat)
-Architecture structurée en couches: core (erreurs, types, logging), dispatcher (stratégies + instrumentation), connexion (services/connection), services métier (testables), adapters (ASGI / embedded), UI Blender, clients (LLM/MCP). État courant: registre unique opérationnel, normalisation `send_command` effective, instrumentation du dispatcher en place, imports normalisés; PR #28 fusionnée. Transport Phase A démarrée (abstraction de transport + SRP côté connexion), poursuite des dépréciations contrôlées.
+Architecture structurée en couches: core (erreurs, types, logging), dispatcher (stratégies + instrumentation), connexion (services/connection), services métier (testables), adapters (ASGI / embedded), UI Blender, clients (LLM/MCP). État courant: registre unique opérationnel, normalisation `send_command` effective, instrumentation du dispatcher en place, imports normalisés; PR #28 fusionnée. Transport Phase A démarrée (abstraction de transport + SRP côté connexion), poursuite des dépréciations contrôlées. Note: le module racine `command_dispatcher.py` a été retiré (2025-11-14); utiliser `blender_mcp.dispatcher` (façade) ou `blender_mcp.dispatchers.dispatcher`.
 
 ---
 ## 2. Couches d'Architecture (Modèle cible)
@@ -30,6 +30,7 @@ https://github.com/sebschopf/blender-mcp/issues/19
 Terminés:
 - Standardisation erreurs (`ErrorCode`, `ErrorInfo`), mapping centralisé.
 - Dispatcher: unification + instrumentation (hooks start/success/error, adapter invoke), réduction de complexité.
+- Retrait du module racine `command_dispatcher.py`; dispatcher canonique = `blender_mcp.dispatchers.dispatcher` (façade `blender_mcp.dispatcher`).
 - Connexion: normalisation `send_command` → retour dict complet (PR #22), tests fragments/timeout.
 - Registre unique services/tools (`services/registry.py`) avec fallback dans le Dispatcher.
 - Endpoints portés et enregistrés: `scene`, `object`, `screenshot`, `execute`, `polyhaven.*`, `sketchfab.*`, `hyper3d.*`.
@@ -186,11 +187,13 @@ Note (2025-11-13): les modules legacy listés ci-dessous émettent désormais un
 | Module legacy | Remplacement | Phase retrait | Avertissement |
 |---------------|-------------|---------------|--------------|
 | `simple_dispatcher.py` | `dispatcher.py` | Phase 2 | DeprecationWarning import |
-| `command_dispatcher.py` (racine) | `dispatchers/dispatcher.py` | Phase 2 | idem |
+| `command_dispatcher.py` (racine) | `dispatchers/dispatcher.py` | Retiré (2025-11-14) | — |
 | `connection_core.py` | `services/connection/network_core.py` | Phase 4 | idem |
 | Services racine (`polyhaven.py`, `sketchfab.py`, `hyper3d.py`) | `services/*.py` | Phase 3 | stub + warning (actif) |
 | `server_shim.py` | `servers/shim.py` | Phase 2 | warning + doc |
 | `blender_codegen.py` racine | `codegen/blender_codegen.py` | Phase 5 | stub + warning |
+
+Note additionnelle (2025-11-14): `command_dispatcher.py` au niveau racine a été supprimé. Compatibilité: importer via `blender_mcp.dispatcher` (façade) ou `blender_mcp.dispatchers.dispatcher`.
 
 Note additionnelle (2025-11-13, post‑migration): les modules racine `polyhaven.py`, `sketchfab.py` et `hyper3d.py` déclenchent désormais un `DeprecationWarning` à l'import afin d'encourager l'utilisation des services validés sous `blender_mcp.services.*`. Leur suppression est planifiée après deux cycles de release une fois que les appels externes ont été migrés.
 
@@ -368,3 +371,40 @@ Ce guide doit rester court, concret et mis à jour après chaque phase majeure. 
 - 2025-11-13: Version initiale (standardisation erreurs, dispatcher, connexion shim).
 - 2025-11-13: Version initiale (standardisation erreurs, dispatcher, connexion shim).
 - 2025-11-13: Ajout de la note sur la priorité per‑call du `policy_check` et le mapping `policy_denied` (réf. Issue #23).
+
+---
+## AI Session — Changements récents et actions (2025-11-14)
+Résumé des modifications appliquées pendant une session d'intégration LLM/bridge et actions recommandées pour finaliser l'E2E Gemini → Bridge → MCP → Blender.
+
+- **Fichiers modifiés clé**:
+  - `src/blender_mcp/asgi.py` : protection de `_ensure_mcp_thread` pour éviter une AttributeError si le shim racine n'expose pas `main`.
+  - `src/blender_mcp/gemini_client.py` : correction du formatage du prompt (échappement des accolades et construction sûre du prompt) pour éviter `KeyError`.
+  - `scripts/gemini_bridge.py` : le script crée désormais un `Dispatcher()`, injecte les callables `call_gemini_cli` / `call_mcp_tool` dans `dispatchers.bridge` et supporte `use_api`.
+  - Documents: mise à jour de guides et journaux pour refléter les correctifs (voir `docs/AI_SESSION_CHANGES.md`).
+
+- **Bugs résolus**:
+  - Guard startup ASGI pour absence de `server.main` (évite crash au démarrage).
+  - Injection du `Dispatcher` manquant pour `run_bridge` (TypeError résolu).
+  - Remplacement des stubs NotImplemented par wiring des callables du script (NotImplementedError résolu).
+  - Signature `call_gemini_cli(use_api=...)` acceptée et routage vers `call_gemini_api` si nécessaire.
+  - Dépendance `google-genai` détectée et signalée (installer via `pip install google-genai`).
+  - Correction du `PROMPT_TEMPLATE` pour éviter `KeyError` lors du formatage contenant du JSON.
+  - Validation de présence de `MCP_BASE` (ex: `http://127.0.0.1:8000`) pour éviter `MissingSchema` lors des POST HTTP.
+
+- **Etat actuel et points d'attention**:
+  - FastAPI app (`blender_mcp.asgi:app`) importe correctement.
+  - Bridge interactif fonctionne et pose les questions de clarification.
+  - Blender détecté écoutant sur `127.0.0.1:9876`.
+  - `/health` peut encore retourner un message sur l'absence de `get_blender_connection` — envisager d'aligner le shim racine ou d'ajuster l'endpoint health.
+
+- **Actions recommandées immédiates**:
+  1. Définir `MCP_BASE` dans l'environnement PowerShell: `$Env:MCP_BASE='http://127.0.0.1:8000'`.
+  2. Redémarrer l'ASGI (ou lancer via `.\\scripts\\uvicorn_start.ps1`) puis relancer `scripts/gemini_bridge.py` pour finaliser le flux.
+  3. Si Gemini retourne un nom d'outil non standard, mapper ce nom à `execute_blender_code` dans `scripts/gemini_bridge.py` ou ajouter un handler dispatcher.
+
+- **Tests à ajouter** (prioritaires):
+  - Test d'intégration simuler POST du bridge → `/tools/<toolname>` et vérifier que `execute_blender_code` est invoqué (mock `bpy`).
+  - Unit tests pour `src/blender_mcp/gemini_client.py` (format prompt, parsing JSON tools).
+  - Tests non-interactifs pour `scripts/gemini_bridge.py` (simulateur de réponse LLM).
+
+Consulter `docs/AI_SESSION_CHANGES.md` pour le détail complet, commandes et exemples de reproductions.
