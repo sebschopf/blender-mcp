@@ -27,6 +27,12 @@ $env:PYTHONPATH = 'src'; python -m pytest -q
 
 Note: In CI (GitHub Actions) `PYTHONPATH` is set to `src:.` to ensure the repository root is available during tests. Locally, `$env:PYTHONPATH = 'src'` is the recommended practice.
 
+Alternatively, to run the exact same steps as GitHub Actions (ruff, mypy, pytest with pinned tool versions), use the provided helper script:
+
+```powershell
+.\scripts\ci_local.ps1
+```
+
 ## Reproduce the CI environment locally (PowerShell)
 
 To reproduce the GitHub Actions pipeline environment as closely as possible on Windows PowerShell (virtual environment, pinned tool versions, and running the same steps `ruff`, `mypy`, `pytest`), follow these commands.
