@@ -22,6 +22,12 @@ _warnings.warn(
     stacklevel=2,
 )
 
+_warnings.warn(
+    "blender_mcp.sketchfab est déprécié; utiliser blender_mcp.services.sketchfab.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 from . import downloaders  # type: ignore
 
 # Base endpoints can be overridden in tests by passing a session that wraps

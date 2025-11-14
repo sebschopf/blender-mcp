@@ -29,7 +29,7 @@ def test_dispatch_strict_with_service():
     # dispatch_strict devrait fonctionner via fallback service
     from blender_mcp.dispatcher import dispatch as basic_dispatch
     assert basic_dispatch(d, "simple_service") == {"v": 1}
-from blender_mcp.command_dispatcher import CommandDispatcher
+from blender_mcp.dispatchers.command_dispatcher import CommandDispatcher
 from blender_mcp.services import polyhaven, registry, sketchfab
 
 

@@ -22,6 +22,12 @@ _warnings.warn(
     stacklevel=2,
 )
 
+_warnings.warn(
+    "blender_mcp.polyhaven est déprécié; utiliser blender_mcp.services.polyhaven à la place.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 # Prefer the shared session headers but keep a module-level default for callers
 _REQ_HEADERS = requests.utils.default_headers()
 _REQ_HEADERS.update({"User-Agent": "blender-mcp"})

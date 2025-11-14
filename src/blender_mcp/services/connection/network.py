@@ -10,6 +10,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from .network_core import NetworkCore
+from .transport import Transport
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +23,15 @@ class BlenderConnectionNetwork:
     maintain.
     """
 
-    def __init__(self, host: str = "localhost", port: int = 9876, *, socket_factory=None) -> None:
-        self._core = NetworkCore(host=host, port=port, socket_factory=socket_factory)
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 9876,
+        *,
+        socket_factory=None,
+        transport: Optional[Transport] = None,
+    ) -> None:
+        self._core = NetworkCore(host=host, port=port, socket_factory=socket_factory, transport=transport)
 
     def connect(self) -> bool:
         return self._core.connect()

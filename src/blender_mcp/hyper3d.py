@@ -23,6 +23,12 @@ _warnings.warn(
     stacklevel=2,
 )
 
+_warnings.warn(
+    "blender_mcp.hyper3d est déprécié; utiliser blender_mcp.services.hyper3d.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 from . import downloaders  # type: ignore
 
 

@@ -4,6 +4,20 @@
 Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le modèle indiqué dans `TASKS_AND_PRACTICES.md`.
 
 ---
+- 2025-11-14 | transport
+- Action: Démarrage Transport Phase A — introduction `Transport` (Protocol), `RawSocketTransport`, `CoreTransport` et `ResponseReceiver`; refactor `NetworkCore` pour déléguer au transport sélectionné; ajout tests ciblés.
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/services/connection/transport.py (Protocol + impls + select)
+	- src/blender_mcp/services/connection/receiver.py (réassemblage/réception avec timeouts)
+	- src/blender_mcp/services/connection/network_core.py (délégation au transport)
+	- tests/test_transport_phase_a.py (sélection transport, timeout, réassemblage)
+- Tests/Lint/Type:
+	- `$Env:PYTHONPATH='src'; ruff check src tests; mypy src --exclude "src/blender_mcp/archive/.*"; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done (compat préservée, API publique inchangée)
+- Notes:
+	- `send_command` reste normalisé (retour dict complet). Sélection: `socket_factory` force Raw, sinon Core si dispo, sinon Raw. Prochaines étapes: injection de transport dans façade connexion et extraction d’un `TransportSelector` configurable.
+
+---
 - 2025-11-13 | automation
 - Action: Dépréciation des modules racine services (polyhaven/sketchfab/hyper3d) + instrumentation dispatcher + baseline sécurité execute
 - Fichiers modifiés:
@@ -34,39 +48,35 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 	- tests/test_connection_reassembly.py, tests/test_connection.py, tests/test_services_execute.py (adaptations)
 - Tests:
 	- `$Env:PYTHONPATH='src'; pytest -q tests/test_connection_reassembly.py tests/test_connection.py tests/test_services_execute.py; pytest -q; Remove-Item Env:PYTHONPATH`
-- Lint/Type:
-	- `ruff check src tests`
-	- `mypy src --exclude "src/blender_mcp/archive/.*"`
-- Statut: done
 - Notes: Aligne `services.connection` sur `connection_core`. Plus de levée `RuntimeError` à ce niveau; les couches supérieures gèrent le mapping d’erreurs.
 
 ---
-- 2025-11-13 | automation
 - Action: Portage Sketchfab search/download (services) + enregistrement registre
-- Fichiers modifiés:
 	- src/blender_mcp/services/sketchfab.py (ajout services canoniques search/download)
 	- src/blender_mcp/services/registry.py (enregistrement)
-	- docs/endpoint_mapping_detailed.md (statut → ported)
-- Tests:
 	- tests/test_sketchfab_service_search_download.py (api_key env, succès, mapping erreurs)
-- Commandes:
-	- `$Env:PYTHONPATH='src'; pytest -q tests/test_sketchfab_service_search_download.py; pytest -q; Remove-Item Env:PYTHONPATH`
-- Statut: done
-- Notes: Résolution de la clé API via param ou variable d’environnement `SKETCHFAB_API_KEY`. Exceptions-first (InvalidParamsError/ExternalServiceError).
 
 ---
 - 2025-11-13 | automation
 - Action: Portage endpoints Hyper3D (services) + enregistrement registre
 - Fichiers modifiés/ajoutés:
-	- src/blender_mcp/services/hyper3d.py (ajout 4 services: generate_text/images, poll, import)
 	- src/blender_mcp/services/registry.py (enregistrements)
-	- docs/endpoint_mapping_detailed.md (statut → ported)
-- Tests:
 	- tests/test_hyper3d_services.py (success + error cases)
 - Commandes:
 	- `$Env:PYTHONPATH='src'; pytest -q tests/test_hyper3d_services.py; pytest -q; Remove-Item Env:PYTHONPATH`
 - Statut: done
-- Notes: Provider par défaut = 'fal_ai'. Pour images côté main_site, l'upload de fichiers n'est pas géré dans ce service (erreur params). Les helpers réseau sont centralisés dans `blender_mcp.hyper3d`.
+- 2025-11-14 | automation
+- Action: Ajout de la spec calendrier retrait legacy (OpenSpec) couvrant connection_core, dispatchers simples, services racine et codegen racine.
+- Fichiers modifiés/ajoutés:
+	- openspec/changes/2025-11-14-legacy-retirement-schedule/spec.md (calendrier + scénarios)
+- Tests/Lint/Type:
+	- Aucun changement runtime; suite existante déjà verte (voir commits précédents Transport Phase A)
+- Statut: done
+- Notes:
+	- Deux cycles minimum avant suppression des modules legacy (services racine, simple_dispatcher, command_dispatcher racine, server_shim, connection_core, blender_codegen racine).
+	- Labels créés: transport, deprecation, legacy-removal, connection, services, docs, tests, ci.
+	- Prochaines étapes: entrée CHANGELOG lors du prochain cycle, audit références internes avant retrait.
+
 
 ---
 - 2025-11-13 | automation
@@ -303,19 +313,31 @@ YYYY-MM-DD | auteur
   - The change prevents name collisions across parallel matrix jobs by including `${{ matrix.python-version }}` in artifact names.
   - Next step: merge the PR into `main` (or request review/merge) so the fix is propagated to `main` runs; after merging, monitor a `main` run to verify no 409 reappears.
 
-````
-	- `_extract_location` is now more forgiving and supports more Blender-like location shapes. Tests cover edge cases and confirm behavior.
-	- All checks passed after the change. If you prefer stricter behavior (e.g., require exactly 3 components), I can tighten the function and update tests accordingly.
-
 	- J'ai mis en place le comportement strict (exige exactement 3 composants) et ajouté des tests complémentaires pour Decimal et `array.array`. Les valeurs non-numériques sont maintenant rejetées proprement.
 	- src/blender_mcp/services/execute.py (existing service used)
 	- src/blender_mcp/services/screenshot.py (existing service used)
 	- tests/test_scene_service.py (added)
-	- tests/test_execute_service.py (added)
 	- tests/test_screenshot_service.py (added)
-- Tests: pytest executed locally (PYTHONPATH=src;.) -> all tests for these services passed
-- Statut: done
 - Notes:
+
+---
+2025-11-14 | automation
+Action: Démarrage Transport Phase A (SRP connexion) — ajout protocole Transport, implémentations RawSocket/Core, extract ResponseReceiver, refactor NetworkCore
+Fichiers modifiés/ajoutés:
+	- src/blender_mcp/services/connection/transport.py (Protocol + RawSocketTransport/CoreTransport + select_transport)
+	- src/blender_mcp/services/connection/receiver.py (ResponseReceiver basé sur ChunkedJSONReassembler)
+	- src/blender_mcp/services/connection/network_core.py (délégation vers Transport sélectionné)
+	- src/blender_mcp/services/connection/__init__.py (exports Transport/Receiver)
+	- tests/test_transport_phase_a.py (sélecteur, timeouts, réassemblage)
+Tests:
+	- `$Env:PYTHONPATH='src'; ruff check src tests; mypy src --exclude "src/blender_mcp/archive/.*"; pytest -q; Remove-Item Env:PYTHONPATH`
+Statut: done
+Notes:
+	- Aucun changement de surface publique; `BlenderConnectionNetwork` et la normalisation `send_command` restent intacts.
+	- Sélection: `socket_factory` → RawSocketTransport; sinon CoreTransport si dispo; sinon Raw.
+	- Étapes suivantes: documenter l’architecture (couche transport), exposer injection transport sur la façade réseau si besoin.
+
+---
 	- Each service uses lazy import of `bpy` so the package remains import-safe in CI.
 	- Tests mock `bpy` via `sys.modules` and `monkeypatch`, covering absence of Blender, helper-not-found, success and error paths.
 	- Next recommended step: port remaining high-impact endpoints (PolyHaven / Sketchfab / object helpers) incrementally and add per-endpoint tests. Each port will be journaled.

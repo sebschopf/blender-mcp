@@ -13,13 +13,8 @@ from blender_mcp.dispatchers.dispatcher import (
 from blender_mcp.dispatchers.dispatcher import (
     register_default_handlers as register_default_handlers_cmd,
 )
-from blender_mcp.server_shim import BlenderMCPServer
-from blender_mcp.simple_dispatcher import (
-    Dispatcher as SimpleDispatcher,
-)
-from blender_mcp.simple_dispatcher import (
-    register_default_handlers as simple_register_default_handlers,
-)
+from blender_mcp.server import BlenderMCPServer
+ # Legacy simple_dispatcher compat is covered in test_simple_dispatcher_compat.py
 
 
 def test_register_and_dispatch():
@@ -55,27 +50,7 @@ def test_handler_exception_wrapped():
     assert "bad" in str(excinfo.value)
 
 
-def test_dispatcher_register_and_dispatch():
-    d = SimpleDispatcher()
-    assert d.list_handlers() == []
-
-    d.register("t1", lambda params: {"r": params.get("x", 0)})
-    assert "t1" in d.list_handlers()
-    assert d.dispatch("t1", {"x": 5}) == {"r": 5}
-    assert d.dispatch("missing") is None
-
-
-def test_register_default_handlers_and_server_integration():
-    d = SimpleDispatcher()
-    simple_register_default_handlers(d)
-    assert "add_primitive" in d.list_handlers()
-
-    s = BlenderMCPServer()
-    # ensure server uses dispatcher and default handler
-    resp = s.execute_command({"tool": "add_primitive", "params": {"type": "sphere"}})
-    assert resp["status"] == "ok"
-    assert resp.get("handled") is True
-    assert resp["result"]["primitive"] == "sphere"
+ # SimpleDispatcher-specific tests removed; canonical paths covered elsewhere
 
 
 def test_register_and_dispatch_commanddispatcher():

@@ -4,7 +4,7 @@ Ce fichier est conçu pour (re)donner rapidement à un assistant AI (ChatGPT / G
 
 ---
 ## 1. TL;DR (Résumé immédiat)
-Architecture en refactorisation: séparation claire entre core (erreurs, dispatcher, connexion), services (logique métier), adapters (ASGI / embedded), UI Blender, clients (LLM/MCP). Objectif: éliminer les duplications (dispatchers multiples, server shims, services racine vs services/), uniformiser contrat de réponse (`status`, `result`, `error_code`). Registre unique en place; normalisation `send_command` implémentée (PR #22). Prochain focus: refactor SOLID du dispatcher, dépréciation des shims.
+Architecture structurée en couches: core (erreurs, types, logging), dispatcher (stratégies + instrumentation), connexion (services/connection), services métier (testables), adapters (ASGI / embedded), UI Blender, clients (LLM/MCP). État courant: registre unique opérationnel, normalisation `send_command` effective, instrumentation du dispatcher en place, imports normalisés; PR #28 fusionnée. Transport Phase A démarrée (abstraction de transport + SRP côté connexion), poursuite des dépréciations contrôlées.
 
 ---
 ## 2. Couches d'Architecture (Modèle cible)
@@ -13,38 +13,37 @@ Architecture en refactorisation: séparation claire entre core (erreurs, dispatc
 | Core | `errors.py`, `types.py`, `logging_utils.py` | Contrats & base stable | `from blender_mcp.errors import ...` |
 | Dispatcher | `dispatchers/dispatcher.py` + façade `dispatcher.py` | Orchestration handlers | `from blender_mcp.dispatcher import Dispatcher` |
 | Connexion | `services/connection/*` + shim `connection.py` | Transport + reassembly | `from blender_mcp.connection import BlenderConnection` |
+| Transport | `services/connection/transport.py` | Sélection/impl (Core/Raw), DI | `from blender_mcp.services.connection import Transport` |
 | Services | `services/*.py` | Logique métier testable | `from blender_mcp.services.scene import get_scene_info` |
-| Adapters | `asgi.py`, `servers/embedded_adapter.py` | Intégration HTTP / processus embarqué | `from blender_mcp.servers import start_server_process` |
+| Adapters | `asgi.py`, `servers/embedded_adapter.py` | Intégration HTTP / processus embarqué | `from blender_mcp.servers.embedded_adapter import start_server_process` |
 | UI | `blender_ui/*`, `codegen/*` | Addon Blender (panel, opérateurs) | Blender runtime seulement |
 | Clients | `gemini_client.py`, `mcp_client.py`, `http.py` | Accès LLM / MCP / HTTP | Tools externes |
 | Legacy/Shims | `simple_dispatcher.py`, `server_shim.py`, `connection_core.py` | Compatibilité migratoire | À déprécier |
 
 ---
 ## 3. État Actuel (Phase et Avancement)
-Branche active: `feature/errors-dispatcher-standardisation`.
+Branche de base: `main` (PR #28 fusionnée). Prochaine branche: `feature/transport-phase-a`.
 
 Roadmap courante: Issue #19 — Registry & Endpoint Porting
 https://github.com/sebschopf/blender-mcp/issues/19
 
 Terminés:
-- Standardisation erreurs (`ErrorCode`, `ErrorInfo`, mapping centralisé).
-- Façade dispatcher unifiée + tests concurrency/timeout.
-- Connexion: shim + injection `socket_factory` + tests fragments/timeout.
-- Documentation politique mapping exceptions.
-- Registre unique services/tools (`src/blender_mcp/services/registry.py`) + fallback dans le Dispatcher.
-- Premiers endpoints portés dans `services/` et enregistrés: `scene`, `object`, `screenshot`, `execute`, `polyhaven.*`, `sketchfab.*`, `hyper3d.*`.
- - Normalisation `send_command` (services.connection) → retour dict complet; spec OpenSpec ajoutée; tests adaptés (PR #22).
+- Standardisation erreurs (`ErrorCode`, `ErrorInfo`), mapping centralisé.
+- Dispatcher: unification + instrumentation (hooks start/success/error, adapter invoke), réduction de complexité.
+- Connexion: normalisation `send_command` → retour dict complet (PR #22), tests fragments/timeout.
+- Registre unique services/tools (`services/registry.py`) avec fallback dans le Dispatcher.
+- Endpoints portés et enregistrés: `scene`, `object`, `screenshot`, `execute`, `polyhaven.*`, `sketchfab.*`, `hyper3d.*`.
+- CI: Ruff/Mypy/Pytest verts; import ordering normalisé.
 
 Partiellement faits / À finaliser:
-- Séparation façade connexion multi-mode en classes SRP (optionnel).
-- Dépréciation modules dupliqués (simple_dispatcher, server shims, services racine). 
+- Transport Phase A: abstraction de transport (Protocol), séparation stratégie/receiver, injection instrumentation connexion (non‑breaking).
+- Dépréciations: modules legacy (simple_dispatcher, server shims, services racine) encore présents avec warnings; plan de retrait après 2 cycles.
 
 À venir (phases):
-1. Refactor SOLID du dispatcher (isoler stratégies/executor/adapters) sans rupture publique.
-2. Deprecation warnings systématiques + plan de retrait des shims (suppression après 2 cycles).
-3. Migration résiduelle des services racine vers `services/` si restant.
-4. Refactor connexion (classes séparées) si nécessaire stricte SRP.
-5. Injection strategies (policy / parser / framing) dans dispatcher.
+1. Transport Phase A (connexion): `Transport` Protocol + `RawSocketTransport`/`CoreTransport`, `select_transport` (sélection), `ResponseReceiver` (SRP). Injection optionnelle: `BlenderConnectionNetwork(..., transport=...)`.
+2. Dépréciations: maintenir warnings, documenter calendrier de retrait (2 cycles), préparer suppression progressive.
+3. Services: finaliser migrations résiduelles si existantes; maintenir `endpoint_mapping_detailed.md`.
+4. Dispatcher: itération légère si besoin (stratégies additionnelles) sans rupture.
 
 ---
 ## 4. Workflow Local (PowerShell / Windows)
@@ -75,6 +74,13 @@ Remove-Item Env:PYTHONPATH
 ```
 
 CI (GitHub Actions): matrice Python 3.11 + 3.12; jobs: ruff, mypy, pytest; option job `integration` pour tests ASGI si FastAPI installé.
+
+Transport — tests ciblés (local):
+```powershell
+$Env:PYTHONPATH='src'
+pytest -q tests/test_transport_phase_a.py
+Remove-Item Env:PYTHONPATH
+```
 
 ---
 ## 5. Conventions de Réponse & Erreurs
@@ -147,12 +153,8 @@ d = Dispatcher(instrumentation_strategy=Rec())
 ## 6. SOLID Compliance (Checklist exécutable)
 | Principe | État | Action | Priorité |
 |----------|------|--------|----------|
-| SRP | Façade connexion multi-mode mélange 3 rôles | Scinder en `SocketConnection`, `NetworkConnection`, `JSONReassembler` | Medium |
-<<<<<<< HEAD
+| SRP | Façade connexion multi‑mode mélange 3 rôles | Scinder en `SocketConnection`, `NetworkConnection`, `JSONReassembler` | Medium |
 | OCP | Ajout service modifie endpoints/tools divers | Utiliser `services/registry.py` et centraliser | High |
-=======
-| OCP | Ajout service modifie endpoints/tools divers | Utiliser `services/registry.py` et centraliser | High |
->>>>>>> origin/feature/port-refactor-2025-11-08
 | LSP | `send_command` output variable (dict vs result) | Normaliser pour toujours renvoyer dict | High |
 | ISP | OK sur `SocketLike` | Maintenir interfaces petites | Low |
 | DIP | Parser/framing/policy non injectés | Introduire `strategies/` + injection dispatcher | Medium |
@@ -197,9 +199,9 @@ Après 2 cycles de release: suppression stubs.
 ---
 ## 9. Phases de Migration (Résumé pour AI)
 1. Ajouter warnings legacy + spec OpenSpec (non-breaking).
-2. Créer registre services/tools + adapter dispatcher & ASGI.
-3. Migrer services racine vers dossier `services/` (PRs petites).
-4. Refactor connexion multi-mode si nécessaire.
+2. Créer registre services/tools + adapter dispatcher & ASGI. (FAIT)
+3. Migrer services racine vers dossier `services/` (PRs petites). (EN GRANDE PARTIE FAIT)
+4. Refactor connexion multi-mode (Transport Phase A) si nécessaire.
 5. Structurer intégrations (dossier), déplacer fichiers réseau.
 6. Injection stratégies (policy/parser/framing) + docs.
 7. Retirer stubs & mettre à jour CHANGELOG.
@@ -208,10 +210,9 @@ Après 2 cycles de release: suppression stubs.
 ## 10. Prompts Modèles (Réutilisables)
 Re-engagement (état général):
 ```
-Tu es assistant sur blender-mcp. Branche active: feature/errors-dispatcher-standardisation.
-Objectif actuel: normaliser send_command + refactor SOLID du dispatcher + déprécier les shims. Tâches: spec si breaking, implémentation non‑rupture, warnings de dépréciation, MAJ docs/tests.
-Contraintes: contrat réponse (status/result/error_code), SOLID, petits PR (<3 fichiers).
-Commence par un plan de tâches, puis implémente par petits incréments, ajoute tests, mets à jour journal.
+Tu es assistant sur blender-mcp. Branche: main (PR #28 fusionnée). Prochaine branche: feature/transport-phase-a.
+Objectif: lancer Transport Phase A (abstraction de transport + séparation SRP), poursuivre dépréciations contrôlées, maintenir docs/tests. Contraintes: contrat réponse (status/result/error_code), SOLID, petits PR (<3 fichiers).
+Commence par un plan concis, implémente par incréments, ajoute tests, mets à jour PROJECT_JOURNAL et endpoint_mapping_detailed.
 ```
 
 Demande ciblée (ajout service):
@@ -289,10 +290,10 @@ Note: Si tu préfères ne pas créer d'autres fichiers, conserve ces commandes d
 
 ---
 ## 15. Prochaine Action Recommandée (si aucune autre instruction)
-Phase suivante: refactor SOLID du dispatcher + dépréciations.
-- Extraire/clarifier stratégies d’exécution/policy dans le dispatcher (itération 1, sans rupture publique).
-- Ajouter warnings de dépréciation pour les shims encore chargés; planifier suppression après 2 cycles.
-- Poursuivre/terminer la migration des services restants; maintenir à jour `docs/endpoint_mapping_detailed.md`.
+Phase suivante: Transport Phase A (connexion) + dépréciations.
+- Introduire `Transport` Protocol + classes concrètes (RawSocket/Core).
+- Séparer sélection de transport et réception/réassemblage (SRP), conserver façade compat.
+- Maintenir warnings de dépréciation, préparer calendrier de retrait (2 cycles).
 
 ---
 ## 15b. Référence Endpoints / Portage
