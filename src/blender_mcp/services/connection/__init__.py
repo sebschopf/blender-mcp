@@ -13,14 +13,10 @@ from .receiver import ResponseReceiver
 from .socket_conn import SocketBlenderConnection
 from .transport import CoreTransport, RawSocketTransport, Transport, select_transport
 
-# Re-export canonical runtime accessor from consolidated implementation
-try:
-    # Prefer the canonical implementation in src/blender_mcp/connection_core.py
-    from ...connection_core import get_blender_connection  # type: ignore
-except Exception:
-    # Fallback: leave get_blender_connection unavailable; callers may import
-    # via the public tools shim which performs lazy resolution.
-    get_blender_connection = None  # type: ignore
+# Re-export canonical runtime accessor from consolidated implementation.
+# Use lazy resolution at call sites instead of importing the legacy
+# `connection_core` here to avoid import-order surprises during tests.
+get_blender_connection = None  # type: ignore
 
 __all__ = [
     "ChunkedJSONReassembler",

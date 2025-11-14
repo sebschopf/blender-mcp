@@ -4,6 +4,14 @@
 Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le modèle indiqué dans `TASKS_AND_PRACTICES.md`.
 
 ---
+2025-11-14 | sebas (transport interim)
+- Action: Mitigation temporaire pour le problème de double-import causant des `isinstance` intermittents.
+- Solution temporaire: ajout d'un metaclass tolérant dans `src/blender_mcp/services/connection/transport.py`, vérifications early-fail dans `tests/conftest.py` (sanity check `src/` en tête de `sys.path`) et diagnostics `DIAG_PRINT` pour identifier modules dupliqués.
+- Décision finale: refactor complet de la couche Transport vers une arborescence SOLID sous `src/blender_mcp/services/transport/` (séparer `protocol`, `raw_socket`, `core_adapter`, `selector`, `receiver`). Les correctifs temporaires seront supprimés après migration complète.
+- Raisons: la duplication provenait de shims/importe dynamiques et d'un module `transport.py` trop gros mélangeant sélection + implémentations concrètes. La nouvelle architecture réduit la surface d'import et force l'utilisation d'une abstraction `Transport` partagée.
+- Prochaine étape: extraction initiale du `Transport` (création package `src/blender_mcp/services/transport/` avec `protocol.py`) puis migration progressive des implémentations hors de `services/connection/transport.py`.
+- Statut: done (mitigation appliquée + journalisation décision)
+
 - 2025-11-14 | transport
 - Action: Démarrage Transport Phase A — introduction `Transport` (Protocol), `RawSocketTransport`, `CoreTransport` et `ResponseReceiver`; refactor `NetworkCore` pour déléguer au transport sélectionné; ajout tests ciblés.
 - Fichiers modifiés/ajoutés:

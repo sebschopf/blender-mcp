@@ -176,13 +176,15 @@ def find_inner_json(obj: Any) -> Optional[dict]:
     return None
 
 
-def call_gemini_cli(user_request: str) -> dict:
-    """Proxy to the extracted Gemini CLI implementation.
+def call_gemini_cli(user_request: str, use_api: bool = False) -> dict:
+    """Proxy to the extracted Gemini implementation.
 
-    The heavy logic lives in `blender_mcp.gemini_client` for testability and
-    smaller scripts. We import lazily so the script remains importable even if
-    the package is not installed in Blender's Python.
+    Accepts optional `use_api` to match the BridgeService contract. When
+    `use_api=True` this forwards to `call_gemini_api` (API mode); otherwise it
+    calls the CLI proxy in `blender_mcp.gemini_client`.
     """
+    if use_api:
+        return call_gemini_api(user_request)
     try:
         from blender_mcp.gemini_client import call_gemini_cli as _call  # type: ignore
 
@@ -486,7 +488,7 @@ if __name__ == "__main__":
     # The CLI script is now a thin wrapper that builds the BridgeConfig and
     # delegates orchestration to the package-level dispatcher. This keeps the
     # script import-light and the orchestration testable.
-    from blender_mcp.dispatchers.dispatcher import run_bridge
+    import importlib
 
     # Parse flags in main() earlier and build config; reuse existing logic
     use_api = False
@@ -534,4 +536,29 @@ if __name__ == "__main__":
     cfg.photoreal = photoreal
     cfg.engraving_default = engraving_default
 
-    run_bridge(user_req, cfg, use_api=use_api)
+    # Wire the bridge module callables to the script-level implementations
+    # so that BridgeService (used by run_bridge) invokes the real callers.
+    try:
+        import blender_mcp.dispatchers.bridge as _bridge
+
+        _bridge.call_gemini_cli = call_gemini_cli
+        _bridge.call_mcp_tool = call_mcp_tool
+        # Reload the dispatcher module so it imports the patched bridge callables
+        importlib.reload(importlib.import_module("blender_mcp.dispatchers.dispatcher"))
+    except Exception:
+        # If the import/reload fails, continue and let run_bridge raise a helpful error
+        pass
+
+    # Import run_bridge and Dispatcher from the (reloaded) dispatcher module
+    from blender_mcp.dispatchers.dispatcher import run_bridge, Dispatcher, register_default_handlers
+
+    # Backwards-compat: create a Dispatcher instance with default handlers
+    # and pass it to run_bridge which expects a dispatcher argument.
+    dispatcher = Dispatcher()
+    try:
+        register_default_handlers(dispatcher)
+    except Exception:
+        # Be permissive: if registration fails (tests/mocks), continue
+        pass
+
+    run_bridge(user_req, cfg, dispatcher, use_api=use_api)
