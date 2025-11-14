@@ -11,8 +11,17 @@ logger = logging.getLogger(__name__)
 
 
 class ResponseReceiver:
-    def __init__(self) -> None:
+    def __init__(self, *, max_message_size: int = 10 * 1024 * 1024) -> None:
+        """Create a ResponseReceiver.
+
+        Args:
+            max_message_size: safety cap in bytes to avoid unbounded buffer growth.
+        """
         self._re = ChunkedJSONReassembler()
+        self.max_message_size = int(max_message_size)
+        # queue for messages already popped from the reassembler but not yet
+        # returned to the caller (multi-message recv handling)
+        self._pending: list[Any] = []
 
     def receive_one(self, sock: socket.socket, *, buffer_size: int = 8192, timeout: float = 15.0) -> Any:
         """Receive a single JSON message from `sock`.
@@ -26,6 +35,24 @@ class ResponseReceiver:
         """
 
         sock.settimeout(timeout)
+        # If we have pending messages from a previous recv, return them first
+        if self._pending:
+            return self._pending.pop(0)
+
+        # Otherwise, check if the underlying reassembler currently contains
+        # complete messages (e.g., were popped by a prior feed); if so,
+        # prime the pending queue and return the first.
+        try:
+            msgs = self._re.pop_messages()
+        except Exception:
+            logger.exception("Error popping messages from reassembler")
+            msgs = []
+        if msgs:
+            # keep subsequent messages for later calls
+            if len(msgs) > 1:
+                self._pending.extend(msgs[1:])
+            return msgs[0]
+
         chunks: list[bytes] = []
         max_size = 10 * 1024 * 1024  # 10 MiB default safety cap
 
@@ -44,13 +71,20 @@ class ResponseReceiver:
 
                 # safety: avoid unbounded buffer growth
                 buf_len = len(self._re._buffer)  # module-local access; intentional
-                if buf_len > max_size:
-                    logger.error("Incoming message exceeds max allowed size (%d bytes)", buf_len)
+                if buf_len > self.max_message_size:
+                    logger.error(
+                        "Incoming message exceeds max allowed size (%d bytes) > %d",
+                        buf_len,
+                        self.max_message_size,
+                    )
                     raise ConnectionError("Incoming message too large")
 
                 msgs = self._re.pop_messages()
                 if msgs:
-                    # return the first complete message; remaining bytes stay in buffer
+                    # if multiple messages arrived in this single feed, queue
+                    # the rest for subsequent calls and return the first now
+                    if len(msgs) > 1:
+                        self._pending.extend(msgs[1:])
                     return msgs[0]
 
         except socket.timeout:

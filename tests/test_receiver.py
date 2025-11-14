@@ -87,3 +87,116 @@ def test_response_receiver_timeout_raises() -> None:
         with pytest.raises(Exception):
             # expect socket.timeout to be raised or bubbled up as Exception
             recv.receive_one(s, buffer_size=8, timeout=0.1)
+
+
+def test_response_receiver_large_message_exceeds() -> None:
+    # Start a server that sends a single large message without delimiter
+    large = b"{" + b"\"x\":" + b"0" * (1024 * 1024) + b"}\n"
+
+    def server_large() -> None:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as srv:
+            srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            srv.bind(("127.0.0.1", 0))
+            srv.listen(1)
+            server_large.port = srv.getsockname()[1]  # type: ignore[attr-defined]
+            try:
+                conn, _ = srv.accept()
+            except Exception:
+                return
+            with conn:
+                # send a payload larger than the receiver max (we'll set a low max)
+                try:
+                    conn.sendall(large)
+                except Exception:
+                    return
+
+    th = threading.Thread(target=server_large, daemon=True)
+    th.start()
+    start = time.time()
+    while not hasattr(server_large, "port"):
+        if time.time() - start > 2.0:
+            raise RuntimeError("server failed to start")
+        time.sleep(0.01)
+
+    port = server_large.port  # type: ignore[attr-defined]
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect(("127.0.0.1", port))
+        # small max_message_size to trigger the guard
+        recv = ResponseReceiver(max_message_size=1024)
+        with pytest.raises(ConnectionError):
+            recv.receive_one(s, buffer_size=512, timeout=1.0)
+
+
+def test_response_receiver_multi_message_single_recv() -> None:
+    # server sends two JSON messages in one send
+    combined = b'{"a":1}\n{"b":2}\n'
+
+    def server_combo() -> None:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as srv:
+            srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            srv.bind(("127.0.0.1", 0))
+            srv.listen(1)
+            server_combo.port = srv.getsockname()[1]  # type: ignore[attr-defined]
+            try:
+                conn, _ = srv.accept()
+            except Exception:
+                return
+            with conn:
+                try:
+                    conn.sendall(combined)
+                except Exception:
+                    return
+
+    th = threading.Thread(target=server_combo, daemon=True)
+    th.start()
+    start = time.time()
+    while not hasattr(server_combo, "port"):
+        if time.time() - start > 2.0:
+            raise RuntimeError("server failed to start")
+        time.sleep(0.01)
+
+    port = server_combo.port  # type: ignore[attr-defined]
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect(("127.0.0.1", port))
+        recv = ResponseReceiver()
+        first = recv.receive_one(s, buffer_size=1024, timeout=1.0)
+        assert first == {"a": 1}
+        # second message should be read next from same socket
+        second = recv.receive_one(s, buffer_size=1024, timeout=1.0)
+        assert second == {"b": 2}
+
+
+def test_response_receiver_invalid_json_chunk_raises() -> None:
+    # server sends an invalid JSON line
+    bad = b'not-a-json\n'
+
+    def server_bad() -> None:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as srv:
+            srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            srv.bind(("127.0.0.1", 0))
+            srv.listen(1)
+            server_bad.port = srv.getsockname()[1]  # type: ignore[attr-defined]
+            try:
+                conn, _ = srv.accept()
+            except Exception:
+                return
+            with conn:
+                try:
+                    conn.sendall(bad)
+                except Exception:
+                    return
+
+    th = threading.Thread(target=server_bad, daemon=True)
+    th.start()
+    start = time.time()
+    while not hasattr(server_bad, "port"):
+        if time.time() - start > 2.0:
+            raise RuntimeError("server failed to start")
+        time.sleep(0.01)
+
+    port = server_bad.port  # type: ignore[attr-defined]
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect(("127.0.0.1", port))
+        recv = ResponseReceiver()
+        with pytest.raises(ValueError):
+            recv.receive_one(s, buffer_size=1024, timeout=1.0)
