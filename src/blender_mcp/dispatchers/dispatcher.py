@@ -4,6 +4,7 @@ This module is a relocated copy of the top-level `blender_mcp.dispatcher`.
 Relative imports have been adjusted so this file lives inside the
 `blender_mcp.dispatchers` package.
 """
+# Conflicts resolved: removed leftover merge markers from prior merge
 # isort: skip_file
 
 from __future__ import annotations
