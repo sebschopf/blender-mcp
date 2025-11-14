@@ -24,3 +24,20 @@ Notes:
 
   - fix: supprimer marqueurs de merge résiduels dans `src/blender_mcp/dispatchers/dispatcher.py` et corriger l'import de test (ruff) — débloque CI (PR #40)
   - feat(transport): introduce Transport protocol and NetworkCore + tests (Phase A)
+
+### Unreleased - Transport refactor (feature/transport-phase-a-implementation)
+
+- refactor(transport): extract `RawSocketTransport` and `CoreTransport` into a
+  dedicated service package `src/blender_mcp/services/transport`.
+  - `RawSocketTransport` moved to `src/blender_mcp/services/transport/raw_socket.py`.
+  - `CoreTransport` adapter moved to `src/blender_mcp/services/transport/core_adapter.py`.
+  - Canonical `Transport` protocol added in `src/blender_mcp/services/transport/protocol.py`.
+  - `src/blender_mcp/services/connection/transport.py` now imports implementations
+    from the `services.transport` package and no longer contains temporary
+    diagnostics or a metaclass used during the earlier refactor.
+  - Tests: `tests/test_transport_phase_a.py` ran locally: all transport tests pass.
+
+Rationale: centralize transport abstractions and implementations to provide a
+stable, SOLID-ready API surface for future adapters and to avoid duplicate
+module-load issues that caused intermittent test failures.
+
