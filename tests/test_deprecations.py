@@ -8,12 +8,10 @@ import pytest
 @pytest.mark.parametrize(
     "module_name, expected_substring",
     [
-        ("blender_mcp.simple_dispatcher", "deprecated; use blender_mcp.dispatchers"),
         (
             "blender_mcp.command_dispatcher",
             "deprecated; use blender_mcp.dispatchers.command_dispatcher",
         ),
-        ("blender_mcp.server_shim", "deprecated; use blender_mcp.servers.shim"),
         (
             "blender_mcp.server",
             "compatibility façade; import from blender_mcp.servers.server",

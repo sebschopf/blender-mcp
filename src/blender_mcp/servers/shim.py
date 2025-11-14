@@ -9,7 +9,7 @@ import json
 import logging
 from typing import Any, Dict, Optional
 
-from ..simple_dispatcher import Dispatcher, register_default_handlers
+from ..dispatchers.dispatcher import Dispatcher, register_default_handlers
 
 logger = logging.getLogger(__name__)
 
