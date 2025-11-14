@@ -20,10 +20,17 @@ class NetworkCore:
 
     _transport: Transport
 
-    def __init__(self, host: str = "localhost", port: int = 9876, *, socket_factory: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 9876,
+        *,
+        socket_factory: Optional[Any] = None,
+        transport: Optional[Transport] = None,
+    ) -> None:
         self.host = host
         self.port = port
-        self._transport = select_transport(host, port, socket_factory=socket_factory)
+        self._transport = transport or select_transport(host, port, socket_factory=socket_factory)
 
     def connect(self) -> bool:
         return self._transport.connect()

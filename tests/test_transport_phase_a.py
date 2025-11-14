@@ -2,6 +2,7 @@ import socket
 
 import pytest
 
+from blender_mcp.services.connection.network import BlenderConnectionNetwork
 from blender_mcp.services.connection.receiver import ResponseReceiver
 from blender_mcp.services.connection.transport import CoreTransport, RawSocketTransport, select_transport
 
@@ -48,3 +49,30 @@ def test_response_receiver_reassembles_chunks():
     rr = ResponseReceiver()
     res = rr.receive_one(ChunkSock(), buffer_size=64, timeout=1)
     assert res == {"x": 1}
+
+
+def test_network_uses_injected_transport(monkeypatch):
+    calls = {"connect": 0, "send": [], "recv": 0, "disconnect": 0}
+
+    class FakeTransport:
+        def connect(self):
+            calls["connect"] += 1
+            return True
+
+        def disconnect(self):
+            calls["disconnect"] += 1
+
+        def receive_full_response(self, *, buffer_size: int = 8192, timeout: float = 15.0):
+            calls["recv"] += 1
+            return {"status": "success", "result": {"ok": True}}
+
+        def send_command(self, command_type: str, params=None):
+            calls["send"].append((command_type, params or {}))
+            return self.receive_full_response()
+
+    net = BlenderConnectionNetwork("localhost", 1234, transport=FakeTransport())
+    assert net.connect() is True
+    resp = net.send_command("ping", {"n": 1})
+    assert resp == {"status": "success", "result": {"ok": True}}
+    assert calls["connect"] == 1
+    assert calls["send"] == [("ping", {"n": 1})]

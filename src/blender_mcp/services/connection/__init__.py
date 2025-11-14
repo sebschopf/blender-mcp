@@ -9,8 +9,8 @@ from .facade import BlenderConnection
 from .framing import LengthPrefixedReassembler
 from .network import BlenderConnectionNetwork
 from .reassembler import ChunkedJSONReassembler
-from .socket_conn import SocketBlenderConnection
 from .receiver import ResponseReceiver
+from .socket_conn import SocketBlenderConnection
 from .transport import CoreTransport, RawSocketTransport, Transport, select_transport
 
 # Re-export canonical runtime accessor from consolidated implementation
