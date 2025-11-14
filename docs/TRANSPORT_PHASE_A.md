@@ -9,6 +9,12 @@ Goals
   - `CoreTransport`: adapter around the legacy `BlenderConnection` when available.
 - Provide `select_transport(...)` and `NetworkCore` to centralize transport selection and injection.
 
+CoreTransport
+- `CoreTransport` is an adapter around the legacy `connection_core.BlenderConnection` shim. It preserves the same `Transport` protocol surface and delegates connect/send/receive/disconnect to the core implementation when available.
+
+Shim: `connection_core.py`
+- The repository exposes a compatibility shim at `src/blender_mcp/connection_core.py` which provides `BlenderConnection` and `get_blender_connection()` for legacy consumers and for `CoreTransport` in environments where the native core implementation is desired.
+
 Usage
 - Prefer `NetworkCore(..., transport=your_transport)` to inject a transport in tests or special runtimes.
 

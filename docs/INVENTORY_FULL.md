@@ -36,7 +36,7 @@ Format: Path | Rôle estimé | Recommandation courte | Risque | OpenSpec
 | `src/blender_mcp/gemini_client.py` | Gemini bridge client | Mark as external integration; mock in tests | Medium | No |
 | `src/blender_mcp/endpoints.py` | Endpoint registry / mapping | Audit signatures; add integration tests | High | Yes (if signature changes) |
 | `src/blender_mcp/downloaders.py` | Downloaders (PolyHaven etc.) | Tests network/retry; keep under services when stable | Medium | No |
-| `src/blender_mcp/connection_core.py` | Core connection (BlenderConnection) | Stabilize; separate network vs API; add socket tests | High | Possibly |
+| `src/blender_mcp/connection_core.py` | Core connection (BlenderConnection) — compatibility shim present in `src/blender_mcp/connection_core.py` | Stabilize; separate network vs API; add socket tests; keep shim for backward compatibility | High | Possibly |
 | `src/blender_mcp/config.py` | Configuration | Centralize env vars; add tests | Low | No |
 | `src/blender_mcp/command_dispatcher.py` | Top-level command dispatcher | Move to `dispatchers/` and deprecate old imports | Medium | Possibly |
 | `src/blender_mcp/blender_codegen.py` | Codegen utilities | Keep under `codegen/`; add tests | Low | No |
