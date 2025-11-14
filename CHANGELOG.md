@@ -21,3 +21,5 @@ Rationale: the in-repo `src/blender_mcp/archive` and `docs/archive` directories 
 
 Notes:
 - The repository still contains a repo-root shim `blender_mcp/server.py` used by a legacy test (`tests/test_blender_connection.py`). This shim was intentionally kept to preserve test behavior. Recommended follow-up: update tests to import the canonical implementation under `src/blender_mcp/connection_core.py` and remove the shim in a follow-up PR.
+
+  - fix: supprimer marqueurs de merge résiduels dans `src/blender_mcp/dispatchers/dispatcher.py` et corriger l'import de test (ruff) — débloque CI (PR #40)
