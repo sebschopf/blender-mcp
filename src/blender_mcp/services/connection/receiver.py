@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import socket
+import os
 from typing import Any
 
 from .reassembler import ChunkedJSONReassembler
@@ -11,14 +12,30 @@ logger = logging.getLogger(__name__)
 
 
 class ResponseReceiver:
-    def __init__(self, *, max_message_size: int = 10 * 1024 * 1024) -> None:
+    def __init__(self, *, max_message_size: int | None = None) -> None:
         """Create a ResponseReceiver.
 
         Args:
             max_message_size: safety cap in bytes to avoid unbounded buffer growth.
+                If `None`, the environment variable `BLENDER_MCP_MAX_MESSAGE_SIZE`
+                will be read (expected as integer bytes). If that is not set,
+                a default of 10 MiB is used.
         """
         self._re = ChunkedJSONReassembler()
-        self.max_message_size = int(max_message_size)
+        if max_message_size is None:
+            env_val = os.environ.get("BLENDER_MCP_MAX_MESSAGE_SIZE")
+            try:
+                self.max_message_size = int(env_val) if env_val is not None else 10 * 1024 * 1024
+            except ValueError:
+                # If the env var is malformed, fall back to the default and
+                # log a warning.
+                logger.warning(
+                    "Invalid BLENDER_MCP_MAX_MESSAGE_SIZE=%r, using default 10MiB",
+                    env_val,
+                )
+                self.max_message_size = 10 * 1024 * 1024
+        else:
+            self.max_message_size = int(max_message_size)
         # queue for messages already popped from the reassembler but not yet
         # returned to the caller (multi-message recv handling)
         self._pending: list[Any] = []
@@ -54,7 +71,6 @@ class ResponseReceiver:
             return msgs[0]
 
         chunks: list[bytes] = []
-        max_size = 10 * 1024 * 1024  # 10 MiB default safety cap
 
         try:
             while True:

@@ -24,3 +24,9 @@ Testing
 Next steps
 - Add `ResponseReceiver` improvements for partial-message reassembly (if needed).
 - Add `RawSocketTransport` connection retry behavior and more robust error handling.
+
+Configuration
+- **`BLENDER_MCP_MAX_MESSAGE_SIZE`**: optional environment variable (bytes). When set,
+  `ResponseReceiver` will use this value as the safety cap to avoid unbounded buffer
+  growth when reassembling incoming messages. If not set, the default is `10485760` (10 MiB).
+  We recommend keeping this value conservative for untrusted networks.
