@@ -76,3 +76,59 @@ def test_network_uses_injected_transport(monkeypatch):
     assert resp == {"status": "success", "result": {"ok": True}}
     assert calls["connect"] == 1
     assert calls["send"] == [("ping", {"n": 1})]
+
+
+def test_response_receiver_no_data_raises():
+    class EmptySock:
+        def settimeout(self, t):
+            self.t = t
+
+        def recv(self, n):
+            return b""
+
+    rr = ResponseReceiver()
+    with pytest.raises(ConnectionError):
+        rr.receive_one(EmptySock(), buffer_size=64, timeout=0.1)
+
+
+def test_rawsocket_transport_sends_ndjson(monkeypatch):
+    sent = {"data": b""}
+
+    class FakeSock:
+        def __init__(self):
+            self._response = [b'{"status":"success","result":{"ok":true}}']
+
+        def connect(self, addr):
+            return None
+
+        def sendall(self, data):
+            sent["data"] += data
+
+        def settimeout(self, t):
+            self.t = t
+
+        def recv(self, n):
+            if self._response:
+                return self._response.pop(0)
+            return b""
+
+        def close(self):
+            return None
+
+    def factory():
+        return FakeSock()
+
+    from blender_mcp.services.connection.transport import RawSocketTransport
+
+    t = RawSocketTransport("localhost", 5555, socket_factory=factory)
+    assert t.connect() is True
+    resp = t.send_command("echo", {"a": 1})
+    assert resp == {"status": "success", "result": {"ok": True}}
+    # Vérifie que l'envoi est du NDJSON (fin par \n) et contient le bon JSON
+    assert sent["data"].endswith(b"\n")
+    payload = sent["data"].rstrip(b"\n").decode("utf-8")
+    import json as _json
+
+    obj = _json.loads(payload)
+    assert obj.get("type") == "echo"
+    assert obj.get("params") == {"a": 1}
