@@ -22,7 +22,7 @@ import os
 from typing import Any, Dict
 
 from .. import prompts as prompts_service
-from ..command_dispatcher import CommandDispatcher
+from ..dispatchers.command_dispatcher import CommandDispatcher
 from . import execute as execute_service
 from . import hyper3d as hyper3d_service
 from . import object as object_service

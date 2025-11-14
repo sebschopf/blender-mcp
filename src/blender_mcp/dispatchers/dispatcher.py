@@ -4,6 +4,7 @@ This module is a relocated copy of the top-level `blender_mcp.dispatcher`.
 Relative imports have been adjusted so this file lives inside the
 `blender_mcp.dispatchers` package.
 """
+# Conflicts resolved: removed leftover merge markers from prior merge
 # isort: skip_file
 
 from __future__ import annotations
@@ -157,13 +158,11 @@ class Dispatcher(AbstractDispatcher):
             self._instrumentation.on_dispatch_error(name, exc, elapsed)
         except Exception:
             pass
-
     def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Call the handler named `name` with `params` and return its result.
 
         If the handler is not found, returns None.
         """
-        # delegate handler resolution to strategy (preserves existing logic)
         fn = self._handler_resolution_strategy.resolve(self, name)
         if fn is None:
             logger.debug("no handler for %s", name)
@@ -179,15 +178,12 @@ class Dispatcher(AbstractDispatcher):
             # handler exceptions to be wrapped
             logger.exception("handler %s raised", name)
             self._instrument_error(name, exc, start_ts)
-            # Raise the canonical HandlerError so higher layers (adapters)
-            # can map it consistently.
             raise CanonicalHandlerError(name, exc) from exc
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
         fn = self._handler_resolution_strategy.resolve(self, name)
         if fn is None:
-            logger.debug("dispatch_strict: missing handler %s", name)
             raise KeyError(name)
         return self.dispatch(name, params)
 

@@ -24,8 +24,8 @@ GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 PROMPT_TEMPLATE = (
     "You are an assistant that controls a local Blender MCP server.\n"
     "When you want Blender to run a tool, reply with a single JSON object only, nothing else.\n"
-    '{"tool": "<tool_name>", "params": { ... }}\n'
-    'If you need user clarification, instead return JSON: {"clarify": ["question 1"] }\n'
+    '{{"tool": "<tool_name>", "params": {{ ... }} }}\n'
+    'If you need user clarification, instead return JSON: {{"clarify": ["question 1"] }}\n'
     "User request:\n{user_request}\n"
 )
 
@@ -183,7 +183,9 @@ def _prepare_prompt(user_request: str) -> str:
     except Exception:
         runtime = ""
     combined = tools_summary + ("\n\nLive status:\n" + runtime if runtime else "")
-    return PROMPT_TEMPLATE.format(user_request=user_request, tools_summary=combined)
+    # Use simple replacement instead of str.format to avoid accidental
+    # interpretation of literal JSON braces inside the template.
+    return PROMPT_TEMPLATE.replace("{user_request}", user_request).replace("{tools_summary}", combined)
 
 
 def _run_gemini_subprocess(cmd: list[str], prompt: str) -> str:
