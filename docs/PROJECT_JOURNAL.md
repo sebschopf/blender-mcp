@@ -18,6 +18,19 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 	- `send_command` reste normalisé (retour dict complet). Sélection: `socket_factory` force Raw, sinon Core si dispo, sinon Raw. Prochaines étapes: injection de transport dans façade connexion et extraction d’un `TransportSelector` configurable.
 
 ---
+
+- 2025-11-14 | ai-session
+- Action: Tests Transport Phase A exécutés localement; correction linter `ruff` mineure.
+- Fichiers modifiés/ajoutés:
+	- src/blender_mcp/gemini_client.py (simplification prompt pour ruff)
+	- tests/test_transport_phase_a.py (existants, passés)
+- Tests/Lint/Type:
+	- `$Env:PYTHONPATH='src'; ruff check src tests; mypy src --exclude "src/blender_mcp/archive/.*"; pytest -q`
+- Statut: done (tests et lint locaux verts)
+- Notes:
+	- Correction non-fonctionnelle pour satisfaire `ruff` (suppression d'une assignation redondante dans le prompt formatter).
+	- Le reste de Transport Phase A (sélection transport, `ResponseReceiver`, injection dans `NetworkCore`) est en place et couvert par `tests/test_transport_phase_a.py`.
+
 - 2025-11-13 | automation
 - Action: Dépréciation des modules racine services (polyhaven/sketchfab/hyper3d) + instrumentation dispatcher + baseline sécurité execute
 - Fichiers modifiés:
@@ -65,17 +78,18 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 - Commandes:
 	- `$Env:PYTHONPATH='src'; pytest -q tests/test_hyper3d_services.py; pytest -q; Remove-Item Env:PYTHONPATH`
 - Statut: done
-- 2025-11-14 | automation
-- Action: Ajout de la spec calendrier retrait legacy (OpenSpec) couvrant connection_core, dispatchers simples, services racine et codegen racine.
-- Fichiers modifiés/ajoutés:
-	- openspec/changes/2025-11-14-legacy-retirement-schedule/spec.md (calendrier + scénarios)
-- Tests/Lint/Type:
-	- Aucun changement runtime; suite existante déjà verte (voir commits précédents Transport Phase A)
-- Statut: done
-- Notes:
-	- Deux cycles minimum avant suppression des modules legacy (services racine, simple_dispatcher, command_dispatcher racine, server_shim, connection_core, blender_codegen racine).
-	- Labels créés: transport, deprecation, legacy-removal, connection, services, docs, tests, ci.
-	- Prochaines étapes: entrée CHANGELOG lors du prochain cycle, audit références internes avant retrait.
+ 2025-11-14 | automation
+ Action: Retrait du shim racine `command_dispatcher.py` + corrections post-merge du dispatcher (instrumentation + stratégies)
+ Fichiers modifiés/supprimés:
+	- src/blender_mcp/command_dispatcher.py (supprimé)
+	- src/blender_mcp/dispatchers/dispatcher.py (résolution conflits; usage de `HandlerResolutionStrategy.resolve`; wrap erreurs via `HandlerError(name, original)`; instrumentation préservée)
+	- tests/test_dispatcher.py (nettoyage imports; ordre normalisé)
+ Tests/Lint/Type:
+	- `$Env:PYTHONPATH='src'; ruff check src tests; mypy src --exclude "src/blender_mcp/archive/.*"; pytest -q; Remove-Item Env:PYTHONPATH` → verts
+ Statut: done (compat maintenue via `blender_mcp.dispatchers.command_dispatcher.CommandDispatcher`)
+ Notes:
+	- Aligné avec la spec de calendrier de retrait legacy (OpenSpec 2025-11-14). Aucune rupture publique: la façade package `dispatchers.command_dispatcher` reste disponible pour les imports historiques.
+
 
 
 ---

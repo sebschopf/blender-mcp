@@ -4,6 +4,7 @@ This module is a relocated copy of the top-level `blender_mcp.dispatcher`.
 Relative imports have been adjusted so this file lives inside the
 `blender_mcp.dispatchers` package.
 """
+# Conflicts resolved: removed leftover merge markers from prior merge
 # isort: skip_file
 
 from __future__ import annotations
@@ -157,43 +158,32 @@ class Dispatcher(AbstractDispatcher):
             self._instrumentation.on_dispatch_error(name, exc, elapsed)
         except Exception:
             pass
-
-<<<<<<< HEAD
-=======
->>>>>>> 3b7e081 (refactor(dispatcher): itération 1 (factorisation résolution handler/service))
-=======
->>>>>>> 4cf36d4 (chore(lint): apply Ruff auto-fix for import ordering in asgi.py and policy strategy)
     def dispatch(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Call the handler named `name` with `params` and return its result.
 
         If the handler is not found, returns None.
         """
-        fn = self._resolve_handler_or_service(name)
+        fn = self._handler_resolution_strategy.resolve(self, name)
         if fn is None:
             logger.debug("no handler for %s", name)
             return None
         logger.debug("dispatching %s with params=%s", name, params)
-<<<<<<< HEAD
+        start_ts = self._instrument_start(name, params)
+        try:
+            result = fn(params or {})
             self._instrument_success(name, result, start_ts)
             return result
->>>>>>> 4cf36d4 (chore(lint): apply Ruff auto-fix for import ordering in asgi.py and policy strategy)
         except Exception as exc:
             # wrap in HandlerError for compatibility with code that expects
             # handler exceptions to be wrapped
             logger.exception("handler %s raised", name)
-<<<<<<< HEAD
-=======
             self._instrument_error(name, exc, start_ts)
-        start_ts = self._instrument_start(name, params)
+            raise CanonicalHandlerError(name, exc) from exc
 
     def dispatch_strict(self, name: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Like `dispatch` but raises KeyError if the handler is missing."""
-        fn = self._resolve_handler_or_service(name)
-            # also check service registry before failing
-            try:
-                from ..services import registry as service_registry
-                if service_registry.has_service(name):
-                pass
+        fn = self._handler_resolution_strategy.resolve(self, name)
+        if fn is None:
             raise KeyError(name)
         return self.dispatch(name, params)
 

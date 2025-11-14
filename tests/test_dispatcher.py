@@ -13,8 +13,8 @@ from blender_mcp.dispatchers.dispatcher import (
 from blender_mcp.dispatchers.dispatcher import (
     register_default_handlers as register_default_handlers_cmd,
 )
-from blender_mcp.server import BlenderMCPServer
- # Legacy simple_dispatcher compat is covered in test_simple_dispatcher_compat.py
+
+# Legacy simple_dispatcher compat is covered in test_simple_dispatcher_compat.py
 
 
 def test_register_and_dispatch():
