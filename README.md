@@ -311,6 +311,18 @@ The system uses a simple JSON-based protocol over TCP sockets:
 
 ## Limitations & Security Considerations
 
+### Legacy & Deprecation Plan
+
+Ce projet est en phase de retrait progressif de plusieurs shims legacy (ex: `connection_core.py`, `simple_dispatcher.py`, façades `materials.py`, `blender_codegen.py`).
+
+Ressources:
+- Tracker détaillé: `docs/LEGACY_TRACKER.md`
+- Spec calendrier (OpenSpec): `openspec/changes/2025-11-14-legacy-retirement-schedule/spec.md`
+- Journal des étapes: `docs/PROJECT_JOURNAL.md`
+
+Calendrier: retrait planifié N+2 (deux cycles après annonce) après audit et mise à jour du CHANGELOG. Pendant l'intervalle, les shims émettent un DeprecationWarning mais restent fonctionnels pour compatibilité.
+
+
 - The `execute_blender_code` tool allows running arbitrary Python code in Blender, which can be powerful but potentially dangerous. Use with caution in production environments. ALWAYS save your work before using it.
 - Poly Haven requires downloading models, textures, and HDRI images. If you do not want to use it, please turn it off in the checkbox in Blender. 
 - Complex operations might need to be broken down into smaller steps

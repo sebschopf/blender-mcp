@@ -77,6 +77,59 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 	- Labels créés: transport, deprecation, legacy-removal, connection, services, docs, tests, ci.
 	- Prochaines étapes: entrée CHANGELOG lors du prochain cycle, audit références internes avant retrait.
 
+---
+2025-11-14 | automation
+- Action: Ajout tracker legacy (`docs/LEGACY_TRACKER.md`), script parité CI locale (`scripts/verify_local_ci.ps1`) et section Legacy dans README.
+- Fichiers modifiés/ajoutés:
+	- docs/LEGACY_TRACKER.md (liste modules, processus retrait)
+	- scripts/verify_local_ci.ps1 (ruff + mypy + pytest)
+	- README.md (section Legacy & Deprecation Plan)
+	- docs/PROJECT_JOURNAL.md (entrée courante)
+- Tests/Lint/Type:
+	- Aucun code runtime modifié; exécution future: `$Env:PYTHONPATH='src'; ruff check src tests; mypy src --exclude "src/blender_mcp/archive/.*"; pytest -q; Remove-Item Env:PYTHONPATH`
+- Statut: done
+- Notes:
+	- Le script de parité CI fournit une commande unique pour vérifier localement avant PR.
+	- Prochaine étape: ouverture manuelle issues GitHub par module legacy (labels `legacy-removal`, `deprecation`).
+	- Audit usages restants de `connection_core` planifié avant son retrait.
+
+---
+2025-11-14 | automation
+- Action: Rédaction des brouillons d'issues de retrait legacy (`docs/ISSUES_LEGACY_DRAFTS.md`).
+- Fichiers modifiés/ajoutés:
+	- docs/ISSUES_LEGACY_DRAFTS.md (templates d'issues par module)
+	- docs/PROJECT_JOURNAL.md (entrée courante)
+- Tests/Lint/Type: N/A (documentation uniquement)
+- Statut: done
+- Notes:
+	- Chaque issue inclut checklist + critères d'acceptation + labels suggérés.
+	- Étape suivante: création manuelle des issues dans GitHub puis PRs de retrait ciblées.
+
+---
+2025-11-14 | automation
+- Action: Ajout plan détaillé de retrait (séquence + risques) et commandes gh pour création d'issues.
+- Fichiers modifiés/ajoutés:
+	- docs/LEGACY_WITHDRAWAL_PLAN.md (séquence, risques, tableau synthèse)
+	- docs/LEGACY_ISSUES_COMMANDS.md (exemples `gh issue create`)
+	- docs/PROJECT_JOURNAL.md (entrée courante)
+- Tests/Lint/Type: N/A (documentation uniquement)
+- Statut: done
+- Notes:
+	- Prochaine étape: exécuter commandes `gh` pour créer issues et compléter tableau synthèse.
+	- Commencer par PR retrait dispatcher shims (faible risque).
+
+---
+2025-11-14 | automation
+- Action: Ajout section Deprecation & Planned Removals dans CHANGELOG (cycle N).
+- Fichiers modifiés:
+	- CHANGELOG.md (tableau composant/remplacement/planned removal)
+	- PROJECT_JOURNAL.md (entrée courante)
+- Tests/Lint/Type: N/A (documentation uniquement)
+- Statut: done
+- Notes:
+	- Section formalise fenêtre N→N+2 et l'ordre de retrait.
+	- Mise en cohérence avec `LEGACY_TRACKER.md` et la spec OpenSpec.
+
 
 ---
 - 2025-11-13 | automation
