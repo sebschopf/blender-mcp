@@ -48,39 +48,35 @@ Ce fichier journalise les étapes du portage / refactor. Chaque entrée suit le 
 	- tests/test_connection_reassembly.py, tests/test_connection.py, tests/test_services_execute.py (adaptations)
 - Tests:
 	- `$Env:PYTHONPATH='src'; pytest -q tests/test_connection_reassembly.py tests/test_connection.py tests/test_services_execute.py; pytest -q; Remove-Item Env:PYTHONPATH`
-- Lint/Type:
-	- `ruff check src tests`
-	- `mypy src --exclude "src/blender_mcp/archive/.*"`
-- Statut: done
 - Notes: Aligne `services.connection` sur `connection_core`. Plus de levée `RuntimeError` à ce niveau; les couches supérieures gèrent le mapping d’erreurs.
 
 ---
-- 2025-11-13 | automation
 - Action: Portage Sketchfab search/download (services) + enregistrement registre
-- Fichiers modifiés:
 	- src/blender_mcp/services/sketchfab.py (ajout services canoniques search/download)
 	- src/blender_mcp/services/registry.py (enregistrement)
-	- docs/endpoint_mapping_detailed.md (statut → ported)
-- Tests:
 	- tests/test_sketchfab_service_search_download.py (api_key env, succès, mapping erreurs)
-- Commandes:
-	- `$Env:PYTHONPATH='src'; pytest -q tests/test_sketchfab_service_search_download.py; pytest -q; Remove-Item Env:PYTHONPATH`
-- Statut: done
-- Notes: Résolution de la clé API via param ou variable d’environnement `SKETCHFAB_API_KEY`. Exceptions-first (InvalidParamsError/ExternalServiceError).
 
 ---
 - 2025-11-13 | automation
 - Action: Portage endpoints Hyper3D (services) + enregistrement registre
 - Fichiers modifiés/ajoutés:
-	- src/blender_mcp/services/hyper3d.py (ajout 4 services: generate_text/images, poll, import)
 	- src/blender_mcp/services/registry.py (enregistrements)
-	- docs/endpoint_mapping_detailed.md (statut → ported)
-- Tests:
 	- tests/test_hyper3d_services.py (success + error cases)
 - Commandes:
 	- `$Env:PYTHONPATH='src'; pytest -q tests/test_hyper3d_services.py; pytest -q; Remove-Item Env:PYTHONPATH`
 - Statut: done
-- Notes: Provider par défaut = 'fal_ai'. Pour images côté main_site, l'upload de fichiers n'est pas géré dans ce service (erreur params). Les helpers réseau sont centralisés dans `blender_mcp.hyper3d`.
+- 2025-11-14 | automation
+- Action: Ajout de la spec calendrier retrait legacy (OpenSpec) couvrant connection_core, dispatchers simples, services racine et codegen racine.
+- Fichiers modifiés/ajoutés:
+	- openspec/changes/2025-11-14-legacy-retirement-schedule/spec.md (calendrier + scénarios)
+- Tests/Lint/Type:
+	- Aucun changement runtime; suite existante déjà verte (voir commits précédents Transport Phase A)
+- Statut: done
+- Notes:
+	- Deux cycles minimum avant suppression des modules legacy (services racine, simple_dispatcher, command_dispatcher racine, server_shim, connection_core, blender_codegen racine).
+	- Labels créés: transport, deprecation, legacy-removal, connection, services, docs, tests, ci.
+	- Prochaines étapes: entrée CHANGELOG lors du prochain cycle, audit références internes avant retrait.
+
 
 ---
 - 2025-11-13 | automation
