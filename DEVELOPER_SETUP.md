@@ -21,11 +21,17 @@ python -m pip install -U pytest ruff mypy types-requests requests
 3. Run tests
 
 ```powershell
-# Ensure the package root is discoverable by tests
-$env:PYTHONPATH = 'src'; python -m pytest -q
+# Ensure the package root is discoverable by tests. Prefer including the
+# repository root *after* `src` so top-level shims like `addon.py` are importable
+# while `blender_mcp` resolves to `src/blender_mcp` (prevents duplicate-import
+# identity issues).
+$env:PYTHONPATH = 'src;.'
+python -m pytest -q
+Remove-Item Env:PYTHONPATH
 ```
 
-Note: In CI (GitHub Actions) `PYTHONPATH` is set to `src:.` to ensure the repository root is available during tests. Locally, `$env:PYTHONPATH = 'src'` is the recommended practice.
+See `docs/ADDON_LAYOUT.md` for details about the `addon.py` shim at the repo
+root and the canonical implementation under `src/blender_mcp/services/addon/`.
 
 Alternatively, to run the exact same steps as GitHub Actions (ruff, mypy, pytest with pinned tool versions), use the provided helper script:
 
