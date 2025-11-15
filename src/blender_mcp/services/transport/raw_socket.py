@@ -69,8 +69,9 @@ class RawSocketTransport:
         for attempt in range(self.retries + 1):
             if not self.sock and not self.connect():
                 last_exc = ConnectionError("Not connected")
-                # wait before retrying
-                time.sleep(self.backoff * (attempt + 1))
+                # wait before retrying, but skip sleep on last attempt
+                if attempt < self.retries:
+                    time.sleep(self.backoff * (attempt + 1))
                 continue
 
             try:
