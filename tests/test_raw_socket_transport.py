@@ -133,6 +133,7 @@ def test_raw_socket_transport_retry() -> None:  # noqa: C901
             try:
                 self._sock.close()
             except Exception:
+                # Ignore errors during socket close in test cleanup
                 pass
 
     def factory() -> Any:
