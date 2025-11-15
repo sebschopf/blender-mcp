@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
+
 from blender_mcp.services.transport import Transport
-from blender_mcp.services.transport.raw_socket import RawSocketTransport
 from blender_mcp.services.transport.core_adapter import CoreTransport
+from blender_mcp.services.transport.raw_socket import RawSocketTransport
 
 logger = logging.getLogger(__name__)
 

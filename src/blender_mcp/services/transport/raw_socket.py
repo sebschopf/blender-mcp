@@ -4,7 +4,6 @@ import json
 import logging
 import socket
 import time
-import inspect
 from typing import Any, Dict, Optional
 
 from blender_mcp.services.connection.receiver import ResponseReceiver

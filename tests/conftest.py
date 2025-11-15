@@ -32,12 +32,20 @@ try:
     # If the resolved module file is not under the src/ directory, fail early
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
     src_dir = os.path.join(repo_root, "src")
-    if not mod_file or os.path.commonpath([os.path.abspath(mod_file), os.path.abspath(src_dir)]) != os.path.abspath(src_dir):
+    if (
+        not mod_file
+        or os.path.commonpath([
+            os.path.abspath(mod_file),
+            os.path.abspath(src_dir),
+        ])
+        != os.path.abspath(src_dir)
+    ):
         msg = (
             "blender_mcp import did not resolve to 'src/blender_mcp'.\n"
             f"Resolved module: {getattr(mod, '__name__', None)!r} at {mod_file!r}\n"
             "Tests require the refactored package under `src/` to be first on sys.path.\n"
-            "If you have a legacy top-level `blender_mcp/` directory, move it out of the repo root or ensure `src/` is ahead of it on `sys.path`."
+            "If you have a legacy top-level `blender_mcp/` directory, move it out of the "
+            "repo root or ensure `src/` is ahead of it on `sys.path`."
         )
         print(msg)
         raise RuntimeError(msg)
@@ -91,7 +99,7 @@ try:
     import builtins as _builtins
     _orig_import = _builtins.__import__
 
-    def _patched_import(name, globals=None, locals=None, fromlist=(), level=0):
+    def _patched_import(name, globals=None, locals=None, fromlist=(), level=0):  # noqa: C901
         mod = _orig_import(name, globals, locals, fromlist, level)
         try:
             # use the module-level `sys` to avoid re-triggering imports

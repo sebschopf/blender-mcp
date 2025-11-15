@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import json
 import logging
-import socket
 import os
-from typing import Any
+import socket
+from typing import Any, Optional
 
 from .reassembler import ChunkedJSONReassembler
 
@@ -40,69 +40,88 @@ class ResponseReceiver:
         # returned to the caller (multi-message recv handling)
         self._pending: list[Any] = []
 
-    def receive_one(self, sock: socket.socket, *, buffer_size: int = 8192, timeout: float = 15.0) -> Any:
-        """Receive a single JSON message from `sock`.
+    def _pop_pending_or_reassembler(self) -> Optional[Any]:
+        """Return a pending message or first available message from reassembler.
 
-        This method accumulates bytes and uses `ChunkedJSONReassembler` to
-        extract newline-delimited JSON objects. It enforces a maximum buffer
-        size to avoid unbounded memory growth and treats socket timeouts as
-        a transient error raised to the caller.
-
-        Returns the first complete JSON-decoded object received.
+        Separated to reduce the complexity of `receive_one` and make each
+        step easier to reason about and test.
         """
-
-        sock.settimeout(timeout)
-        # If we have pending messages from a previous recv, return them first
         if self._pending:
             return self._pending.pop(0)
 
-        # Otherwise, check if the underlying reassembler currently contains
-        # complete messages (e.g., were popped by a prior feed); if so,
-        # prime the pending queue and return the first.
         try:
             msgs = self._re.pop_messages()
         except Exception:
             logger.exception("Error popping messages from reassembler")
-            msgs = []
+            return None
+
         if msgs:
-            # keep subsequent messages for later calls
             if len(msgs) > 1:
                 self._pending.extend(msgs[1:])
             return msgs[0]
 
+        return None
+
+    def _feed_and_check(self, sock: socket.socket, buffer_size: int) -> Optional[Any]:
+        """Read chunks from `sock`, feed the reassembler and return a message if any.
+
+        Raises socket.timeout or other exceptions from `recv` up to the caller.
+        """
         chunks: list[bytes] = []
+        while True:
+            chunk = sock.recv(buffer_size)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            try:
+                self._re.feed(chunk)
+            except Exception:
+                logger.exception("Error feeding reassembler")
+                raise
+
+            buf_len = len(self._re._buffer)  # module-local access; intentional
+            if buf_len > self.max_message_size:
+                logger.error(
+                    "Incoming message exceeds max allowed size (%d bytes) > %d",
+                    buf_len,
+                    self.max_message_size,
+                )
+                raise ConnectionError("Incoming message too large")
+
+            msgs = self._re.pop_messages()
+            if msgs:
+                if len(msgs) > 1:
+                    self._pending.extend(msgs[1:])
+                return msgs[0]
+
+        # No more data; return joined bytes for potential fallback parse
+        return b"".join(chunks)
+
+    def _fallback_parse(self, joined: bytes) -> Optional[Any]:
+        if not joined:
+            return None
+        try:
+            return json.loads(joined.decode("utf-8"))
+        except Exception:
+            logger.debug("fallback JSON parse of joined chunks failed")
+            return None
+
+    def receive_one(self, sock: socket.socket, *, buffer_size: int = 8192, timeout: float = 15.0) -> Any:
+        """Receive a single JSON message from `sock`.
+
+        This implementation delegates most work to small helpers to keep
+        cognitive complexity low while preserving the original behavior.
+        """
+
+        sock.settimeout(timeout)
+
+        # Fast-path: pending or already-reassembled messages
+        res = self._pop_pending_or_reassembler()
+        if res is not None:
+            return res
 
         try:
-            while True:
-                chunk = sock.recv(buffer_size)
-                if not chunk:
-                    break
-                chunks.append(chunk)
-                # feed into reassembler and attempt to pop messages
-                try:
-                    self._re.feed(chunk)
-                except Exception:
-                    logger.exception("Error feeding reassembler")
-                    raise
-
-                # safety: avoid unbounded buffer growth
-                buf_len = len(self._re._buffer)  # module-local access; intentional
-                if buf_len > self.max_message_size:
-                    logger.error(
-                        "Incoming message exceeds max allowed size (%d bytes) > %d",
-                        buf_len,
-                        self.max_message_size,
-                    )
-                    raise ConnectionError("Incoming message too large")
-
-                msgs = self._re.pop_messages()
-                if msgs:
-                    # if multiple messages arrived in this single feed, queue
-                    # the rest for subsequent calls and return the first now
-                    if len(msgs) > 1:
-                        self._pending.extend(msgs[1:])
-                    return msgs[0]
-
+            read_res = self._feed_and_check(sock, buffer_size)
         except socket.timeout:
             logger.warning("Socket timeout in ResponseReceiver")
             raise
@@ -110,13 +129,14 @@ class ResponseReceiver:
             logger.exception("Error while receiving data")
             raise
 
-        # No more data available from socket; try a last-ditch parse of joined chunks
-        joined = b"".join(chunks)
-        if joined:
-            try:
-                return json.loads(joined.decode("utf-8"))
-            except Exception:
-                logger.debug("fallback JSON parse of joined chunks failed")
+        # If `_feed_and_check` returned a JSON-decoded object, return it
+        if isinstance(read_res, (dict, list)):
+            return read_res
+
+        # Otherwise, `read_res` is the joined bytes; try fallback parse
+        parsed = self._fallback_parse(read_res)  # type: ignore[arg-type]
+        if parsed is not None:
+            return parsed
 
         raise ConnectionError("No data received")
 

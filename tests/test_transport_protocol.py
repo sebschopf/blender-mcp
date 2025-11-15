@@ -3,8 +3,6 @@ from __future__ import annotations
 import types
 from typing import Any, Dict, Optional
 
-import pytest
-
 from blender_mcp.services.connection import Transport, select_transport
 from blender_mcp.services.connection.network_core import NetworkCore
 

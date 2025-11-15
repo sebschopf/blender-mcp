@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import importlib
 from typing import Any, Dict, Optional
 
 import pytest
-
-import importlib
 
 
 class DummyCoreConn:

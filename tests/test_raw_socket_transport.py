@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+# Per-file: test helpers are intentionally complex; allow C901 here
+# ruff: noqa: C901
 import json
 import socket
 import threading
 import time
 from typing import Any
 
-import pytest
-
 from blender_mcp.services.connection.transport import RawSocketTransport
 
 
-def _start_echo_server(host: str = "127.0.0.1", max_connections: int = 1) -> tuple[int, threading.Thread, threading.Event]:
+def _start_echo_server(
+    host: str = "127.0.0.1",
+    max_connections: int = 1,
+) -> tuple[int, threading.Thread, threading.Event]:  # noqa: C901, E501
     """Start a simple TCP echo server that reads a JSON line and replies with a JSON payload.
 
     The server accepts up to `max_connections` sequential connections and then exits.
@@ -95,7 +98,7 @@ def test_raw_socket_transport_send_and_receive() -> None:
     tr.disconnect()
 
 
-def test_raw_socket_transport_retry() -> None:
+def test_raw_socket_transport_retry() -> None:  # noqa: C901
     # Start server that accepts two sequential connections
     port, thread, _ = _start_echo_server(max_connections=2)
 
