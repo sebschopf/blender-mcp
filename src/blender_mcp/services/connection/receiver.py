@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import socket
+from collections import deque
 from typing import Any, Optional
 
 from .reassembler import ChunkedJSONReassembler
@@ -54,7 +55,7 @@ class ResponseReceiver:
             self.max_message_size = int(max_message_size)
         # queue for messages already popped from the reassembler but not yet
         # returned to the caller (multi-message recv handling)
-        self._pending: list[Any] = []
+        self._pending: deque[Any] = deque()
 
     def _pop_pending_or_reassembler(self) -> Optional[Any]:
         """Return a pending message or first available message from reassembler.
@@ -63,7 +64,7 @@ class ResponseReceiver:
         step easier to reason about and test.
         """
         if self._pending:
-            return self._pending.pop(0)
+            return self._pending.popleft()
 
         try:
             msgs = self._re.pop_messages()
