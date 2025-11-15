@@ -71,7 +71,7 @@ class RawSocketTransport:
                 last_exc = ConnectionError("Not connected")
                 # wait before retrying, but skip sleep on last attempt
                 if attempt < self.retries:
-                    time.sleep(self.backoff * (attempt + 1))
+                    time.sleep(self.backoff * (2 ** attempt))
                 continue
 
             try:
@@ -91,7 +91,7 @@ class RawSocketTransport:
 
                 last_exc = exc
                 if attempt < self.retries:
-                    time.sleep(self.backoff * (attempt + 1))
+                    time.sleep(self.backoff * (2 ** attempt))
                     continue
                 logger.exception("RawSocketTransport send_command failed after %s attempts", self.retries + 1)
                 raise last_exc
