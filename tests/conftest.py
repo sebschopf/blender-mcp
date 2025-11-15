@@ -92,58 +92,8 @@ if duplicates:
     raise RuntimeError(msg)
 
 
-# Monkeypatch builtins.__import__ to deduplicate modules as they are imported.
-# This ensures that if a module file from `src/` is loaded under multiple
-# names, later imports are normalized to the canonical module object.
-#
-# Performance note: This hook iterates through sys.modules on every import
-# to build a file-to-module-names mapping and deduplicate entries. While this
-# adds overhead during test initialization, it's necessary to prevent
-# duplicate module identity issues that cause test failures. The deduplication
-# is best-effort and won't break imports if it fails.
-#
-# TODO: This is a workaround for import-order issues during the transport
-# refactor. Once the codebase fully adopts canonical imports from the new
-# services.transport package, this monkeypatch should be removed or simplified.
-try:
-    import builtins as _builtins
-    _orig_import = _builtins.__import__
-
-    def _patched_import(name, globals=None, locals=None, fromlist=(), level=0):  # noqa: C901
-        mod = _orig_import(name, globals, locals, fromlist, level)
-        try:
-            # use the module-level `sys` to avoid re-triggering imports
-            _sys = sys
-            # build file -> module names map for modules under src_dir
-            file_map_local: dict[str, list[str]] = {}
-            for n, m in list(_sys.modules.items()):
-                mf = getattr(m, "__file__", None)
-                if not mf:
-                    continue
-                try:
-                    mf_abs = os.path.abspath(mf)
-                except Exception:
-                    continue
-                if not mf_abs.startswith(src_dir):
-                    continue
-                file_map_local.setdefault(mf_abs, []).append(n)
-            for mf, names in file_map_local.items():
-                if len(names) <= 1:
-                    continue
-                canonical = names[0]
-                canonical_mod = _sys.modules.get(canonical)
-                if canonical_mod is None:
-                    continue
-                for other in names[1:]:
-                    if _sys.modules.get(other) is not canonical_mod:
-                        # Replace the duplicate module object with the canonical one
-                        _sys.modules[other] = canonical_mod
-        except Exception:
-            # Best-effort deduplication; ignore errors to avoid breaking imports during test startup.
-            pass
-        return mod
-
-    _builtins.__import__ = _patched_import
-except Exception:
-    # Best-effort; don't fail test startup if monkeypatching import fails.
-    pass
+# Duplicate module detection is performed above (lines 60–81).
+# Monkeypatching builtins.__import__ is fragile and can cause unintended side effects.
+# Instead, fail fast if duplicate modules are detected, and fix import paths in the codebase.
+# If you see a duplicate import error, ensure all imports of `blender_mcp` resolve to the canonical path under `src/`.
+# Remove any accidental imports from the top-level shim or other locations.
