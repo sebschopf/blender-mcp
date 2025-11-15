@@ -6,14 +6,17 @@ import sys
 # Ensure repository root is on sys.path so we can import the package when running
 # this script directly.
 repo_root = os.path.dirname(os.path.dirname(__file__))
-# Load connection.py directly (avoid importing package-level __init__ which has additional
-# external dependencies during this smoke test).
+# Import the canonical module via normal package import so Python's import system
+# and `sys.modules` identity are preserved. If this fails, raise a clear error
+# so CI/dev environments can adjust `PYTHONPATH` instead of silently loading a
+# duplicate module by path.
+try:
+    connection_mod = importlib.import_module("blender_mcp.connection_core")
+except Exception as e:
+    raise ImportError(
+        "Could not import 'blender_mcp.connection_core'. Ensure 'src' is on PYTHONPATH."
+    ) from e
 
-
-connection_path = os.path.join(repo_root, "src", "blender_mcp", "connection_core.py")
-spec = importlib.util.spec_from_file_location("blender_mcp.connection_core", connection_path)
-connection_mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(connection_mod)
 BlenderConnection = connection_mod.BlenderConnection
 
 

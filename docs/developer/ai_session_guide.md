@@ -408,3 +408,62 @@ Résumé des modifications appliquées pendant une session d'intégration LLM/br
   - Tests non-interactifs pour `scripts/gemini_bridge.py` (simulateur de réponse LLM).
 
 Consulter `docs/AI_SESSION_CHANGES.md` pour le détail complet, commandes et exemples de reproductions.
+
+---
+
+## 19. Transport — Diagnostic d'erreur et plan de refactorisation (action requise)
+
+Contexte rapide
+- Symptôme observé : certains tests (sélecteurs de transport) passent isolément mais échouent dans la suite complète — erreurs `isinstance` inattendues.
+- Cause racine : double-chargement du même fichier source sous des noms/modules différents (p.ex. shim racine vs `src/`), ce qui crée deux objets module distincts et donc deux objets-classes distincts pour la même définition de `RawSocketTransport` / `CoreTransport`.
+
+Pourquoi c'est un problème SOLID
+- Violation de DIP/ISP : le code et les tests dépendent des classes concrètes au lieu d'un contrat d'abstraction (le `Transport` Protocol). Les tests vérifient l'identité des classes concrètes (`isinstance(..., RawSocketTransport)`) ce qui est fragile.
+- Mauvaise séparation des responsabilités : le module `transport.py` contient sélection, implémentations concrètes, diagnostics et logique d'initialisation (lazy import) — mélange de responsabilités qui favorise les importations non-déterministes.
+
+Objectif
+- Réorganiser la couche Transport pour respecter SOLID et garantir qu'il n'y ait qu'une seule voie d'import canonique, réduisant ainsi le risque de double-import et rendant les tests robustes.
+
+Proposition d'architecture (dossier `src/blender_mcp/services/connection/transport/`)
+- `__init__.py` : exporte l'API publique minimale (Protocol `Transport`, `select_transport`).
+- `protocol.py` : définit `@runtime_checkable Transport` (signature seule).
+- `raw_socket.py` : implémentation `RawSocketTransport` (NDJSON over TCP, tests unitaires dédiés).
+- `core_adapter.py` : implémentation `CoreTransport` (adaptateur autour du core `BlenderConnection`), uniquement lazy-import du core.
+- `selector.py` : `select_transport(host, port, *, socket_factory=None)` — logiques de sélection et d'injection.
+- `receiver.py` (déjà existant mais à réconcilier) : `ResponseReceiver` et réassembleur JSON (si besoin, extraire `reassembler.py`).
+
+Pourquoi ce découpage
+- Chaque fichier a une responsabilité unique (SRP) : implémentation concrète séparée de la sélection et de l'API.
+- Facilite les imports canoniques : `from blender_mcp.services.connection.transport.selector import select_transport` ou `from blender_mcp.services.connection.transport.raw_socket import RawSocketTransport`.
+- Permet d'écrire des tests qui importent l'abstraction (`Transport`) et/ou vérifient le comportement public, pas l'identité des classes.
+
+Étapes de migration (petits commits, tests verts à chaque étape)
+1. Créer le dossier `src/blender_mcp/services/connection/transport/` et y ajouter `protocol.py`, `raw_socket.py`, `core_adapter.py`, `selector.py`, `__init__.py` (boilerplate minimal).
+2. Réimplémenter progressivement le contenu actuel de `src/blender_mcp/services/connection/transport.py` en petits commits (≤ 3 fichiers modifiés par PR) :
+  - Commit A: extraire `Transport` dans `protocol.py` et mettre à jour les imports tests/calls pour utiliser `transport.protocol.Transport`.
+  - Commit B: déplacer `RawSocketTransport` dans `raw_socket.py` et ses tests (`tests/test_raw_socket_transport.py`) ; exécuter tests ciblés.
+  - Commit C: déplacer `CoreTransport` dans `core_adapter.py` (lazy import), et ajouter tests mocks pour la fallback/branch.
+  - Commit D: implémenter `selector.py` avec `select_transport` et adapter les points d'appel qui utilisaient l'ancien module.
+3. Mettre à jour `tests/` pour qu'ils vérifient `isinstance(t, Transport)` (ou, préférer, vérifications comportementales) au lieu d'`isinstance` sur classes concrètes.
+4. Supprimer le shim racine `blender_mcp/` (ou le laisser exclusivement en `legacy_shims/`) et vérifier que `tests/conftest.py` place `src/` en tête de `sys.path`.
+5. Retirer les hacks temporaires ajoutés pendant le debugging (metaclass tolérante, `__import__` monkeypatch, DIAG_PRINT) après avoir validé la suite complète.
+
+Critères d'acceptation (Definition of Done)
+- Tous les tests passent en exécution complète (`.\scripts\ci_local.ps1` local) sans modifications temporaires (pas de metaclass/monkeypatch/prints de diagnostic).
+- `ruff check` et `mypy` passent.
+- Les tests n'utilisent plus d'assertions sur l'identité des classes concrètes; soit ils vérifient `isinstance(t, Transport)`, soit ils valident le comportement public.
+- Documentation mise à jour (ce document) et journal de projet (`docs/PROJECT_JOURNAL.md`) notant la migration et les PRs associés.
+
+Risques & mitigations
+- Risque : régression si d'autres composants importent le shim legacy. Mitigation : ajouter `DeprecationWarning` sur les shims et communiquer dans PR/CHANGELOG.
+- Risque : cycle de refactor lourd. Mitigation : faire des commits petits, tests ciblés par étape, et garder `select_transport` stable comme façade.
+
+Tâches recommandées immédiates
+- A. Créer l'arborescence `transport/` et extraire `protocol.py` (commit minimal).
+- B. Modifier `tests/conftest.py` pour échouer tôt si `blender_mcp` ne résout pas vers `src/` (déjà ajouté pendant debug) et documenter l'étape de nettoyage.
+- C. Convertir 2–3 tests critiques pour valider l'approche d'abstraction (préparer PRs petites).
+
+Besoin d'aide ?
+- Je peux appliquer le découpage initial (création des fichiers + mise à jour des imports) et exécuter les tests ciblés. Dis‑moi si tu veux que je commence par A (extraire `protocol.py`) ou directement B (extraire `RawSocketTransport`).
+
+*** End Patch

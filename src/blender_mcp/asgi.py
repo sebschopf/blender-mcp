@@ -51,11 +51,20 @@ def _ensure_mcp_thread(app: FastAPI, server_module: Any) -> None:
     Extracted from create_app to reduce function complexity for linters.
     """
     try:
+        # Only start a background MCP thread if the provided server_module
+        # exposes a callable `main`. Some compatibility façades (or lightweight
+        # server shims) may not provide a runner; in that case we skip the
+        # background thread and allow the ASGI app to function normally.
+        main_fn = getattr(server_module, "main", None)
+        if not callable(main_fn):
+            logger.debug("server_module has no callable 'main'; skipping MCP thread start")
+            return
+
         if getattr(app.state, "mcp_thread", None) is None or not getattr(
             app.state.mcp_thread, "is_alive", lambda: False
         )():
             app.state.mcp_thread = threading.Thread(
-                target=lambda: server_module.main(),
+                target=lambda: main_fn(),
                 name="BlenderMCPThread",
                 daemon=True,
             )
