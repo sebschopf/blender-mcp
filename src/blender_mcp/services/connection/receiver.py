@@ -12,6 +12,19 @@ logger = logging.getLogger(__name__)
 
 
 class ResponseReceiver:
+    """Receives and parses JSON messages from a socket.
+
+    This receiver maintains internal state to handle multi-message buffering.
+    When a single socket recv() call returns multiple complete JSON messages,
+    they are queued internally and returned one at a time on subsequent
+    receive_one() calls.
+
+    Important: Because of this stateful buffering behavior, ResponseReceiver
+    instances should not be shared across different sockets or connection
+    contexts. Each socket connection should have its own ResponseReceiver
+    instance to avoid mixing messages from different sources.
+    """
+
     def __init__(self, *, max_message_size: int | None = None) -> None:
         """Create a ResponseReceiver.
 
@@ -109,8 +122,25 @@ class ResponseReceiver:
     def receive_one(self, sock: socket.socket, *, buffer_size: int = 8192, timeout: float = 15.0) -> Any:
         """Receive a single JSON message from `sock`.
 
+        If multiple messages arrive in a single recv() call, they are queued
+        internally and returned one at a time on subsequent calls. This allows
+        efficient handling of batched messages while maintaining a simple
+        single-message API.
+
         This implementation delegates most work to small helpers to keep
         cognitive complexity low while preserving the original behavior.
+
+        Args:
+            sock: The socket to receive data from.
+            buffer_size: Number of bytes to request in each recv() call.
+            timeout: Socket timeout in seconds.
+
+        Returns:
+            A single decoded JSON message (dict or list).
+
+        Raises:
+            socket.timeout: If no data arrives within the timeout period.
+            ConnectionError: If the message exceeds max_message_size or no data is received.
         """
 
         sock.settimeout(timeout)

@@ -95,6 +95,16 @@ if duplicates:
 # Monkeypatch builtins.__import__ to deduplicate modules as they are imported.
 # This ensures that if a module file from `src/` is loaded under multiple
 # names, later imports are normalized to the canonical module object.
+#
+# Performance note: This hook iterates through sys.modules on every import
+# to build a file-to-module-names mapping and deduplicate entries. While this
+# adds overhead during test initialization, it's necessary to prevent
+# duplicate module identity issues that cause test failures. The deduplication
+# is best-effort and won't break imports if it fails.
+#
+# TODO: This is a workaround for import-order issues during the transport
+# refactor. Once the codebase fully adopts canonical imports from the new
+# services.transport package, this monkeypatch should be removed or simplified.
 try:
     import builtins as _builtins
     _orig_import = _builtins.__import__
