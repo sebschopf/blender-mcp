@@ -79,7 +79,7 @@ class ResponseReceiver:
                 logger.exception("Error feeding reassembler")
                 raise
 
-            buf_len = len(self._re._buffer)  # module-local access; intentional
+            buf_len = self._re.get_buffer_size()
             if buf_len > self.max_message_size:
                 logger.error(
                     "Incoming message exceeds max allowed size (%d bytes) > %d",
