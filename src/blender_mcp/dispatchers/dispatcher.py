@@ -318,16 +318,31 @@ def run_bridge(
     config: Any,
     dispatcher: _CommandDispatcherCompat,
     use_api: bool = False,
+    gemini_caller: Optional[Callable[..., Any]] = None,
+    mcp_tool_caller: Optional[Callable[..., Any]] = None,
 ) -> None:
     """Run the Gemini->tool bridging flow.
 
-    This function delegates to `BridgeService`. The concrete callers
-    are the module-level stubs defined in `bridge.py` so tests can
-    monkeypatch `blender_mcp.dispatchers.bridge.call_gemini_cli` and
-    `blender_mcp.dispatchers.bridge.call_mcp_tool` as needed.
+    This function delegates to `BridgeService`. The concrete callers can be
+    provided via `gemini_caller` and `mcp_tool_caller` parameters (dependency
+    injection pattern). If not provided, defaults to module-level stubs from
+    `bridge.py` for backwards compatibility with tests that monkeypatch those
+    stubs.
+
+    Args:
+        user_req: User request string to pass to Gemini
+        config: Configuration object
+        dispatcher: Dispatcher instance to use for tool execution
+        use_api: Whether to use API mode (passed to gemini_caller)
+        gemini_caller: Optional callable that accepts (user_req, use_api) and
+            returns a dict. If None, uses module-level `call_gemini_cli`.
+        mcp_tool_caller: Optional callable that accepts (tool, params) and
+            invokes remote MCP tools. If None, uses module-level `call_mcp_tool`.
     """
-    # Use the module-level callables (imported from bridge at module import
-    # time) so tests can monkeypatch `dispatcher.call_gemini_cli` and
-    # `dispatcher.call_mcp_tool` easily.
-    service = BridgeService(call_gemini_cli, call_mcp_tool)
+    # Use provided callables or fall back to module-level defaults for backwards
+    # compatibility with existing tests that monkeypatch the module-level functions.
+    _gemini = gemini_caller if gemini_caller is not None else call_gemini_cli
+    _mcp_tool = mcp_tool_caller if mcp_tool_caller is not None else call_mcp_tool
+    
+    service = BridgeService(_gemini, _mcp_tool)
     return service.run(user_req, config, dispatcher, use_api=use_api)
