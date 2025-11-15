@@ -118,6 +118,7 @@ def test_raw_socket_transport_retry() -> None:  # noqa: C901
             try:
                 self._sock.settimeout(t)
             except Exception:
+                # Ignore exceptions when setting timeout; not critical for test and may fail on some platforms.
                 pass
 
         def sendall(self, data: bytes) -> None:
