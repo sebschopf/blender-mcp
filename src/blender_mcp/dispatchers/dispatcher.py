@@ -318,16 +318,30 @@ def run_bridge(
     config: Any,
     dispatcher: _CommandDispatcherCompat,
     use_api: bool = False,
+    gemini_caller: Optional[Callable[..., Any]] = None,
+    mcp_tool_caller: Optional[Callable[..., Any]] = None,
 ) -> None:
     """Run the Gemini->tool bridging flow.
 
     This function delegates to `BridgeService`. The concrete callers
-    are the module-level stubs defined in `bridge.py` so tests can
-    monkeypatch `blender_mcp.dispatchers.bridge.call_gemini_cli` and
-    `blender_mcp.dispatchers.bridge.call_mcp_tool` as needed.
+    can be provided via `gemini_caller` and `mcp_tool_caller` parameters
+    (dependency injection), or fall back to module-level stubs for
+    backward compatibility with tests that monkeypatch them.
+
+    Args:
+        user_req: User request string to process
+        config: Configuration object
+        dispatcher: Dispatcher instance to use for local handlers
+        use_api: Whether to use API mode for Gemini calls
+        gemini_caller: Optional callable for Gemini interactions.
+            If None, uses module-level call_gemini_cli.
+        mcp_tool_caller: Optional callable for MCP tool invocations.
+            If None, uses module-level call_mcp_tool.
     """
-    # Use the module-level callables (imported from bridge at module import
-    # time) so tests can monkeypatch `dispatcher.call_gemini_cli` and
-    # `dispatcher.call_mcp_tool` easily.
-    service = BridgeService(call_gemini_cli, call_mcp_tool)
+    # Use provided callables or fall back to module-level stubs for backward
+    # compatibility with tests that monkeypatch the module-level functions.
+    _gemini = gemini_caller if gemini_caller is not None else call_gemini_cli
+    _mcp = mcp_tool_caller if mcp_tool_caller is not None else call_mcp_tool
+    
+    service = BridgeService(_gemini, _mcp)
     return service.run(user_req, config, dispatcher, use_api=use_api)

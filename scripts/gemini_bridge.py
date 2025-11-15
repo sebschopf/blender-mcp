@@ -488,7 +488,6 @@ if __name__ == "__main__":
     # The CLI script is now a thin wrapper that builds the BridgeConfig and
     # delegates orchestration to the package-level dispatcher. This keeps the
     # script import-light and the orchestration testable.
-    import importlib
 
     # Parse flags in main() earlier and build config; reuse existing logic
     use_api = False
@@ -536,21 +535,8 @@ if __name__ == "__main__":
     cfg.photoreal = photoreal
     cfg.engraving_default = engraving_default
 
-    # Wire the bridge module callables to the script-level implementations
-    # so that BridgeService (used by run_bridge) invokes the real callers.
-    try:
-        import blender_mcp.dispatchers.bridge as _bridge
-
-        _bridge.call_gemini_cli = call_gemini_cli
-        _bridge.call_mcp_tool = call_mcp_tool
-        # Reload the dispatcher module so it imports the patched bridge callables
-        importlib.reload(importlib.import_module("blender_mcp.dispatchers.dispatcher"))
-    except Exception:
-        # If the import/reload fails, continue and let run_bridge raise a helpful error
-        pass
-
-    # Import run_bridge and Dispatcher from the (reloaded) dispatcher module
-    from blender_mcp.dispatchers.dispatcher import run_bridge, Dispatcher, register_default_handlers
+    # Import run_bridge and Dispatcher from the dispatcher module
+    from blender_mcp.dispatchers.dispatcher import Dispatcher, register_default_handlers, run_bridge
 
     # Backwards-compat: create a Dispatcher instance with default handlers
     # and pass it to run_bridge which expects a dispatcher argument.
@@ -561,4 +547,13 @@ if __name__ == "__main__":
         # Be permissive: if registration fails (tests/mocks), continue
         pass
 
-    run_bridge(user_req, cfg, dispatcher, use_api=use_api)
+    # Pass the script-level implementations directly to run_bridge via
+    # dependency injection, avoiding module monkey-patching and reloading.
+    run_bridge(
+        user_req, 
+        cfg, 
+        dispatcher, 
+        use_api=use_api,
+        gemini_caller=call_gemini_cli,
+        mcp_tool_caller=call_mcp_tool,
+    )
