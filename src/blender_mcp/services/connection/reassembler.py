@@ -31,6 +31,10 @@ class ChunkedJSONReassembler:
         self._buffer.extend(data)
         logger.debug("fed %d bytes, buffer now %d bytes", len(data), len(self._buffer))
 
+    def get_buffer_size(self) -> int:
+        """Return the current size of the internal buffer in bytes."""
+        return len(self._buffer)
+
     def pop_messages(self) -> List[Any]:
         messages: List[Any] = []
         delim = self.delimiter
