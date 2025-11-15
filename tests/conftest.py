@@ -129,6 +129,7 @@ try:
                         # Replace the duplicate module object with the canonical one
                         _sys.modules[other] = canonical_mod
         except Exception:
+            # Best-effort deduplication; ignore errors to avoid breaking imports during test startup.
             pass
         return mod
 
