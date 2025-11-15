@@ -10,6 +10,9 @@ from .reassembler import ChunkedJSONReassembler
 
 logger = logging.getLogger(__name__)
 
+# Default maximum message size: 10 MiB
+DEFAULT_MAX_MESSAGE_SIZE = 10 * 1024 * 1024
+
 
 class ResponseReceiver:
     """Receives and parses JSON messages from a socket.
@@ -38,7 +41,7 @@ class ResponseReceiver:
         if max_message_size is None:
             env_val = os.environ.get("BLENDER_MCP_MAX_MESSAGE_SIZE")
             try:
-                self.max_message_size = int(env_val) if env_val is not None else 10 * 1024 * 1024
+                self.max_message_size = int(env_val) if env_val is not None else DEFAULT_MAX_MESSAGE_SIZE
             except ValueError:
                 # If the env var is malformed, fall back to the default and
                 # log a warning.
@@ -46,7 +49,7 @@ class ResponseReceiver:
                     "Invalid BLENDER_MCP_MAX_MESSAGE_SIZE=%r, using default 10MiB",
                     env_val,
                 )
-                self.max_message_size = 10 * 1024 * 1024
+                self.max_message_size = DEFAULT_MAX_MESSAGE_SIZE
         else:
             self.max_message_size = int(max_message_size)
         # queue for messages already popped from the reassembler but not yet
