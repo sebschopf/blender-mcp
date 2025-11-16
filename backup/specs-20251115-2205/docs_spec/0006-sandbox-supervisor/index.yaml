@@ -1,0 +1,67 @@
+id: 0006-sandbox-supervisor
+path: openspec/changes/0006-sandbox-supervisor
+files_present: []
+referenced_paths: []
+missing_refs:
+- '
+
+
+  Health & metrics
+
+  ----------------
+
+
+  Supervisor must expose aggregated status (number of running processes, failed restarts)
+  for '
+- ' and '
+- ' and logged as timed-out.
+
+  3. Memory-bound processes are killed if they exceed '
+- ' and then '
+- ' with expected exit code.
+
+  2. Long-running processes are killed after '
+- '.
+
+
+  Acceptance tests
+
+  ----------------
+
+
+   1. Running a short-lived process returns '
+   blender_mcp.servers.embedded_adapter
+- exit_code
+- exited
+- failed
+- 'get_process_status(handle: ProcessHandle) -> ProcessStatus'
+- mem_limit_mb
+- net_policy
+- pid
+- preexec_fn
+- resource.setrlimit
+- running
+- spec.md
+- src/blender_mcp/adapter_supervisor.py
+- src/blender_mcp/adapter_supervisor.py`
+- src/blender_mcp/servers/embedded_server_adapter.py
+- src/blender_mcp/servers/embedded_server_adapter.py`
+- 'start_server_process(cmd: List[str], *, timeout_sec: int, mem_limit_mb: int, net_policy:
+  str, workdir: str) -> ProcessHandle'
+- start_time
+- state
+- 'stop_server_process(handle: ProcessHandle) -> None'
+- subprocess
+- tasks.md
+- tests/test_adapter_sandbox.py
+- tests/test_adapter_sandbox.py`
+- 'tests:'
+- timeout_sec
+- timeout_sec=1
+- workdir
+- "yaml\nsandbox:\n  mode: container|unprivileged\n  default_timeout_sec: 30\n  default_mem_mb:\
+  \ 256\n  network_default: deny\n  allowed_hosts: [\"polyhaven.org\",\"api.sketchfab.com\"\
+  ]\n  workdir_base: /tmp/mcp-runs\nsupervisor:\n  restart_policy: never|on-failure|always\n\
+  \  backoff_seconds: 5\n"
+spec_files:
+- openspec/changes/0006-sandbox-supervisor/specs/sandbox/spec.md

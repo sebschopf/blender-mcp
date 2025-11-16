@@ -1,0 +1,23 @@
+id: consolidate-server
+title: consolidate-server
+summary: '# OpenSpec Change: consolidate-server'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- PYTHONPATH=src
+- backup/baseline-...
+- blender_mcp.server
+- blender_mcp/server.py
+- mypy
+- pytest
+- ruff
+- src/blender_mcp/server.py`
+- src/blender_mcp/servers/*
+- src/blender_mcp/servers/*`
+- src/blender_mcp`
+- src`
+- src`.
+spec_files: []
+status: draft

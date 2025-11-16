@@ -1,7 +1,6 @@
 import io
 import zipfile
 
-from blender_mcp import sketchfab as sk
 from blender_mcp.services import sketchfab as services_sketchfab
 
 
@@ -28,7 +27,11 @@ def test_search_models_with_key(monkeypatch):
         assert "search" in url
         return DummyResp(200, {"results": [{"name": "Model1"}]})
 
-    monkeypatch.setattr(sk.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, headers=headers, params=params, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     data = services_sketchfab.search_models("apikey", "chair", None, count=5, downloadable=True)
     assert "results" in data
 
@@ -46,7 +49,11 @@ def test_download_model_uses_downloaders(monkeypatch, tmp_path):
         z.writestr("f.txt", "x")
     zip_bytes = bio.getvalue()
 
-    monkeypatch.setattr(sk.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, headers=headers, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     # Patch downloaders used by the top-level sketchfab module
     from blender_mcp import downloaders
 

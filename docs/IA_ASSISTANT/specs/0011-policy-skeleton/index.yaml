@@ -1,0 +1,25 @@
+id: 0011-policy-skeleton
+path: openspec/changes/0011-policy-skeleton
+files_present: []
+referenced_paths: []
+missing_refs:
+- PYTHONPATH=src
+- check
+- check(action, context)
+- load_policy
+- load_policy()
+- load_policy(yaml_blob)
+- policy.check
+- policy.py
+- src/blender_mcp/policy.py
+- src/blender_mcp/policy.py`
+- src`
+- tests/fixtures
+- tests/fixtures`
+- tests/test_policy_basic.py
+- tests/test_policy_basic.py`
+- '{''allowed'': False, ''reason'': ...}'
+- '{''allowed'': True}'
+spec_files:
+- openspec/changes/0011-policy-skeleton/specs/policy_poc/README.md
+- openspec/changes/0011-policy-skeleton/specs/policy_poc/spec.md

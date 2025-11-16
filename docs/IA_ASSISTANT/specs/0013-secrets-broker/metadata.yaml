@@ -1,0 +1,14 @@
+id: 0013-secrets-broker
+title: '# 0013 — Secrets broker (POC)'
+summary: '# 0013 - Secrets broker POC'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- secrets_broker
+- src/blender_mcp/secrets_broker.py
+- src/blender_mcp/secrets_broker.py`
+spec_files:
+- openspec/changes/0013-secrets-broker/specs/secrets/spec.md
+status: draft

@@ -17,6 +17,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
+import blender_mcp.http as _http
+
 _warnings.warn(
     "blender_mcp.hyper3d est déprécié; utiliser blender_mcp.services.hyper3d.",
     DeprecationWarning,
@@ -51,8 +53,8 @@ def create_rodin_job_main_site(
 
     headers = {"Authorization": f"Bearer {api_key}"}
     if session is None:
-        # preserve backward-compatibility for tests that monkeypatch `requests.post`
-        resp = requests.post("https://hyperhuman.deemos.com/api/v2/rodin", headers=headers, files=files)
+        # preserve backward-compatibility for tests that monkeypatch `blender_mcp.http.get_session`
+        resp = _http.get_session().post("https://hyperhuman.deemos.com/api/v2/rodin", headers=headers, files=files)
     else:
         resp = session.post("https://hyperhuman.deemos.com/api/v2/rodin", headers=headers, files=files)
     return resp.json()
@@ -75,7 +77,7 @@ def create_rodin_job_fal_ai(
 
     headers = {"Authorization": f"Key {api_key}", "Content-Type": "application/json"}
     if session is None:
-        resp = requests.post("https://queue.fal.run/fal-ai/hyper3d/rodin", headers=headers, json=req_data)
+        resp = _http.get_session().post("https://queue.fal.run/fal-ai/hyper3d/rodin", headers=headers, json=req_data)
     else:
         resp = session.post("https://queue.fal.run/fal-ai/hyper3d/rodin", headers=headers, json=req_data)
     return resp.json()
@@ -85,7 +87,7 @@ def poll_rodin_job_status_main_site(
     api_key: str, subscription_key: str, session: Optional[requests.sessions.Session] = None
 ) -> Dict[str, Any]:
     if session is None:
-        resp = requests.post(
+        resp = _http.get_session().post(
             "https://hyperhuman.deemos.com/api/v2/status",
             headers={"Authorization": f"Bearer {api_key}"},
             json={"subscription_key": subscription_key},
@@ -103,16 +105,12 @@ def poll_rodin_job_status_main_site(
 def poll_rodin_job_status_fal_ai(
     api_key: str, request_id: str, session: Optional[requests.sessions.Session] = None
 ) -> Dict[str, Any]:
+    url = f"https://queue.fal.run/fal-ai/hyper3d/requests/{request_id}/status"
+    headers = {"Authorization": f"KEY {api_key}"}
     if session is None:
-        resp = requests.get(
-            f"https://queue.fal.run/fal-ai/hyper3d/requests/{request_id}/status",
-            headers={"Authorization": f"KEY {api_key}"},
-        )
+        resp = _http.get_session().get(url, headers=headers)
     else:
-        resp = session.get(
-            f"https://queue.fal.run/fal-ai/hyper3d/requests/{request_id}/status",
-            headers={"Authorization": f"KEY {api_key}"},
-        )
+        resp = session.get(url, headers=headers)
     return resp.json()
 
 
@@ -120,7 +118,7 @@ def import_generated_asset_main_site(
     api_key: str, task_uuid: str, name: str, session: Optional[requests.sessions.Session] = None
 ) -> Dict[str, Any]:
     if session is None:
-        resp = requests.post(
+        resp = _http.get_session().post(
             "https://hyperhuman.deemos.com/api/v2/download",
             headers={"Authorization": f"Bearer {api_key}"},
             json={"task_uuid": task_uuid},
@@ -152,7 +150,7 @@ def import_generated_asset_main_site(
             except Exception:
                 # Fallback to streaming requests
                 if session is None:
-                    r = requests.get(url, stream=True)
+                    r = _http.get_session().get(url, stream=True)
                 else:
                     r = session.get(url, stream=True)
                 r.raise_for_status()
@@ -176,7 +174,7 @@ def import_generated_asset_fal_ai(
     if session is None:
         url = f"https://queue.fal.run/fal-ai/hyper3d/requests/{request_id}"
         headers = {"Authorization": f"Key {api_key}"}
-        resp = requests.get(url, headers=headers)
+        resp = _http.get_session().get(url, headers=headers)
     else:
         url = f"https://queue.fal.run/fal-ai/hyper3d/requests/{request_id}"
         headers = {"Authorization": f"Key {api_key}"}

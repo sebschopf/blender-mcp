@@ -1,0 +1,54 @@
+id: 2025-11-12-asgi-lifespan
+path: openspec/changes/2025-11-12-asgi-lifespan
+files_present: []
+referenced_paths: []
+missing_refs:
+- '
+
+
+  2. The PR includes a clear description and references this openspec change directory.
+
+  3. FastAPI DeprecationWarning for '
+- "\n  - Then tests succeed and no DeprecationWarning about "
+- ' (if available) in repo root to validate spec format.
+
+  - Ensure the PR body references this change id '
+- ' as an artifact
+
+
+  Validation
+
+  ----------
+
+  - Run '
+- " is emitted\n\n- Scenario: Running integration job in CI\n  - Given the workflow\
+  \ is manually dispatched\n  - When the integration job runs\n  - Then the job completes\
+  \ and uploads "
+- ' job can be manually dispatched and produces an artifact '
+- ' no longer appears when running ASGI tests.
+
+  4. CI '
+- ".\n\nScenarios (short)\n-----------------\n- Scenario: Running ASGI tests locally\n\
+  \  - Given a dev environment with the listed dev deps\n  - When running "
+- '@app.on_event("startup")'
+- PYTHONPATH
+- integration
+- lifespan
+- logging_utils
+- 'powershell
+
+  $env:PYTHONPATH = ''src''
+
+  python -m pip install --upgrade pip
+
+  python -m pip install fastapi starlette httpx pytest-asyncio uvicorn
+
+  python -m pytest tests/test_asgi_tools.py -q
+
+  Remove-Item Env:\PYTHONPATH
+
+  '
+- src'
+- src/blender_mcp/asgi.py`
+- tests/test_asgi_tools.py`
+spec_files: []

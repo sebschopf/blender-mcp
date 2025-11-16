@@ -1,0 +1,27 @@
+id: 0001-embedded-server-adapter
+title: Embedded server adapter (out-of-process)
+status: draft
+owner: "@sebschopf"
+summary: |
+  Provide an optional adapter to run the historical embedded server in a separate
+  process; keep the addon import-safe and allow the UI to start/stop an external
+  helper process.
+files:
+  - src/blender_mcp/servers/embedded_adapter.py
+  - src/blender_mcp/blender_ui/
+  - tests/test_addon_server_ui.py
+  - tests/test_embedded_adapter.py
+referenced_paths:
+  - scripts/start-server.ps1
+  - src/blender_mcp/servers/embedded_adapter.py
+  - src/blender_mcp/blender_ui
+missing_files:
+  - path: scripts/start-server.ps1
+    purpose: "Helper script invoked by the adapter default command on Windows; placeholder provided for CI/tests."
+    recommended_action: "Keep placeholder until a real helper script is implemented; add real script when adapter runtime is provided."
+  - path: src/blender_mcp/servers/embedded_adapter.py
+    purpose: "Adapter module implementing start_server_process/stop_server_process/is_running API."
+    recommended_action: "Already present under `src/blender_mcp/servers/embedded_adapter.py` — verify API surface and tests."
+  - path: tests/test_embedded_adapter.py
+    purpose: "Unit tests for adapter behavior that mock subprocesses."
+    recommended_action: "Add tests that validate start/stop semantics without launching processes."

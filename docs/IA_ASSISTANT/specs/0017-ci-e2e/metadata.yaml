@@ -1,0 +1,14 @@
+id: 0017-ci-e2e
+title: '# 0017 — CI: OpenSpec & E2E'
+summary: '# 0017 - CI: OpenSpec validate & E2E harness job'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- PYTHONPATH=src
+- openspec validate --strict
+- src`.
+spec_files:
+- openspec/changes/0017-ci-e2e/specs/ci/spec.md
+status: draft

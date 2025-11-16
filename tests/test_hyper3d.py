@@ -19,10 +19,14 @@ class DummyResp:
 
 
 def test_create_rodin_job_main_site(monkeypatch):
-    def fake_post(url, headers=None, files=None):
+    def fake_post(url, headers=None, files=None, json=None):
         return DummyResp(200, {"job": "ok"})
 
-    monkeypatch.setattr(hyper3d.requests, "post", fake_post)
+    class DummySession:
+        def post(self, url, timeout=None, headers=None, files=None, json=None, **kwargs):
+            return fake_post(url, headers=headers, files=files, json=json)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     res = hyper3d.create_rodin_job_main_site(api_key="k", text_prompt="hi")
     assert res.get("job") == "ok"
 
@@ -31,7 +35,11 @@ def test_poll_status_main_site(monkeypatch):
     def fake_post(url, headers=None, json=None):
         return DummyResp(200, {"jobs": [{"status": "done"}, {"status": "queued"}]})
 
-    monkeypatch.setattr(hyper3d.requests, "post", fake_post)
+    class DummySession:
+        def post(self, url, timeout=None, headers=None, files=None, json=None, **kwargs):
+            return fake_post(url, headers=headers, json=json)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     res = hyper3d.poll_rodin_job_status_main_site(api_key="k", subscription_key="s")
     assert res["status_list"] == ["done", "queued"]
 
@@ -41,7 +49,11 @@ def test_import_generated_asset_main_site(monkeypatch, tmp_path):  # noqa: C901
     def fake_post(url, headers=None, json=None):
         return DummyResp(200, {"list": [{"name": "asset.glb", "url": "https://example.com/asset.glb"}]})
 
-    monkeypatch.setattr(hyper3d.requests, "post", fake_post)
+    class DummySession:
+        def post(self, url, timeout=None, headers=None, files=None, json=None, **kwargs):
+            return fake_post(url, headers=headers, json=json)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
 
     called = {}
 

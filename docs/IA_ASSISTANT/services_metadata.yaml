@@ -1,0 +1,191 @@
+services_metadata:
+  - name: execute_blender_code
+    module: src.blender_mcp.services.execute
+    callable: execute_blender_code
+    description: |
+      Execute a Python snippet in the Blender environment. The implementation
+      performs a lazy import of `bpy` when available and validates parameters
+      before execution. This service can be dangerous — callers must respect
+      the security policy (do not run untrusted code in CI or on shared hosts).
+    params:
+      code:
+        type: string
+        required: true
+        description: "Python source to execute. Expect assignment to `result` or side-effects."
+      dry_run:
+        type: boolean
+        required: false
+        default: false
+        description: "If true, validate and simulate execution without applying Blender-side effects."
+      timeout:
+        type: integer
+        required: false
+        default: 30
+        description: "Maximum time in seconds to allow code execution before raising ExecutionTimeoutError."
+    returns:
+      type: object
+      description: "Service-specific result. Typically returns { 'result': <value> } or raises exceptions mapped by the adapter."
+    exceptions:
+      - InvalidParamsError
+      - ExecutionTimeoutError
+      - CanonicalHandlerError
+    security_notes: |
+      This service executes arbitrary Python; ensure code comes from a trusted source
+      or run within a strict sandbox. Prefer `dry_run=true` for validation when possible.
+    tests:
+      - tests/test_execute_service.py
+      - tests/test_services_execute.py
+
+  - name: get_scene_info
+    module: src.blender_mcp.services.scene
+    callable: get_scene_info
+    description: |
+      Return metadata about the current Blender scene (objects, cameras, units,
+      collections). Implementation is lazy with respect to `bpy` and raises
+      `InvalidParamsError` only for invalid explicit params (none expected).
+    params: {}
+    returns:
+      type: object
+      description: "Structured scene metadata (objects list, active camera, units, etc.). See tests for shape."
+    exceptions:
+      - CanonicalHandlerError
+    tests:
+      - tests/test_services_scene.py
+      - tests/test_scene_service.py
+    example_response:
+      objects: []
+      active_camera: null
+      units: "metric"
+
+  - name: get_viewport_screenshot
+    module: src.blender_mcp.services.screenshot
+    callable: get_viewport_screenshot
+    description: |
+      Capture a viewport screenshot. Accepts optional sizing and format parameters.
+      The service may return bytes (binary) or a path depending on the adapter;
+      adapters should normalise to a safe serialisable representation (e.g. base64
+      string or temporary artifact path). The endpoint wrapper maps incoming
+      params to the function signature with sensible defaults.
+    params:
+      max_size:
+        type: integer
+        required: false
+        default: 800
+        description: "Maximum dimension (px) for the screenshot; the implementation may scale down to preserve aspect ratio."
+      filepath:
+        type: string
+        required: false
+        default: null
+        description: "Optional path to write the screenshot; if omitted, the service returns bytes/temporary path."
+      format:
+        type: string
+        required: false
+        default: png
+        enum: [png, jpg]
+        description: "Image format to use."
+    returns:
+      type: object
+      description: "By default returns { 'image_base64': <str> } or { 'path': <str> } depending on the adapter."
+    exceptions:
+      - CanonicalHandlerError
+    tests:
+      - tests/test_services_screenshot.py
+      - tests/test_screenshot_service.py
+    example_params:
+      max_size: 400
+      format: png
+
+  - name: get_object_info
+    module: src.blender_mcp.services.object
+    callable: get_object_info
+    description: "(draft) Lookup object by name in scene or data; returns object metadata or raises if missing."
+    params: {}
+
+  - name: get_polyhaven_categories
+    module: src.blender_mcp.services.polyhaven
+    callable: get_polyhaven_categories
+    description: "(draft) List PolyHaven categories"
+    params: {}
+
+  - name: search_polyhaven_assets
+    module: src.blender_mcp.services.polyhaven
+    callable: search_polyhaven_assets
+    description: "(draft) Search assets"
+    params: {}
+
+  - name: download_polyhaven_asset
+    module: src.blender_mcp.services.polyhaven
+    callable: download_polyhaven_asset
+    description: "(draft) Download asset"
+    params: {}
+
+  - name: get_sketchfab_status
+    module: src.blender_mcp.services.sketchfab
+    callable: get_sketchfab_status_service
+    description: "(draft) Sketchfab status"
+    params: {}
+
+  - name: search_sketchfab_models
+    module: src.blender_mcp.services.sketchfab
+    callable: search_sketchfab_models
+    description: "(draft) Search Sketchfab models"
+    params: {}
+
+  - name: download_sketchfab_model
+    module: src.blender_mcp.services.sketchfab
+    callable: download_sketchfab_model
+    description: "(draft) Download Sketchfab model"
+    params: {}
+
+  - name: set_texture
+    module: src.blender_mcp.services.textures
+    callable: set_texture
+    description: "(draft) Apply texture"
+    params: {}
+
+  - name: get_polyhaven_status
+    module: src.blender_mcp.services.polyhaven_status
+    callable: get_polyhaven_status_service
+    description: "(draft) PolyHaven integration status"
+    params: {}
+
+  - name: get_hyper3d_status
+    module: src.blender_mcp.services.hyper3d_status
+    callable: get_hyper3d_status_service
+    description: "(draft) Hyper3D status"
+    params: {}
+
+  - name: generate_hyper3d_model_via_text
+    module: src.blender_mcp.services.hyper3d
+    callable: generate_hyper3d_model_via_text
+    description: "(draft) Generate model via text"
+    params: {}
+
+  - name: generate_hyper3d_model_via_images
+    module: src.blender_mcp.services.hyper3d
+    callable: generate_hyper3d_model_via_images
+    description: "(draft) Generate model via images"
+    params: {}
+
+  - name: poll_rodin_job_status
+    module: src.blender_mcp.services.hyper3d
+    callable: poll_rodin_job_status
+    description: "(draft) Poll job status"
+    params: {}
+
+  - name: import_generated_asset
+    module: src.blender_mcp.services.hyper3d
+    callable: import_generated_asset
+    description: "(draft) Import generated asset"
+    params: {}
+
+  - name: asset_creation_strategy
+    module: src.blender_mcp.prompts
+    callable: asset_creation_strategy
+    description: "(draft) Prompt helper for asset creation"
+    params: {}
+
+notes:
+  - Keep this file updated when registering new services or changing parametrisation.
+  - The AI assistant should use `services_index.yaml` + `services_metadata.yaml` to validate generated requests before calling `/tools/{name}`.
+  - For services executing user-provided code (`execute_blender_code`), the assistant must enforce the security policy documented in `docs/developer/ai_session_guide.md` and related specs.

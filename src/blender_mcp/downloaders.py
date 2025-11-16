@@ -16,6 +16,8 @@ from typing import Any, Mapping, Optional
 import requests
 from requests.exceptions import HTTPError, RequestException
 
+import blender_mcp.http as _http
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,7 +46,7 @@ def download_bytes(
             if session is not None:
                 resp = session.get(url, timeout=timeout, headers=headers)
             else:
-                resp = requests.get(url, timeout=timeout, headers=headers)
+                resp = _http.get_session().get(url, timeout=timeout, headers=headers)
             # raise_for_status will raise HTTPError for 4xx/5xx
             resp.raise_for_status()
             return resp.content

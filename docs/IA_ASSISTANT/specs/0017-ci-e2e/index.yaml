@@ -1,0 +1,10 @@
+id: 0017-ci-e2e
+path: openspec/changes/0017-ci-e2e
+files_present: []
+referenced_paths: []
+missing_refs:
+- PYTHONPATH=src
+- openspec validate --strict
+- src`.
+spec_files:
+- openspec/changes/0017-ci-e2e/specs/ci/spec.md

@@ -1,0 +1,15 @@
+id: 0018-archive-mapping
+title: '# 0018 — Archive → implementation mapping'
+summary: '# 0018 - Archive → implementation mapping'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- docs/archive_symbol_mapping.md`
+- src/`.
+- src/blender_mcp`
+- src/blender_mcp`.
+spec_files:
+- openspec/changes/0018-archive-mapping/specs/archive/spec.md
+status: draft

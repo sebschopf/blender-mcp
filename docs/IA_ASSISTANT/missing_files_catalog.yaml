@@ -1,0 +1,21 @@
+catalog:
+  - path: scripts/start-server.ps1
+    referenced_by:
+      - 0001-embedded-server-adapter
+    purpose: |
+      PowerShell helper invoked by the adapter default command on Windows. Intended
+      to launch a lightweight out-of-process helper for development and tests.
+    recommended_action: "Keep lightweight placeholder (no-op) until a real helper is implemented."
+
+  - path: tests/test_embedded_adapter.py
+    referenced_by:
+      - 0001-embedded-server-adapter
+    purpose: "Unit tests exercising start/stop semantics of the embedded adapter while mocking subprocesses."
+    recommended_action: "Add tests that assert start returns a handle-like object and stop cleans up without launching real processes."
+
+  - path: src/blender_mcp/servers/embedded_adapter.py
+    referenced_by:
+      - 0001-embedded-server-adapter
+      - 0006-sandbox-supervisor
+    purpose: "Adapter module exposing start_server_process/stop_server_process/is_running."
+    recommended_action: "Verify API shape, add type hints + docstrings; add unit tests."

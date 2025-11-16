@@ -57,6 +57,169 @@ jobs:
         run: |
           mypy src --exclude "src/blender_mcp/archive/.*"
 
+  ia_docs_sync:
+    name: IA Docs Sync (PR-only)
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: generate_ia_metadata
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install IA validator deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml jsonschema
+
+      - name: Run IA docs sync check
+        id: ia_check
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $base = "origin/${{ github.event.pull_request.base.ref }}"
+          ./scripts/check_ia_docs_sync.ps1 -BaseRef $base -HeadRef HEAD -OutputDir artifacts
+
+      - name: Upload ia_docs_sync report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ia_docs_sync-report
+          path: artifacts/ia_docs_sync.json
+
+      - name: Post PR comment on IA docs sync failure
+        if: ${{ steps.ia_check.outcome == 'failure' && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = 'artifacts/ia_docs_sync.json';
+            let body = 'IA Docs Sync Check FAILED. Summary (concise & factual):\n\n';
+            if (!fs.existsSync(path)) {
+              body += '- No machine-readable report available. Please inspect CI logs.\n';
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.payload.pull_request.number, body });
+              return;
+            }
+            const report = JSON.parse(fs.readFileSync(path, {encoding:'utf8'}));
+            // Report fields: reason, important_changed (array), ia_docs_changed (array), suggestions
+            body += `- Reason: ${report.reason || 'unspecified'}\n`;
+            if (Array.isArray(report.important_changed) && report.important_changed.length) {
+              body += '- Files detected that require IA doc updates:\n';
+              for (const f of report.important_changed) {
+                // derive type from path
+                let type = 'code';
+                if (f.startsWith('src/blender_mcp/services/')) type = 'service';
+                else if (f.startsWith('tests/')) type = 'test';
+                else if (f.endsWith('endpoints.py') || f.endsWith('asgi.py')) type = 'endpoint';
+                body += `  - file: ${f}; type: ${type}; why: 'code changed that should be reflected in IA docs'\n`;
+              }
+            } else {
+              body += '- No specific files listed in the report.\n';
+            }
+            if (Array.isArray(report.suggestions) && report.suggestions.length) {
+              body += '- Suggestions:\n';
+              for (const s of report.suggestions.slice(0,5)) {
+                body += `  - ${s}\n`;
+              }
+            }
+            body += '\nAction: Update the relevant file(s) under `docs/IA_ASSISTANT/` and push the change. Use `scripts/run_local_ia_checks.ps1` locally to validate.';
+            await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.payload.pull_request.number, body });
+
+      - name: Fail job if IA docs sync failed
+        if: ${{ steps.ia_check.outcome == 'failure' }}
+        run: exit 1
+
+      - name: "IA Docs Sync: OK marker"
+        if: ${{ steps.ia_check.outcome == 'success' }}
+        run: |
+          echo "IA Docs Sync: OK"
+
+  ia_docs_consistency_test:
+    name: IA Docs Consistency Test
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pyyaml
+
+      - name: Run IA docs consistency test
+        env:
+          PYTHONPATH: 'src'
+        run: |
+          pytest -q tests/test_ia_docs_consistency.py
+
+  generate_ia_metadata:
+    name: Generate IA Services Metadata (PR)
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install generator deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Run generator
+        run: |
+          python ./scripts/generate_services_metadata.py -o docs/IA_ASSISTANT/services_metadata_full_draft.yaml
+      - name: Upload generated metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: services-metadata-draft
+          path: docs/IA_ASSISTANT/services_metadata_full_draft.yaml
+
+      - name: Post generated metadata to PR as comment
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = 'docs/IA_ASSISTANT/services_metadata_full_draft.yaml';
+            if (!fs.existsSync(path)) {
+              console.log('No generated metadata to post.');
+              return;
+            }
+            const yaml = require('js-yaml');
+            const content = fs.readFileSync(path, {encoding:'utf8'});
+            let parsed = {};
+            try { parsed = yaml.load(content) || {}; } catch (e) { parsed = {}; }
+            let services = parsed.services_metadata || [];
+            let body = '**Generated services metadata (draft) — concise summary**\n\n';
+            body += `- total_services: ${services.length}\n`;
+            if (services.length) {
+              body += '\n**Services (name — module — callable — params_present)**\n';
+              for (const s of services.slice(0, 200)) {
+                const name = s.name || '<unknown>';
+                const module = s.module || '<unknown>';
+                const callable = s.callable || '<unknown>';
+                const params = s.params && Object.keys(s.params).length ? 'yes' : 'no';
+                body += `- ${name} — ${module} — ${callable} — params_present: ${params}\n`;
+              }
+            }
+            body += '\nAction: review & merge the draft into `docs/IA_ASSISTANT/services_metadata.yaml` or update the draft as needed.';
+            await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.payload.pull_request.number, body });
+
   pytest:
     name: Tests (pytest)
     runs-on: ubuntu-latest

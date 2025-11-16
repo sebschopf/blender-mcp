@@ -1,0 +1,38 @@
+id: 0003-session-factory-refactor
+title: '# 0003 - Central session factory and conservative session-injection'
+summary: '# Proposal: 0003 - Session factory refactor'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- PR_NOTES_SESSION_REFACTOR.md
+- downloaders.py
+- get
+- get_session()
+- hyper3d.py
+- openspec validate --strict
+- polyhaven.py
+- post
+- python -m pytest
+- requests.*
+- requests.Session
+- requests.get
+- requests.get/post
+- reset_session()
+- session
+- session.get/post
+- 'session: Optional[requests.Session]'
+- 'session: Optional[requests.sessions.Session]'
+- sketchfab.py
+- src/blender_mcp/downloaders.py`
+- src/blender_mcp/http.py`
+- src/blender_mcp/hyper3d.py`
+- src/blender_mcp/polyhaven.py`
+- src/blender_mcp/services/addon/polyhaven.py`
+- src/blender_mcp/sketchfab.py`
+- tests/test_session_injection_*.py
+- tests/test_session_injection_*.py`
+spec_files:
+- openspec/changes/0003-session-factory-refactor/specs/session/spec.md
+status: draft

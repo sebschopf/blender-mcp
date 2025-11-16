@@ -22,7 +22,11 @@ def test_get_sketchfab_status_ok(monkeypatch):
     def fake_get(url, headers=None, timeout=None):
         return DummyResp(200, {"username": "alice"})
 
-    monkeypatch.setattr(sketchfab.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, headers=headers, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     res = sketchfab.get_sketchfab_status("token-123")
     assert res["enabled"] is True
     assert "alice" in res["message"]
@@ -32,7 +36,11 @@ def test_search_models_error_auth(monkeypatch):
     def fake_get(url, headers=None, params=None, timeout=None):
         return DummyResp(401, {})
 
-    monkeypatch.setattr(sketchfab.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, headers=headers, params=params, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     res = sketchfab.search_models(api_key="bad", query="test")
     assert "error" in res
 
@@ -66,7 +74,11 @@ def test_download_model_uses_downloaders(monkeypatch, tmp_path):
     def fake_get(url, headers=None, timeout=None):
         return DummyResp(200, {"gltf": {"url": "https://example.com/model.zip"}})
 
-    monkeypatch.setattr(sketchfab.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, headers=headers, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
 
     res = sketchfab.download_model(api_key="tok", uid="u123")
     assert "temp_dir" in res

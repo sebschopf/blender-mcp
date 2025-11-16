@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["services"],
+  "properties": {
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "module", "callable"],
+        "properties": {
+          "name": {"type": "string"},
+          "module": {"type": "string"},
+          "callable": {"type": "string"},
+          "tests": {"type": "array"},
+          "description": {"type": "string"}
+        }
+      }
+    }
+  }
+}

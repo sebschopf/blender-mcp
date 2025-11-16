@@ -1,0 +1,140 @@
+id: 0005-policy-layer
+title: '# 0005 - Policy layer: validation and action allowlists'
+summary: '# Proposal: 0005 - Policy layer'
+owner: '@sebschopf'
+files: []
+referenced_paths:
+- 1. Add `openspec/changes/0005-policy-layer/spec.md` describing schema and examples.
+- 4. Provide a sample policy file `openspec/changes/0005-policy-layer/sample_policy.yaml`
+  with deny of arbitrary `system.exec` and allow of `polyhaven.search`.
+acceptance_tests: []
+missing_refs:
+- '
+
+
+  Action shape (input to policy.check)
+
+  ------------------------------------
+
+
+  An action is a JSON-like dict produced by the LLM translator or dispatcher. Minimal
+  recommended shape:
+
+
+  '
+- '
+
+
+  Policy language & rules
+
+  -----------------------
+
+
+  - Policies are expressed as a list of rules evaluated top-down. Each rule matches
+  an action by tool/action/param patterns and returns a decision and optional obligations
+  (e.g. redact_output=true).
+
+  - Example rule (YAML):
+
+
+  '
+- '
+
+
+  Runtime API
+
+  -----------
+
+
+  The runtime '
+- '
+
+  - '
+- ' (debug mode)
+
+
+  Integration points
+
+  ------------------
+
+
+  - '
+- ' and a clear reason.
+
+  2. allow rule permits execution and may include obligations which the dispatcher
+  honors.
+
+  3. ask decision returns '
+- ' before invoking handlers.
+
+  - '
+- ' module exposes:
+
+
+  - '
+- ' must call '
+- ' should optionally short-circuit and return a structured denied response when policy
+  denies.
+
+
+  Logging & audit
+
+  ---------------
+
+
+  Each policy decision must be logged to the audit sink with: request_id, rule_id(s)
+  matched, decision, reason, and timestamp.
+
+
+  Test cases / Acceptance
+
+  -----------------------
+
+
+  Minimum unit tests:
+
+
+  1. deny rule prevents execution and produces a policy decision with '
+- BlenderMCPServer.execute_command
+- Dispatcher.dispatch_command
+- allow
+- check
+- decision
+- deny
+- "json\n{\n  \"tool\": \"string\",\n  \"action\": \"string\",\n  \"params\": {\"\
+  type\":\"object\"},\n  \"request_id\": \"string\",\n  \"user\": {\"id\":\"string\"\
+  ,\"roles\":[\"string\"]}\n}\n"
+- "json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"decision\": {\"type\"\
+  : \"string\", \"enum\": [\"allow\",\"deny\",\"ask\"]},\n    \"reason\": {\"type\"\
+  : \"string\"},\n    \"obligations\": {\"type\": \"array\", \"items\": {\"type\"\
+  :\"string\"}},\n    \"metadata\": {\"type\": \"object\"}\n  },\n  \"required\":\
+  \ [\"decision\"]\n}\n"
+- load_policy
+- openspec/changes/0005-policy-layer/sample_policy.yaml
+- openspec/changes/0005-policy-layer/sample_policy.yaml`
+- openspec/changes/0005-policy-layer/spec.md`
+- policy
+- policy.check
+- policy.check(action)
+- 'policy.check(action: Dict) -> PolicyDecision'
+- polyhaven.search
+- reason
+- spec.md
+- src/blender_mcp/dispatcher.py`
+- src/blender_mcp/policy.py
+- src/blender_mcp/policy.py`
+- src/blender_mcp/server.py`
+- src/blender_mcp/server.py`.
+- system.exec
+- tasks.md
+- tests/test_policy_basic.py
+- tests/test_policy_basic.py`
+- tests/test_server.py`
+- 'tests:'
+- "yaml\n- id: deny-shell\n  match:\n    tool: system\n    action: exec\n  decision:\
+  \ deny\n  reason: \"Arbitrary shell execution is forbidden\"\n"
+- '{tool: "polyhaven", action: "search"}'
+- '{tool: "system", action: "exec"}'
+spec_files:
+- openspec/changes/0005-policy-layer/specs/policy/spec.md
+status: draft

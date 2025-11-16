@@ -14,7 +14,8 @@ import subprocess
 import sys
 from typing import Any, Optional, cast
 
-from .http import get_session
+import blender_mcp.http as _http
+
 from .types import ToolCommand
 
 # Configuration
@@ -86,7 +87,7 @@ def get_local_tool_catalog() -> str:
     tools: list[str] = []
     try:
         url = f"{MCP_BASE}/tools"
-        resp = get_session().get(url, timeout=3)
+        resp = _http.get_session().get(url, timeout=3)
         if resp.ok:
             j = resp.json()
             for t in j.get("tools", []):
@@ -138,7 +139,7 @@ def get_mcp_runtime_summary() -> str:
     parts: list[str] = []
     for title, tool in services:
         try:
-            resp = get_session().post(f"{MCP_BASE}/tools/{tool}", json={}, timeout=3)
+            resp = _http.get_session().post(f"{MCP_BASE}/tools/{tool}", json={}, timeout=3)
             if resp.ok:
                 j = resp.json()
                 summary = j.get("summary") or str(j)

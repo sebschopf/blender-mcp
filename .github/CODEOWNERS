@@ -1,0 +1,27 @@
+# CODEOWNERS: assign reviewers for IA assistant docs and services
+# Format: <pattern> <owner>
+#
+# Ce fichier assigne automatiquement des relecteurs pour les changements
+# importants. Lorsqu'un relecteur est assigné, merci de:
+# 1) Exécuter localement `scripts/run_local_ia_checks.ps1` (PowerShell) pour
+#    générer le draft, valider les YAML, et lancer le test de consistance.
+# 2) Examiner le draft `docs/IA_ASSISTANT/services_metadata_full_draft.yaml`
+#    attaché à la PR et valider/compléter les champs `params`, `returns`,
+#    et `exceptions` avant de merger.
+# 3) Vérifier les artefacts CI (ia_docs_sync-report) pour comprendre les
+#    suggestions machine‑readable.
+#
+# Si vous êtes assigné automatiquement, pensez à répondre dans la PR avec
+# un verdict clair: `LGTM`, `needs changes` + liste courte, ou `request human`.
+
+# IA assistant docs
+/docs/IA_ASSISTANT/ @sebschopf
+
+# Services code (registry and services)
+src/blender_mcp/services/ @sebschopf
+
+# CI and workflows
+.github/workflows/ @sebschopf
+
+# NOTE: Les lignes ci‑dessus assignent @sebschopf comme relecteur par défaut.
+# Pour ajouter d'autres reviewers, ajoutez leur handle GitHub après le pattern.

@@ -1,0 +1,9 @@
+id: 0016-rbac-auth
+path: openspec/changes/0016-rbac-auth
+files_present: []
+referenced_paths: []
+missing_refs:
+- execute
+- start-server
+spec_files:
+- openspec/changes/0016-rbac-auth/specs/rbac/spec.md

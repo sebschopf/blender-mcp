@@ -1,0 +1,18 @@
+id: 2025-11-14-deprecate-connection_core
+title: 2025-11-14-deprecate-connection_core
+summary: ''
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- NetworkCore
+- Transport
+- connection_core.py
+- docs/TRANSPORT_PHASE_A.md`
+- services.connection
+- services.connection.NetworkCore
+- services.connection.network_core
+- src/blender_mcp/connection_core.py`
+spec_files: []
+status: draft

@@ -23,7 +23,11 @@ def test_download_model_fallback_returns_error_when_download_fails(monkeypatch):
     def fake_get_meta(url, headers=None, timeout=None):
         return DummyResp(200, {"gltf": {"url": "https://example.com/model.zip"}})
 
-    monkeypatch.setattr(sketchfab.requests, "get", fake_get_meta)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get_meta(url, headers=headers, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
 
     # Make downloaders.download_bytes raise to simulate helper failure
     def fake_download_bytes(url, timeout=30):

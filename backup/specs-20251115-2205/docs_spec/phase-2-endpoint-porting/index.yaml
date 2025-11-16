@@ -1,0 +1,118 @@
+id: phase-2-endpoint-porting
+path: openspec/changes/phase-2-endpoint-porting
+files_present: []
+referenced_paths: []
+missing_refs:
+- '
+
+
+  ## 6. Tests (Exemples)
+
+  Nom fichier: '
+- '
+
+
+  ## 7. Registre
+
+  '
+- '
+
+  - '
+- '
+
+  Cas:
+
+  - '
+- '
+
+  Le dispatcher s’adaptera: résolution via '
+- ' (mock suppression de module '
+- ' (pending → ported).
+
+  4. Journal + changelog interne.
+
+  5. Linter + type checks.
+
+  6. Merge une fois vert.
+
+
+  ## 9. Risques & Mitigation
+
+  | Risque | Impact | Mitigation |
+
+  |--------|--------|-----------|
+
+  | Sandbox insuffisante execute code | Exposition API interne | Spec séparée + validation
+  pré-exec |
+
+  | Tests réseau lents | Lenteur CI | Mock httpx + fixtures |
+
+  | Divergence signatures | Incohérence clients | Documenter dans spec + alias éventuels
+  |
+
+  | Erreurs mapping absentes | Réponses non standard | Ajouter tests mapping exceptions
+  |
+
+
+  ## 10. Rollback
+
+  Maintenir temporairement exports legacy (shims) avec warnings. Rollback = réactiver
+  anciens imports sans supprimer nouveaux services.
+
+
+  ## 11. Validation Acceptation
+
+  - Tous endpoints Phase 1–3 marqués '
+- ' ou attribut ctx)
+
+  - '
+- '.
+
+
+  ## 12. Suivi
+
+  Ajouter entrée dans '
+- '.
+
+
+  ## 8. Migration Workflow (PR par domaine)
+
+  1. Créer service + tests.
+
+  2. Ajouter au registre.
+
+  3. Mettre à jour '
+- '.
+
+  - Tests unitaires ajoutés et verts.
+
+  - Registre expose toutes les clés listées.
+
+  - Pas d’import runtime de '
+- '@prompt'
+- '@tool'
+- PROJECT_JOURNAL.md
+- copy_server.py
+- docs/endpoint_mapping_detailed.md`
+- endpoint_mapping_detailed.md
+- execute_blender_code
+- get_scene_info
+- 'python
+
+  # services/registry.py
+
+  _SERVICES: dict[str, callable] = {}
+
+  def register_service(name: str, fn: callable) -> None: _SERVICES[name] = fn
+
+  def get_service(name: str): return _SERVICES[name]
+
+  def list_services() -> list[str]: return sorted(_SERVICES)
+
+  '
+- "python\ndef get_scene_info(ctx) -> dict:\n    if not hasattr(ctx, 'scene'):\n \
+  \       raise BlenderNotAvailableError(\"No scene context\")\n    # construire et\
+  \ retourner dict (objets, frames, etc.)\n"
+- services/registry.py
+- tests/test_scene_service.py`
+spec_files: []

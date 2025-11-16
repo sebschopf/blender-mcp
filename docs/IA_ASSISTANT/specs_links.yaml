@@ -1,0 +1,40 @@
+specs:
+  - id: 0001-embedded-server-adapter
+    title: Embedded server adapter (out-of-process)
+    status: draft
+    owner: "@sebschopf"
+    files_present:
+      - src/blender_mcp/servers/embedded_adapter.py
+      - src/blender_mcp/blender_ui/
+      - tests/test_addon_server_ui.py
+    missing_files:
+      - scripts/start-server.ps1
+      - tests/test_embedded_adapter.py
+    notes: |
+      Adapter implementation exists under `servers/embedded_adapter.py` and UI operators
+      already lazy-import it. Provide tests and a non-destructive start-server helper
+      script for Windows. Marked `draft` until tests and helper script are added.
+
+  - id: 0002-addon-preferences
+    title: Addon preferences & UI start-server flag
+    status: draft
+    files_present:
+      - src/blender_mcp/blender_ui/
+      - tests/test_addon_prefs.py
+    missing_files:
+      - none
+    notes: |
+      Review preferences API (AddonPreferences.allow_ui_start_server). Tests reference
+      operators that already exist under `blender_ui.operators`.
+
+  - id: 0003-session-factory-refactor
+    title: Session factory refactor
+    status: draft
+    files_present:
+      - src/blender_mcp/downloaders.py
+      - src/blender_mcp/hyper3d.py
+    missing_files:
+      - tests/test_session_injection_*.py
+    notes: |
+      This change references several service modules and network code; ensure session
+      injection tests exist and are green.

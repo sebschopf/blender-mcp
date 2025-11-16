@@ -1,0 +1,32 @@
+id: 2025-11-13-send-command-normalization
+title: 2025-11-13-send-command-normalization
+summary: ''
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- NetworkCore.send_command
+- RuntimeError
+- connection_core
+- connection_core.BlenderConnection.send_command
+- r.get("result", resp)
+- raise RuntimeError
+- receive_full_response
+- resp.get("result", resp)
+- result
+- send_command
+- send_command("any", {})
+- 'send_command("echo", {"value": 42})'
+- services.connection
+- services.connection.network_core.NetworkCore.send_command
+- src/blender_mcp/services/connection/network_core.py`
+- status == "error"
+- tests/test_connection.py`
+- tests/test_connection_reassembly.py`
+- '{"status":"error","message":"boom","error_code":"handler_error"}'
+- '{"status":"success","result":42}'
+- '{status, result|message, error_code?}'
+- '{status, result}'
+spec_files: []
+status: draft

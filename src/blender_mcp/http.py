@@ -11,15 +11,49 @@ from typing import Optional
 
 import requests
 
-_global_session: Optional[requests.Session] = None
+# To keep tests that monkeypatch `requests.get`/`requests.post` working, we
+# provide a lightweight session-proxy that stores headers but delegates the
+# actual network calls to the top-level `requests` functions. This preserves
+# both the ability to configure shared headers and the ability for tests to
+# monkeypatch `requests.get` / `requests.post`.
 
 
-def get_session() -> requests.Session:
-    """Return a shared requests.Session instance, creating it on first use."""
+class _SessionProxy:
+    def __init__(self) -> None:
+        # session-like headers mapping; callers may update/merge with this
+        self.headers: dict[str, str] = {}
+
+    def get(self, url: str, **kwargs):
+        headers = dict(self.headers)
+        hdrs = kwargs.pop("headers", None)
+        if hdrs:
+            headers.update(hdrs)
+        return requests.get(url, headers=headers, **kwargs)
+
+    def post(self, url: str, **kwargs):
+        headers = dict(self.headers)
+        hdrs = kwargs.pop("headers", None)
+        if hdrs:
+            headers.update(hdrs)
+        return requests.post(url, headers=headers, **kwargs)
+
+    def close(self) -> None:
+        # No-op for the proxy
+        return None
+
+
+_global_session: Optional[_SessionProxy] = None
+
+
+def get_session() -> _SessionProxy:
+    """Return a shared session-like proxy instance (creates on first use).
+
+    The proxy stores headers and delegates network calls to `requests.get`/`post`
+    which allows tests that patch `requests` to intercept calls.
+    """
     global _global_session
     if _global_session is None:
-        s = requests.Session()
-        # sensible defaults
+        s = _SessionProxy()
         s.headers.update({"User-Agent": "blender-mcp"})
         _global_session = s
     return _global_session

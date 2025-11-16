@@ -1,0 +1,67 @@
+name: blender-mcp-ai-assistant-guide
+version: 1
+description: |
+  Machine-readable guide for AI assistants working on the `blender-mcp` repository.
+  Contains branch naming rules, local verification commands, CI mapping, and key documentation indices
+  to let an automated agent choose branches, run checks, and follow PR conventions.
+branching:
+  patterns:
+    - pattern: "feature/*"
+      purpose: "New features, medium scope (default target). Example: feature/transport-phase-a"
+    - pattern: "chore/*"
+      purpose: "Non-functional changes: lint, deps, CI, tooling. Example: chore/deprecations"
+    - pattern: "docs/*"
+      purpose: "Documentation-only changes. Example: docs/ai_assistant_guides"
+    - pattern: "fix/*"
+      purpose: "Bug fixes that should be small and safe. Example: fix/response-reassembly"
+  naming_rules:
+    max_files_changed: 3
+    commit_message_style: "Conventional Commits (fr): feat(scope): … | chore(scope): … | fix(scope): …"
+ci:
+  workflow_file: ".github/workflows/ci.yml"
+  matrix_python: ["3.11","3.12"]
+  checks:
+    - ruff
+    - mypy
+    - pytest
+local_checks:
+  shell: "pwsh"
+  steps:
+    - "$Env:PYTHONPATH='src'"
+    - "ruff check src tests"
+    - "mypy src --exclude \"src/blender_mcp/archive/.*\""
+    - "pytest -q"
+    - "Remove-Item Env:PYTHONPATH"
+versions:
+  recommended:
+    ruff: "0.12.4"
+    mypy: "1.11.0"
+    pytest: "7.4.2"
+notes_for_ai:
+  - "When creating a branch, prefer `feature/*` for new functionality and `chore/*` for infra changes. Keep PRs <= 3 files where possible."
+  - "If tests fail locally, do NOT create a PR; create a diagnostic issue instead."
+  - "Check files listed in `docs_index` to answer contextual questions before making changes."
+docs_index:
+  - docs/developer/ai_session_guide.md
+  - docs/architecture.md
+  - docs/AI_SESSION_CHANGES.md
+  - openspec/AGENTS.md
+  - AGENTS.md
+files_mapping:
+  services_registry: "src/blender_mcp/services/registry.py"
+  dispatcher_facade: "src/blender_mcp/dispatchers/dispatcher.py"
+  asgi_adapter: "src/blender_mcp/asgi.py"
+  transport_phase_a_candidate: "src/blender_mcp/services/connection/"
+pr_checklist:
+  - "≤3 files changed (code)"
+  - "All tests pass locally: ruff, mypy, pytest"
+  - "If public API changes, add an openspec under openspec/changes/<id>/"
+  - "Include PROJECT_JOURNAL.md update if behavior or architecture changes"
+comparison_strategy:
+  description: "How to verify local vs CI parity"
+  steps:
+    - "Ensure local tool versions match `versions.recommended`."
+    - "Run `local_checks.steps` and capture stdout/stderr to files."
+    - "Compare ruff/mypy versions and config (pyproject.toml) to CI logs."
+    - "If CI uses environment variables (CI exposes PYTHONPATH: 'src:.'), replicate them locally when running."
+    - "If mismatch persists, record CI run id and raise issue with logs attached."

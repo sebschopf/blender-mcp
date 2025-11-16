@@ -1,0 +1,31 @@
+id: 2025-11-13-execute-security
+title: 2025-11-13-execute-security
+summary: ''
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- BLENDER_MCP_EXECUTE_DRY_RUN=1
+- ExternalServiceError
+- ExternalServiceError("Blender (bpy) not available")
+- HandlerError
+- HandlerError("execute_blender_code", original)
+- InvalidParamsError
+- __builtins__
+- boom
+- bpy
+- exec
+- execute_blender_code
+- import
+- 'params: { code: str }'
+- raise ValueError('boom')
+- result
+- result = 'ok'
+- services/execute.py::execute_blender_code
+- '{ "status": "success", "result": "ok" }'
+- '{"status":"success","result": <any>}'
+- '{"status":"success","result": any}'
+- '{}'
+spec_files: []
+status: draft
