@@ -1,0 +1,24 @@
+id: 0001-embedded-server-adapter
+title: Embedded server adapter (out-of-process)
+summary: 'Provide an optional adapter to run the historical embedded server in a separate
+
+  process; keep the addon import-safe and allow the UI to start/stop an external
+
+  helper process.
+
+  '
+owner: '@sebschopf'
+files:
+- src/blender_mcp/servers/embedded_adapter.py
+- src/blender_mcp/blender_ui/
+- tests/test_addon_server_ui.py
+- tests/test_embedded_adapter.py
+referenced_paths:
+- scripts/start-server.ps1
+- src/blender_mcp/blender_ui
+- src/blender_mcp/servers/embedded_adapter.py
+acceptance_tests: []
+missing_refs: []
+spec_files:
+- openspec/changes/0001-embedded-server-adapter/specs/adapter/spec.md
+status: ready

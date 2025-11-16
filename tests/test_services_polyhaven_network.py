@@ -22,7 +22,11 @@ def test_fetch_categories_requests(monkeypatch):
         assert "list" in url
         return DummyResp(200, {"categories": {"c1": 5}})
 
-    monkeypatch.setattr(polyhaven.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, params=params, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     res = polyhaven.fetch_categories(asset_type="textures")
     assert res["categories"]["c1"] == 5
 
@@ -60,7 +64,11 @@ def test_search_assets_network_invalid_json(monkeypatch):
     def fake_get(url, params=None, timeout=None):
         return BadJSONResp()
 
-    monkeypatch.setattr(polyhaven.requests, "get", fake_get)
+    class DummySession2:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, params=params, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession2())
     res = polyhaven.search_assets_network(asset_type="all")
     assert isinstance(res, dict)
     assert "error" in res and "Invalid JSON" in res["error"]

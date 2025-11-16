@@ -1,0 +1,21 @@
+id: 0012-audit-logger
+title: '# 0012 — Audit logger & request-id'
+summary: '# 0012 - Audit logger & request-id POC'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- audit.py
+- generate_request_id()
+- log_event
+- log_event(event_dict)
+- request_id
+- server.execute_command
+- src/blender_mcp/audit.py
+- src/blender_mcp/audit.py`
+- tests/test_audit_logger.py
+- tests/test_audit_logger.py`
+spec_files:
+- openspec/changes/0012-audit-logger/specs/audit/spec.md
+status: draft

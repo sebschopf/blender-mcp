@@ -7,7 +7,7 @@ the add-on import-safe and avoids lifecycle issues.
 
 Quick summary
 -------------
-- Module: `blender_mcp.embedded_server_adapter`
+-- Module: `blender_mcp.servers.embedded_adapter`
 - API:
   - `start_server_process(command: Optional[Iterable[str]] = None, cwd: Optional[str] = None) -> Popen`
   - `stop_server_process(proc: Popen, timeout: float = 5.0) -> None`
@@ -19,7 +19,7 @@ Defaults and recommended usage
   repository helper `scripts/start-server.ps1` via `pwsh`.
 - On non-Windows platforms you should pass an explicit command. Example:
 
-    from blender_mcp import embedded_server_adapter as adapter
+    from blender_mcp.servers import embedded_adapter as adapter
     proc = adapter.start_server_process(command=['python', '-m', 'blender_mcp.server'])
     # keep `proc` so you can stop it later
     adapter.stop_server_process(proc)

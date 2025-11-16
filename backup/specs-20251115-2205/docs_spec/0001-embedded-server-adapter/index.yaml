@@ -1,0 +1,14 @@
+id: 0001-embedded-server-adapter
+path: openspec/changes/0001-embedded-server-adapter
+files_present:
+- src/blender_mcp/servers/embedded_adapter.py
+- src/blender_mcp/blender_ui/
+- tests/test_addon_server_ui.py
+- tests/test_embedded_adapter.py
+referenced_paths:
+- scripts/start-server.ps1
+- src/blender_mcp/servers/embedded_adapter.py
+- src/blender_mcp/blender_ui
+missing_refs: []
+spec_files:
+- openspec/changes/0001-embedded-server-adapter/specs/adapter/spec.md

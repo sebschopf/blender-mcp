@@ -1,0 +1,13 @@
+id: 0016-rbac-auth
+title: '# 0016 — RBAC & auth design'
+summary: '# 0016 - RBAC & auth design'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- execute
+- start-server
+spec_files:
+- openspec/changes/0016-rbac-auth/specs/rbac/spec.md
+status: draft

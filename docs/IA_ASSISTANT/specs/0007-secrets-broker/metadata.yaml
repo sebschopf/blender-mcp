@@ -1,0 +1,27 @@
+id: 0007-secrets-broker
+title: '# 0007 - Secrets broker and runtime secret handling'
+summary: '# Proposal: 0007 - Secrets broker'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- '
+
+
+  Response:
+
+
+  '
+- "json\n{\n  \"service\": \"sketchfab\",\n  \"operation\": \"download_metadata\"\
+  ,\n  \"params\": {\"uid\":\"abc123\"},\n  \"request_id\": \"...\"\n}\n"
+- "json\n{\n  \"status\":\"ok\",\n  \"result\": { ... }\n}\n"
+- service=sketchfab operation=download_metadata
+- spec.md
+- src/blender_mcp/secrets_broker.py
+- src/blender_mcp/secrets_broker.py`.
+- tasks.md
+- uid
+spec_files:
+- openspec/changes/0007-secrets-broker/specs/secrets/spec.md
+status: draft

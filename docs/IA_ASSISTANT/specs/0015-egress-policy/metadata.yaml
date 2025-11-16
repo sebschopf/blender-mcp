@@ -1,0 +1,14 @@
+id: 0015-egress-policy
+title: '# 0015 — Network egress policy'
+summary: '# 0015 - Network egress policy (proxy/allowlist)'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- evil.example
+- src/blender_mcp/egress.py
+- src/blender_mcp/egress.py`
+spec_files:
+- openspec/changes/0015-egress-policy/specs/egress/spec.md
+status: draft

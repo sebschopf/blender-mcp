@@ -1,0 +1,100 @@
+endpoints:
+  - path: /health
+    method: GET
+    description: "Health check for MCP server and Blender connection. Returns {'status': 'ok', 'blender': 'connected'} or error." 
+    handler:
+      module: src.blender_mcp.asgi
+      factory: make_health
+      runtime: server_module.get_blender_connection
+    tests:
+      - "(none specific)"
+    notes: "Lightweight health endpoint; no openspec mapping."
+
+  - path: /tools
+    method: GET
+    description: "List available tools exposed by the MCP server and optional registry enrichment controlled by `BLENDER_MCP_EXPOSE_REGISTRY_TOOLS`."
+    handler:
+      module: src.blender_mcp.asgi
+      factory: make_list_tools
+    response_shape:
+      status: string
+      tools: list
+    tests:
+      - tests/test_asgi_tools.py
+    notes: "When `BLENDER_MCP_EXPOSE_REGISTRY_TOOLS=1`, services from `blender_mcp.services.registry` are added with source 'services_registry'."
+
+  - path: /tools/{name}
+    method: POST
+    description: "Invoke a tool by name. Body expected: { 'params': { ... } } (params optional). Returns standardized payload: success -> {'status':'ok','result': ...} ; error -> HTTP error mapping + body {status:error,message,error_code}."
+    handler:
+      module: src.blender_mcp.asgi
+      factory: make_call_tool
+    request_body:
+      type: object
+      properties:
+        params: object
+    response_shape:
+      success:
+        status: string
+        result: any
+      error:
+        status: string
+        message: string
+        error_code: string
+    tests:
+      - tests/test_endpoints.py
+      - tests/test_asgi_tools.py
+    notes: "Maps exceptions to HTTP codes via `_map_exception_to_http` (invalid_params, not_found, policy_denied, timeout, external_error, handler_error)."
+
+builtin_tools:
+  - name: execute_blender_code
+    exposed_via: endpoints.register_builtin_endpoints
+    handler:
+      module: src.blender_mcp.endpoints
+      function: _execute -> executes `blender_mcp.services.execute.execute_blender_code`
+    service_module: src.blender_mcp.services.execute
+    tests:
+      - tests/test_execute_service.py
+      - tests/test_services_execute.py
+      - tests/test_services_execute_dispatcher.py
+    openspec_id: null
+    notes: "Executes Python snippet in Blender (lazy bpy). Validate params before running."
+
+  - name: get_scene_info
+    exposed_via: endpoints.register_builtin_endpoints
+    handler:
+      module: src.blender_mcp.endpoints
+      function: _scene -> delegates to `services.addon.get_scene_info`
+    service_module: src.blender_mcp.services.addon
+    tests:
+      - tests/test_services_scene.py
+      - tests/test_scene_service.py
+    openspec_id: null
+    notes: "No params expected; returns scene metadata."
+
+  - name: get_viewport_screenshot
+    exposed_via: endpoints.register_builtin_endpoints
+    handler:
+      module: src.blender_mcp.endpoints
+      function: _screenshot -> maps params to `get_viewport_screenshot(max_size, filepath, format)`
+    service_module: src.blender_mcp.services.addon
+    tests:
+      - tests/test_services_screenshot.py
+      - tests/test_screenshot_service.py
+    openspec_id: null
+    notes: "Params: max_size (int, default 800), filepath (optional), format (png/jpg)."
+
+  - name: ping
+    exposed_via: endpoints.register_builtin_endpoints
+    handler:
+      module: src.blender_mcp.endpoints
+      function: _ping
+    service_module: null
+    tests:
+      - tests/test_endpoints.py
+    notes: "Utility endpoint that echoes a message (for smoke tests)."
+
+# Guidance for AI assistants
+# - Use `/tools` to discover available tools before calling `/tools/{name}`.
+# - For built-in endpoints, prefer using the service mapping under `builtin_tools` to find the canonical service module to inspect for param schemas and behavior.
+# - If a public API change is proposed for an endpoint, create an `openspec/changes/<id>/` spec and reference it via `openspec_id` (set to id).

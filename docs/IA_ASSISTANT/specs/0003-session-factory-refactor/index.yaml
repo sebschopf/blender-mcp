@@ -1,0 +1,45 @@
+id: 0003-session-factory-refactor
+title: Central session factory (session injection)
+summary: "Introduire une usine de sessions HTTP centrale (`blender_mcp.http`) et permettre l'injection
+  conservatrice de `requests.Session` dans les helpers réseau pour faciliter les tests et
+  la réutilisation des connexions."
+owner: '@sebschopf'
+status: in-progress
+spec_files:
+  - openspec/changes/0003-session-factory-refactor/proposal.md
+  - openspec/changes/0003-session-factory-refactor/README.md
+  - openspec/changes/0003-session-factory-refactor/tasks.md
+id: 0003-session-factory-refactor
+path: openspec/changes/0003-session-factory-refactor
+files_present: []
+referenced_paths: []
+missing_refs:
+- PR_NOTES_SESSION_REFACTOR.md
+- downloaders.py
+- get
+- get_session()
+- hyper3d.py
+- openspec validate --strict
+- polyhaven.py
+- post
+- python -m pytest
+- requests.*
+- requests.Session
+- requests.get
+- requests.get/post
+- reset_session()
+- session
+- session.get/post
+- 'session: Optional[requests.Session]'
+- 'session: Optional[requests.sessions.Session]'
+- sketchfab.py
+- src/blender_mcp/downloaders.py`
+- src/blender_mcp/http.py`
+- src/blender_mcp/hyper3d.py`
+- src/blender_mcp/polyhaven.py`
+- src/blender_mcp/services/addon/polyhaven.py`
+- src/blender_mcp/sketchfab.py`
+- tests/test_session_injection_*.py
+- tests/test_session_injection_*.py`
+spec_files:
+- openspec/changes/0003-session-factory-refactor/specs/session/spec.md

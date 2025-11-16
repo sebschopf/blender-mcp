@@ -1,0 +1,186 @@
+id: 2025-11-13-dispatcher-instrumentation-strategy
+path: openspec/changes/2025-11-13-dispatcher-instrumentation-strategy
+files_present: []
+referenced_paths: []
+missing_refs:
+- '
+
+
+  The dispatcher will:
+
+  1. Capture monotonic start time before resolution.
+
+  2. Invoke '
+- '
+
+  Then behavior matches current implementation and no instrumentation callbacks fire.
+
+
+  ### Scenario: Strategy captures success
+
+  Given a '
+- '
+
+  When calling '
+- '
+
+  When dispatched
+
+  Then '
+- ' (Unreleased) and '
+- ' and '
+- ' are recorded; elapsed time >= 0; original error propagates normally.
+
+
+  ### Scenario: Adapter invocation instrumentation
+
+  Given a call to '
+- ' block.)
+
+
+  ## Security / Privacy Considerations
+
+  Strategy receives raw '
+- ' checks.
+
+
+  Performance: single monotonic time capture + conditional calls. Strategy implementations
+  should remain fast; any blocking I/O must be async-compatible or offloaded by the
+  implementer.
+
+
+  Thread-safety: The dispatcher may be used concurrently; strategy implementations
+  must be responsible for their own synchronization (documented caveat). The interface
+  itself imposes no shared mutable state.
+
+
+  ## API Contract Impact
+
+  No change to existing public methods; argument added is optional with default '
+- ' entries are recorded with non-negative elapsed time.
+
+
+  ### Scenario: Strategy captures error
+
+  Given a handler that raises '
+- ' if strategy present.
+
+  3. After success/error, compute elapsed duration and call respective method.
+
+  4. '
+- ' is recorded before adapter execution.
+
+
+  ### Scenario: Strategy exception resilience
+
+  Given a strategy whose '
+- ' just before invoking the adapter (after policy pass).
+
+
+  Default behavior when no strategy is provided: no overhead beyond the '
+- ' protocol + default no-op implementation.
+
+  - [ ] Extend Dispatcher constructor and internal calls.
+
+  - [ ] Implement safe callback wrapper ('
+- ' raises an exception
+
+  When a handler succeeds
+
+  Then dispatch result is still returned; strategy exception is swallowed (optionally
+  logged).
+
+
+  ## Backward Compatibility
+
+  All existing tests pass unchanged. New tests focus on instrumentation presence.
+  No environment variable or config change required. API usage without the new kw
+  remains valid.
+
+
+  ## Rollout Plan
+
+  1. Land this spec file.
+
+  2. Implement interface + no-op default (Phase 2).
+
+  3. Add tests under '
+- ' storing events
+
+  When a handler returns successfully
+
+  Then '
+- ' will call '
+- ' with a command adapter
+
+  When policy allows
+
+  Then '
+- ' with instrumentation section.
+
+  5. Future Phase 3: optional built-in implementation aggregating counts and latencies,
+  with exporter hook.
+
+
+  ## Alternatives Considered
+
+  - Inline logging inside dispatcher methods (rejected: mixes concerns, harder to
+  evolve).
+
+  - Observer pattern via global signals (rejected: implicit coupling, less explicit
+  injection point).
+
+  - Decorator wrapping dispatcher public methods externally (possible but less ergonomic
+  for layered strategies; chosen approach integrates with existing strategy pattern).
+
+
+  ## Open Questions
+
+  - Should we include a callback for policy denial? (Deferred; can be added in Phase
+  3 if needed.)
+
+  - Provide an async variant? (Current dispatcher is sync; revisit if async path added.)
+
+
+  ## Tasks
+
+  - [ ] Add '
+- '.
+
+  4. Update '
+- '. Type checkers see a new parameter—backwards-compatible for call sites using positional
+  args. Named call sites ignoring the new kw continue to work.
+
+
+  ## Error Handling
+
+  Instrumentation callbacks must not raise or alter dispatch results. Any exception
+  raised by a strategy will be caught and logged at DEBUG (or ignored) to prevent
+  side effects. (Implementation note: wrap each callback in a '
+- '; implementers must avoid logging secrets (e.g. API keys). Phase 3 may introduce
+  a redaction helper or allow specifying a param allowlist. No new external surface
+  exposed.
+
+
+  ## Acceptance Scenarios
+
+
+  ### Scenario: No strategy provided
+
+  Given a Dispatcher created without '
+- Dispatcher
+- 'Dispatcher(..., instrumentation_strategy: Optional[InstrumentationStrategy] = None)'
+- InstrumentationStrategy
+- dispatchers/dispatcher.py
+- docs/developer/ai_session_guide.md`
+- error_code
+- message
+- "python\nclass InstrumentationStrategy(Protocol):\n    def on_dispatch_start(self,\
+  \ name: str, params: dict[str, Any]) -> None: ...\n    def on_dispatch_success(self,\
+  \ name: str, result: Any, elapsed_s: float) -> None: ...\n    def on_dispatch_error(self,\
+  \ name: str, error: Exception, elapsed_s: float) -> None: ...\n    def on_adapter_invoke(self,\
+  \ adapter_name: str, cmd_type: str, params: dict[str, Any]) -> None: ...\n"
+- result
+- status
+- tests/test_dispatcher_instrumentation.py`.
+spec_files: []

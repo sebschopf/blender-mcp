@@ -1,0 +1,14 @@
+id: 0014-adapter-supervisor
+title: '# 0014 — Adapter supervisor'
+summary: '# 0014 - Adapter supervisor POC'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- adapter_supervisor
+- src/blender_mcp/adapter_supervisor.py
+- src/blender_mcp/adapter_supervisor.py`
+spec_files:
+- openspec/changes/0014-adapter-supervisor/specs/supervisor/spec.md
+status: draft

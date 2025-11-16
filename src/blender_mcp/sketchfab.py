@@ -16,6 +16,8 @@ from typing import Any, Dict, Optional
 
 import requests
 
+import blender_mcp.http as _http
+
 _warnings.warn(
     "blender_mcp.sketchfab est déprécié; utiliser blender_mcp.services.sketchfab.",
     DeprecationWarning,
@@ -53,7 +55,7 @@ def get_sketchfab_status(api_key: Optional[str], session: Optional[requests.Sess
     headers = {"Authorization": f"Token {api_key}"}
     try:
         if session is None:
-            resp = requests.get(SKETCHFAB_ME_ENDPOINT, headers=headers, timeout=10)
+            resp = _http.get_session().get(SKETCHFAB_ME_ENDPOINT, headers=headers, timeout=10)
         else:
             resp = session.get(SKETCHFAB_ME_ENDPOINT, headers=headers, timeout=10)
         if resp.status_code == 200:
@@ -89,7 +91,7 @@ def search_models(
     # requests expects params values to be strings or sequences; coerce to strings to satisfy type checkers
     params_cast = {k: str(v) for k, v in params.items() if v is not None}
     if session is None:
-        resp = requests.get(SKETCHFAB_SEARCH_ENDPOINT, headers=headers, params=params_cast, timeout=30)
+        resp = _http.get_session().get(SKETCHFAB_SEARCH_ENDPOINT, headers=headers, params=params_cast, timeout=30)
     else:
         resp = session.get(SKETCHFAB_SEARCH_ENDPOINT, headers=headers, params=params_cast, timeout=30)
     if resp.status_code == 401:
@@ -114,7 +116,7 @@ def download_model(api_key: str, uid: str, session: Optional[requests.Session] =
     download_endpoint = f"https://api.sketchfab.com/v3/models/{uid}/download"
 
     if session is None:
-        resp = requests.get(download_endpoint, headers=headers, timeout=30)
+        resp = _http.get_session().get(download_endpoint, headers=headers, timeout=30)
     else:
         resp = session.get(download_endpoint, headers=headers, timeout=30)
     if resp.status_code == 401:

@@ -1,0 +1,968 @@
+generated_from: docs\IA_ASSISTANT\specs_index.yaml
+missing_count: 498
+specs:
+- id: 0001-embedded-server-adapter
+  missing_paths:
+  - blender_mcp.embedded_server_adapter
+  - blender_mcp.servers.embedded_adapter
+  - is_running
+  - is_running(proc)
+  - openspec validate
+  - servers
+  - src/blender_mcp/blender_ui.py
+  - src/blender_mcp/blender_ui.py`
+  - src/blender_mcp/blender_ui`
+  - src/blender_mcp/servers/embedded_adapter.py`
+  - start_server_process
+  - start_server_process(command, cwd)
+  - stop_server_process
+  - stop_server_process(proc)
+  - tests/test_addon_server_ui.py`
+  - tests/test_embedded_adapter.py`
+- id: 0002-addon-preferences
+  missing_paths:
+  - '
+
+
+    Notes
+
+    -----
+
+    - L''implémentation défensive permet d''importer le module hors de Blender (tests)
+    même si '
+  - '
+
+    # depuis la racine du repo
+
+    openspec validate --strict
+
+    '
+  - AddonPreferences
+  - AddonPreferences.allow_ui_start_server
+  - BLENDERMCP_AddonPreferences
+  - BLENDERMCP_OT_StartServer
+  - CANCELLED
+  - 'False'
+  - allow_ui_start_server
+  - 'allow_ui_start_server: BoolProperty'
+  - openspec/changes/0002-addon-preferences`
+  - src/blender_mcp/blender_ui.py
+  - src/blender_mcp/blender_ui.py`
+  - tests/test_addon_preferences.py
+  - tests/test_addon_preferences.py`
+  - tests/test_addon_prefs.py`
+  - tests/test_addon_server_ui.py`
+- id: 0003-session-factory-refactor
+  missing_paths:
+  - PR_NOTES_SESSION_REFACTOR.md
+  - downloaders.py
+  - get
+  - get_session()
+  - hyper3d.py
+  - openspec validate --strict
+  - polyhaven.py
+  - post
+  - python -m pytest
+  - requests.*
+  - requests.Session
+  - requests.get
+  - requests.get/post
+  - reset_session()
+  - session
+  - session.get/post
+  - 'session: Optional[requests.Session]'
+  - 'session: Optional[requests.sessions.Session]'
+  - sketchfab.py
+  - src/blender_mcp/downloaders.py`
+  - src/blender_mcp/http.py`
+  - src/blender_mcp/hyper3d.py`
+  - src/blender_mcp/polyhaven.py`
+  - src/blender_mcp/services/addon/polyhaven.py`
+  - src/blender_mcp/sketchfab.py`
+  - tests/test_session_injection_*.py
+  - tests/test_session_injection_*.py`
+- id: 0004-archive-symbols
+  missing_paths:
+  - '0004'
+  - BlenderMCPServer
+  - Dispatcher
+  - _lazy_attr
+  - '_lazy_attr(module: str, name: str)'
+  - _process_bbox
+  - addon.BlenderMCPServer -> src/blender_mcp/server.BlenderMCPServer
+  - addon.register
+  - addon.register()
+  - addon.unregister()
+  - bl_info
+  - blender_mcp.blender_ui.register
+  - blender_mcp.blender_ui.unregister
+  - blender_mcp.server.BlenderMCPServer
+  - bpy
+  - execute_command
+  - openspec validate
+  - openspec validate --strict
+  - openspec/changes/0004-archive-symbols/symbols/*
+  - openspec/changes/0004-archive-symbols/symbols/*`
+  - openspec/changes/<next-id>/
+  - openspec/changes/<next-id>/`
+  - python addon.py
+  - register
+  - register()
+  - specs/archive/spec.md
+  - src/`
+  - src/blender_mcp/`
+  - src/blender_mcp/`.
+  - src/blender_mcp/server.BlenderMCPServer`
+  - src/blender_mcp/server.py`
+  - symbols/
+  - tests/`
+  - tests/test_addon_lazy_imports.py
+  - tests/test_addon_lazy_imports.py`
+  - tests/test_bbox.py`
+  - tests/test_server.py`
+  - unregister
+  - unregister()
+  - validators
+- id: 0005-policy-layer
+  missing_paths:
+  - '
+
+
+    Action shape (input to policy.check)
+
+    ------------------------------------
+
+
+    An action is a JSON-like dict produced by the LLM translator or dispatcher. Minimal
+    recommended shape:
+
+
+    '
+  - '
+
+
+    Policy language & rules
+
+    -----------------------
+
+
+    - Policies are expressed as a list of rules evaluated top-down. Each rule matches
+    an action by tool/action/param patterns and returns a decision and optional obligations
+    (e.g. redact_output=true).
+
+    - Example rule (YAML):
+
+
+    '
+  - '
+
+
+    Runtime API
+
+    -----------
+
+
+    The runtime '
+  - '
+
+    - '
+  - ' (debug mode)
+
+
+    Integration points
+
+    ------------------
+
+
+    - '
+  - ' and a clear reason.
+
+    2. allow rule permits execution and may include obligations which the dispatcher
+    honors.
+
+    3. ask decision returns '
+  - ' before invoking handlers.
+
+    - '
+  - ' module exposes:
+
+
+    - '
+  - ' must call '
+  - ' should optionally short-circuit and return a structured denied response when
+    policy denies.
+
+
+    Logging & audit
+
+    ---------------
+
+
+    Each policy decision must be logged to the audit sink with: request_id, rule_id(s)
+    matched, decision, reason, and timestamp.
+
+
+    Test cases / Acceptance
+
+    -----------------------
+
+
+    Minimum unit tests:
+
+
+    1. deny rule prevents execution and produces a policy decision with '
+  - BlenderMCPServer.execute_command
+  - Dispatcher.dispatch_command
+  - allow
+  - check
+  - decision
+  - deny
+  - "json\n{\n  \"tool\": \"string\",\n  \"action\": \"string\",\n  \"params\": {\"\
+    type\":\"object\"},\n  \"request_id\": \"string\",\n  \"user\": {\"id\":\"string\"\
+    ,\"roles\":[\"string\"]}\n}\n"
+  - "json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"decision\": {\"\
+    type\": \"string\", \"enum\": [\"allow\",\"deny\",\"ask\"]},\n    \"reason\":\
+    \ {\"type\": \"string\"},\n    \"obligations\": {\"type\": \"array\", \"items\"\
+    : {\"type\":\"string\"}},\n    \"metadata\": {\"type\": \"object\"}\n  },\n  \"\
+    required\": [\"decision\"]\n}\n"
+  - load_policy
+  - openspec/changes/0005-policy-layer/sample_policy.yaml
+  - openspec/changes/0005-policy-layer/sample_policy.yaml`
+  - openspec/changes/0005-policy-layer/spec.md`
+  - policy
+  - policy.check
+  - policy.check(action)
+  - 'policy.check(action: Dict) -> PolicyDecision'
+  - polyhaven.search
+  - reason
+  - spec.md
+  - src/blender_mcp/dispatcher.py`
+  - src/blender_mcp/policy.py
+  - src/blender_mcp/policy.py`
+  - src/blender_mcp/server.py`
+  - src/blender_mcp/server.py`.
+  - system.exec
+  - tasks.md
+  - tests/test_policy_basic.py
+  - tests/test_policy_basic.py`
+  - tests/test_server.py`
+  - 'tests:'
+  - "yaml\n- id: deny-shell\n  match:\n    tool: system\n    action: exec\n  decision:\
+    \ deny\n  reason: \"Arbitrary shell execution is forbidden\"\n"
+  - '{tool: "polyhaven", action: "search"}'
+  - '{tool: "system", action: "exec"}'
+- id: 0006-sandbox-supervisor
+  missing_paths:
+  - '
+
+
+    Health & metrics
+
+    ----------------
+
+
+    Supervisor must expose aggregated status (number of running processes, failed
+    restarts) for '
+  - ' and '
+  - ' and logged as timed-out.
+
+    3. Memory-bound processes are killed if they exceed '
+  - ' and then '
+  - ' with expected exit code.
+
+    2. Long-running processes are killed after '
+  - '.
+
+
+    Acceptance tests
+
+    ----------------
+
+
+    1. Running a short-lived process returns '
+  - blender_mcp.servers.embedded_adapter
+  - exit_code
+  - exited
+  - failed
+  - 'get_process_status(handle: ProcessHandle) -> ProcessStatus'
+  - mem_limit_mb
+  - net_policy
+  - pid
+  - preexec_fn
+  - resource.setrlimit
+  - running
+  - spec.md
+  - src/blender_mcp/adapter_supervisor.py
+  - src/blender_mcp/adapter_supervisor.py`
+  - src/blender_mcp/servers/embedded_server_adapter.py
+  - src/blender_mcp/servers/embedded_server_adapter.py`
+  - 'start_server_process(cmd: List[str], *, timeout_sec: int, mem_limit_mb: int,
+    net_policy: str, workdir: str) -> ProcessHandle'
+  - start_time
+  - state
+  - 'stop_server_process(handle: ProcessHandle) -> None'
+  - subprocess
+  - tasks.md
+  - tests/test_adapter_sandbox.py
+  - tests/test_adapter_sandbox.py`
+  - 'tests:'
+  - timeout_sec
+  - timeout_sec=1
+  - workdir
+  - "yaml\nsandbox:\n  mode: container|unprivileged\n  default_timeout_sec: 30\n \
+    \ default_mem_mb: 256\n  network_default: deny\n  allowed_hosts: [\"polyhaven.org\"\
+    ,\"api.sketchfab.com\"]\n  workdir_base: /tmp/mcp-runs\nsupervisor:\n  restart_policy:\
+    \ never|on-failure|always\n  backoff_seconds: 5\n"
+- id: 0007-secrets-broker
+  missing_paths:
+  - '
+
+
+    Response:
+
+
+    '
+  - "json\n{\n  \"service\": \"sketchfab\",\n  \"operation\": \"download_metadata\"\
+    ,\n  \"params\": {\"uid\":\"abc123\"},\n  \"request_id\": \"...\"\n}\n"
+  - "json\n{\n  \"status\":\"ok\",\n  \"result\": { ... }\n}\n"
+  - service=sketchfab operation=download_metadata
+  - spec.md
+  - src/blender_mcp/secrets_broker.py
+  - src/blender_mcp/secrets_broker.py`.
+  - tasks.md
+  - uid
+- id: 0008-observability-metrics
+  missing_paths:
+  - '
+
+
+    Endpoints
+
+    ---------
+
+
+    - '
+  - ' returns 200 when service is up and supervisor/process counts are within thresholds.
+
+    - '
+  - ' returns Prometheus-format counters: '
+  - ', '
+  - /health
+  - /metrics
+  - GET /health
+  - GET /metrics
+  - action
+  - decision
+  - decision":"deny"
+  - "json\n{\n \"timestamp\":\"ISO8601\",\n \"request_id\":\"string\",\n \"user\"\
+    :\"string|null\",\n \"action\":\"string\",\n \"decision\":\"allow|deny|ask|null\"\
+    ,\n \"details\":{ }\n}\n"
+  - reason
+  - request_id
+  - server.execute_command
+  - server.py
+  - spec.md
+  - src/blender_mcp/audit.py
+  - src/blender_mcp/audit.py`
+  - src/blender_mcp/server.py`
+  - tasks.md
+  - tests/test_metrics.py
+  - tests/test_metrics.py`.
+  - timestamp
+- id: 0009-e2e-harness
+  missing_paths:
+  - BlenderMCPServer
+  - HarnessResult
+  - PYTHONPATH=src
+  - allow
+  - 'decision: allow'
+  - 'decision: deny'
+  - deny
+  - 'harness.run_case(case_id: str) -> HarnessResult'
+  - polyhaven.search
+  - spec.md
+  - src`.
+  - system.exec
+  - tasks.md
+  - test_e2e_allow.py
+  - test_e2e_deny.py
+  - tests/e2e/
+  - tests/e2e/`
+  - tests/e2e/`.
+  - tests/e2e/harness.py
+  - tests/e2e/harness.py`
+- id: 0010-policy-design
+  missing_paths:
+  - design.md
+  - openspec validate --strict
+  - spec.md
+  - tasks.md
+- id: 0011-policy-skeleton
+  missing_paths:
+  - PYTHONPATH=src
+  - check
+  - check(action, context)
+  - load_policy
+  - load_policy()
+  - load_policy(yaml_blob)
+  - policy.check
+  - policy.py
+  - src/blender_mcp/policy.py
+  - src/blender_mcp/policy.py`
+  - src`
+  - tests/fixtures
+  - tests/fixtures`
+  - tests/test_policy_basic.py
+  - tests/test_policy_basic.py`
+  - '{''allowed'': False, ''reason'': ...}'
+  - '{''allowed'': True}'
+- id: 0012-audit-logger
+  missing_paths:
+  - audit.py
+  - generate_request_id()
+  - log_event
+  - log_event(event_dict)
+  - request_id
+  - server.execute_command
+  - src/blender_mcp/audit.py
+  - src/blender_mcp/audit.py`
+  - tests/test_audit_logger.py
+  - tests/test_audit_logger.py`
+- id: 0013-secrets-broker
+  missing_paths:
+  - secrets_broker
+  - src/blender_mcp/secrets_broker.py
+  - src/blender_mcp/secrets_broker.py`
+- id: 0014-adapter-supervisor
+  missing_paths:
+  - adapter_supervisor
+  - src/blender_mcp/adapter_supervisor.py
+  - src/blender_mcp/adapter_supervisor.py`
+- id: 0015-egress-policy
+  missing_paths:
+  - evil.example
+  - src/blender_mcp/egress.py
+  - src/blender_mcp/egress.py`
+- id: 0016-rbac-auth
+  missing_paths:
+  - execute
+  - start-server
+- id: 0017-ci-e2e
+  missing_paths:
+  - PYTHONPATH=src
+  - openspec validate --strict
+  - src`.
+- id: 0018-archive-mapping
+  missing_paths:
+  - docs/archive_symbol_mapping.md`
+  - src/`.
+  - src/blender_mcp`
+  - src/blender_mcp`.
+- id: 2025-11-12-asgi-lifespan
+  missing_paths:
+  - '
+
+
+    2. The PR includes a clear description and references this openspec change directory.
+
+    3. FastAPI DeprecationWarning for '
+  - "\n  - Then tests succeed and no DeprecationWarning about "
+  - ' (if available) in repo root to validate spec format.
+
+    - Ensure the PR body references this change id '
+  - ' as an artifact
+
+
+    Validation
+
+    ----------
+
+    - Run '
+  - " is emitted\n\n- Scenario: Running integration job in CI\n  - Given the workflow\
+    \ is manually dispatched\n  - When the integration job runs\n  - Then the job\
+    \ completes and uploads "
+  - ' job can be manually dispatched and produces an artifact '
+  - ' no longer appears when running ASGI tests.
+
+    4. CI '
+  - ".\n\nScenarios (short)\n-----------------\n- Scenario: Running ASGI tests locally\n\
+    \  - Given a dev environment with the listed dev deps\n  - When running "
+  - '@app.on_event("startup")'
+  - PYTHONPATH
+  - integration
+  - lifespan
+  - logging_utils
+  - 'powershell
+
+    $env:PYTHONPATH = ''src''
+
+    python -m pip install --upgrade pip
+
+    python -m pip install fastapi starlette httpx pytest-asyncio uvicorn
+
+    python -m pytest tests/test_asgi_tools.py -q
+
+    Remove-Item Env:\PYTHONPATH
+
+    '
+  - src'
+  - src/blender_mcp/asgi.py`
+  - tests/test_asgi_tools.py`
+- id: 2025-11-13-deprecations-legacy-shims
+  missing_paths:
+  - DeprecationWarning
+  - ai_session_guide.md
+  - blender_mcp.dispatchers
+  - blender_mcp.dispatchers.command_dispatcher
+  - blender_mcp.servers
+  - blender_mcp.servers.server
+  - blender_mcp.servers.shim
+  - blender_mcp/server.py
+  - connection.py
+  - from blender_mcp.server import BlenderMCPServer
+  - from blender_mcp.simple_dispatcher import Dispatcher
+  - services/connection
+  - services/connection/network_core.py
+  - src/blender_mcp/command_dispatcher.py
+  - src/blender_mcp/command_dispatcher.py`
+  - src/blender_mcp/connection_core.py`
+  - src/blender_mcp/server.py`
+  - src/blender_mcp/server_shim.py`
+  - src/blender_mcp/simple_dispatcher.py`
+  - warnings.warn(msg, DeprecationWarning, stacklevel=2)
+- id: 2025-11-13-dispatcher-instrumentation-strategy
+  missing_paths:
+  - '
+
+
+    The dispatcher will:
+
+    1. Capture monotonic start time before resolution.
+
+    2. Invoke '
+  - '
+
+    Then behavior matches current implementation and no instrumentation callbacks
+    fire.
+
+
+    ### Scenario: Strategy captures success
+
+    Given a '
+  - '
+
+    When calling '
+  - '
+
+    When dispatched
+
+    Then '
+  - ' (Unreleased) and '
+  - ' and '
+  - ' are recorded; elapsed time >= 0; original error propagates normally.
+
+
+    ### Scenario: Adapter invocation instrumentation
+
+    Given a call to '
+  - ' block.)
+
+
+    ## Security / Privacy Considerations
+
+    Strategy receives raw '
+  - ' checks.
+
+
+    Performance: single monotonic time capture + conditional calls. Strategy implementations
+    should remain fast; any blocking I/O must be async-compatible or offloaded by
+    the implementer.
+
+
+    Thread-safety: The dispatcher may be used concurrently; strategy implementations
+    must be responsible for their own synchronization (documented caveat). The interface
+    itself imposes no shared mutable state.
+
+
+    ## API Contract Impact
+
+    No change to existing public methods; argument added is optional with default '
+  - ' entries are recorded with non-negative elapsed time.
+
+
+    ### Scenario: Strategy captures error
+
+    Given a handler that raises '
+  - ' if strategy present.
+
+    3. After success/error, compute elapsed duration and call respective method.
+
+    4. '
+  - ' is recorded before adapter execution.
+
+
+    ### Scenario: Strategy exception resilience
+
+    Given a strategy whose '
+  - ' just before invoking the adapter (after policy pass).
+
+
+    Default behavior when no strategy is provided: no overhead beyond the '
+  - ' protocol + default no-op implementation.
+
+    - [ ] Extend Dispatcher constructor and internal calls.
+
+    - [ ] Implement safe callback wrapper ('
+  - ' raises an exception
+
+    When a handler succeeds
+
+    Then dispatch result is still returned; strategy exception is swallowed (optionally
+    logged).
+
+
+    ## Backward Compatibility
+
+    All existing tests pass unchanged. New tests focus on instrumentation presence.
+    No environment variable or config change required. API usage without the new kw
+    remains valid.
+
+
+    ## Rollout Plan
+
+    1. Land this spec file.
+
+    2. Implement interface + no-op default (Phase 2).
+
+    3. Add tests under '
+  - ' storing events
+
+    When a handler returns successfully
+
+    Then '
+  - ' will call '
+  - ' with a command adapter
+
+    When policy allows
+
+    Then '
+  - ' with instrumentation section.
+
+    5. Future Phase 3: optional built-in implementation aggregating counts and latencies,
+    with exporter hook.
+
+
+    ## Alternatives Considered
+
+    - Inline logging inside dispatcher methods (rejected: mixes concerns, harder to
+    evolve).
+
+    - Observer pattern via global signals (rejected: implicit coupling, less explicit
+    injection point).
+
+    - Decorator wrapping dispatcher public methods externally (possible but less ergonomic
+    for layered strategies; chosen approach integrates with existing strategy pattern).
+
+
+    ## Open Questions
+
+    - Should we include a callback for policy denial? (Deferred; can be added in Phase
+    3 if needed.)
+
+    - Provide an async variant? (Current dispatcher is sync; revisit if async path
+    added.)
+
+
+    ## Tasks
+
+    - [ ] Add '
+  - '.
+
+    4. Update '
+  - '. Type checkers see a new parameter—backwards-compatible for call sites using
+    positional args. Named call sites ignoring the new kw continue to work.
+
+
+    ## Error Handling
+
+    Instrumentation callbacks must not raise or alter dispatch results. Any exception
+    raised by a strategy will be caught and logged at DEBUG (or ignored) to prevent
+    side effects. (Implementation note: wrap each callback in a '
+  - '; implementers must avoid logging secrets (e.g. API keys). Phase 3 may introduce
+    a redaction helper or allow specifying a param allowlist. No new external surface
+    exposed.
+
+
+    ## Acceptance Scenarios
+
+
+    ### Scenario: No strategy provided
+
+    Given a Dispatcher created without '
+  - Dispatcher
+  - 'Dispatcher(..., instrumentation_strategy: Optional[InstrumentationStrategy] =
+    None)'
+  - InstrumentationStrategy
+  - dispatchers/dispatcher.py
+  - docs/developer/ai_session_guide.md`
+  - error_code
+  - message
+  - "python\nclass InstrumentationStrategy(Protocol):\n    def on_dispatch_start(self,\
+    \ name: str, params: dict[str, Any]) -> None: ...\n    def on_dispatch_success(self,\
+    \ name: str, result: Any, elapsed_s: float) -> None: ...\n    def on_dispatch_error(self,\
+    \ name: str, error: Exception, elapsed_s: float) -> None: ...\n    def on_adapter_invoke(self,\
+    \ adapter_name: str, cmd_type: str, params: dict[str, Any]) -> None: ...\n"
+  - result
+  - status
+  - tests/test_dispatcher_instrumentation.py`.
+- id: 2025-11-13-execute-security
+  missing_paths:
+  - BLENDER_MCP_EXECUTE_DRY_RUN=1
+  - ExternalServiceError
+  - ExternalServiceError("Blender (bpy) not available")
+  - HandlerError
+  - HandlerError("execute_blender_code", original)
+  - InvalidParamsError
+  - __builtins__
+  - boom
+  - bpy
+  - exec
+  - execute_blender_code
+  - import
+  - 'params: { code: str }'
+  - raise ValueError('boom')
+  - result
+  - result = 'ok'
+  - services/execute.py::execute_blender_code
+  - '{ "status": "success", "result": "ok" }'
+  - '{"status":"success","result": <any>}'
+  - '{"status":"success","result": any}'
+  - '{}'
+- id: 2025-11-13-legacy-removal-timeline
+  missing_paths:
+  - DeprecationWarning
+  - ModuleNotFoundError
+  - blender_mcp.dispatchers.*
+  - blender_mcp.polyhaven
+  - blender_mcp.servers.*
+  - blender_mcp.services.*
+  - blender_mcp.services.polyhaven
+  - blender_mcp.simple_dispatcher
+  - blender_mcp/server.py
+  - command_dispatcher.py
+  - connection.py
+  - connection_core
+  - connection_core.py
+  - dispatchers/dispatcher.py
+  - docs/developer/ai_session_guide.md`
+  - from blender_mcp.connection import BlenderConnection
+  - from blender_mcp.dispatchers.dispatcher import Dispatcher
+  - from blender_mcp.servers.server import start_server
+  - from blender_mcp.simple_dispatcher import Dispatcher
+  - hyper3d.py
+  - polyhaven.py
+  - server.py
+  - server_shim.py
+  - servers/shim.py
+  - services/connection/network_core.py
+  - services/hyper3d.py
+  - services/polyhaven.py
+  - services/sketchfab.py
+  - simple_dispatcher.py
+  - sketchfab.py
+  - src/blender_mcp/servers/server.py`
+- id: 2025-11-13-send-command-normalization
+  missing_paths:
+  - NetworkCore.send_command
+  - RuntimeError
+  - connection_core
+  - connection_core.BlenderConnection.send_command
+  - r.get("result", resp)
+  - raise RuntimeError
+  - receive_full_response
+  - resp.get("result", resp)
+  - result
+  - send_command
+  - send_command("any", {})
+  - 'send_command("echo", {"value": 42})'
+  - services.connection
+  - services.connection.network_core.NetworkCore.send_command
+  - src/blender_mcp/services/connection/network_core.py`
+  - status == "error"
+  - tests/test_connection.py`
+  - tests/test_connection_reassembly.py`
+  - '{"status":"error","message":"boom","error_code":"handler_error"}'
+  - '{"status":"success","result":42}'
+  - '{status, result|message, error_code?}'
+  - '{status, result}'
+- id: 2025-11-14-deprecate-connection_core
+  missing_paths:
+  - NetworkCore
+  - Transport
+  - connection_core.py
+  - docs/TRANSPORT_PHASE_A.md`
+  - services.connection
+  - services.connection.NetworkCore
+  - services.connection.network_core
+  - src/blender_mcp/connection_core.py`
+- id: 2025-11-14-legacy-retirement-schedule
+  missing_paths:
+  - DeprecationWarning
+  - INVENTORY_CONSOLIDATION.md
+  - ModuleNotFoundError
+  - PROJECT_JOURNAL.md
+  - blender_codegen.py
+  - blender_mcp.connection_core
+  - blender_mcp.services.connection.network_core
+  - codegen/blender_codegen.py
+  - command_dispatcher.py
+  - connection_core.py
+  - deprecation
+  - dispatchers.*
+  - docs/migration.md
+  - hyper3d.py
+  - legacy-removal
+  - openspec/changes/`.
+  - polyhaven.py
+  - search_polyhaven_assets
+  - send_command
+  - server_shim.py
+  - servers.*
+  - servers/server.py
+  - servers/shim.py
+  - services.*
+  - services.connection.*
+  - services.polyhaven
+  - simple_dispatcher.py
+  - sketchfab.py
+  - src/`
+  - src/blender_mcp/`.
+- id: consolidate-server
+  missing_paths:
+  - PYTHONPATH=src
+  - backup/baseline-...
+  - blender_mcp.server
+  - blender_mcp/server.py
+  - mypy
+  - pytest
+  - ruff
+  - src/blender_mcp/server.py`
+  - src/blender_mcp/servers/*
+  - src/blender_mcp/servers/*`
+  - src/blender_mcp`
+  - src`
+  - src`.
+- id: phase-2-endpoint-porting
+  missing_paths:
+  - '
+
+
+    ## 6. Tests (Exemples)
+
+    Nom fichier: '
+  - '
+
+
+    ## 7. Registre
+
+    '
+  - '
+
+    - '
+  - '
+
+    Cas:
+
+    - '
+  - '
+
+    Le dispatcher s’adaptera: résolution via '
+  - ' (mock suppression de module '
+  - ' (pending → ported).
+
+    4. Journal + changelog interne.
+
+    5. Linter + type checks.
+
+    6. Merge une fois vert.
+
+
+    ## 9. Risques & Mitigation
+
+    | Risque | Impact | Mitigation |
+
+    |--------|--------|-----------|
+
+    | Sandbox insuffisante execute code | Exposition API interne | Spec séparée +
+    validation pré-exec |
+
+    | Tests réseau lents | Lenteur CI | Mock httpx + fixtures |
+
+    | Divergence signatures | Incohérence clients | Documenter dans spec + alias éventuels
+    |
+
+    | Erreurs mapping absentes | Réponses non standard | Ajouter tests mapping exceptions
+    |
+
+
+    ## 10. Rollback
+
+    Maintenir temporairement exports legacy (shims) avec warnings. Rollback = réactiver
+    anciens imports sans supprimer nouveaux services.
+
+
+    ## 11. Validation Acceptation
+
+    - Tous endpoints Phase 1–3 marqués '
+  - ' ou attribut ctx)
+
+    - '
+  - '.
+
+
+    ## 12. Suivi
+
+    Ajouter entrée dans '
+  - '.
+
+
+    ## 8. Migration Workflow (PR par domaine)
+
+    1. Créer service + tests.
+
+    2. Ajouter au registre.
+
+    3. Mettre à jour '
+  - '.
+
+    - Tests unitaires ajoutés et verts.
+
+    - Registre expose toutes les clés listées.
+
+    - Pas d’import runtime de '
+  - '@prompt'
+  - '@tool'
+  - PROJECT_JOURNAL.md
+  - copy_server.py
+  - docs/endpoint_mapping_detailed.md`
+  - endpoint_mapping_detailed.md
+  - execute_blender_code
+  - get_scene_info
+  - 'python
+
+    # services/registry.py
+
+    _SERVICES: dict[str, callable] = {}
+
+    def register_service(name: str, fn: callable) -> None: _SERVICES[name] = fn
+
+    def get_service(name: str): return _SERVICES[name]
+
+    def list_services() -> list[str]: return sorted(_SERVICES)
+
+    '
+  - "python\ndef get_scene_info(ctx) -> dict:\n    if not hasattr(ctx, 'scene'):\n\
+    \        raise BlenderNotAvailableError(\"No scene context\")\n    # construire\
+    \ et retourner dict (objets, frames, etc.)\n"
+  - services/registry.py
+  - tests/test_scene_service.py`

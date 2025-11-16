@@ -1,0 +1,15 @@
+id: 0010-policy-design
+title: '# 0010 — Policy design (extension to 0005)'
+summary: '# 0010 - Policy design (design.md)'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- design.md
+- openspec validate --strict
+- spec.md
+- tasks.md
+spec_files:
+- openspec/changes/0010-policy-design/specs/policy/spec.md
+status: draft

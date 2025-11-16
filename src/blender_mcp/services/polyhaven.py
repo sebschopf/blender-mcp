@@ -281,6 +281,7 @@ __all__ = [
 # --- helper functions (network helpers and formatters) ---
 import requests
 
+import blender_mcp.http as _http
 from blender_mcp import downloaders
 
 
@@ -344,7 +345,8 @@ def fetch_categories(
     if session is not None:
         resp = session.get(url, params=params, timeout=15)
     else:
-        resp = requests.get(url, params=params, timeout=15)
+        # Use shared session factory so tests can patch `blender_mcp.http.get_session`
+        resp = _http.get_session().get(url, params=params, timeout=15)
     resp.raise_for_status()
     data = resp.json()
     categories = data.get("categories") or {}
@@ -371,7 +373,8 @@ def search_assets_network(
     if session is not None:
         resp = session.get(url, params=params, timeout=20)
     else:
-        resp = requests.get(url, params=params, timeout=20)
+        # Use shared session factory so tests can patch `blender_mcp.http.get_session`
+        resp = _http.get_session().get(url, params=params, timeout=20)
     resp.raise_for_status()
     try:
         return resp.json()

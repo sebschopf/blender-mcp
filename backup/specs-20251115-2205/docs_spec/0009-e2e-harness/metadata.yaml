@@ -1,0 +1,31 @@
+id: 0009-e2e-harness
+title: '# 0009 - E2E harness (mock LLM) and acceptance tests'
+summary: '# Proposal: 0009 - E2E harness (mock LLM)'
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- BlenderMCPServer
+- HarnessResult
+- PYTHONPATH=src
+- allow
+- 'decision: allow'
+- 'decision: deny'
+- deny
+- 'harness.run_case(case_id: str) -> HarnessResult'
+- polyhaven.search
+- spec.md
+- src`.
+- system.exec
+- tasks.md
+- test_e2e_allow.py
+- test_e2e_deny.py
+- tests/e2e/
+- tests/e2e/`
+- tests/e2e/`.
+- tests/e2e/harness.py
+- tests/e2e/harness.py`
+spec_files:
+- openspec/changes/0009-e2e-harness/specs/e2e/spec.md
+status: draft

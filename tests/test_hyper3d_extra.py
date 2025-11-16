@@ -23,7 +23,20 @@ def test_import_generated_asset_main_site_streaming_fallback(monkeypatch, tmp_pa
     def fake_post(url, headers=None, json=None):
         return DummyResp(200, {"list": [{"name": "asset.glb", "url": "https://example.com/asset.glb"}]})
 
-    monkeypatch.setattr(hyper3d.requests, "post", fake_post)
+    class DummySession:
+        def post(self, url, timeout=None, headers=None, files=None, json=None, **kwargs):
+            return fake_post(url, headers=headers, json=json)
+
+    # Combined dummy session will be used for both the initial POST and the
+    # subsequent streaming GET fallback to ensure both operations are available
+    class DummyCombined:
+        def post(self, url, timeout=None, headers=None, files=None, json=None, **kwargs):
+            return fake_post(url, headers=headers, json=json)
+
+        def get(self, url, stream=None, headers=None, timeout=None, **kwargs):
+            return fake_get(url, stream=stream, headers=headers, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummyCombined())
 
     # Make downloaders.download_bytes raise so the code falls back to streaming
     def fake_download_bytes(url, timeout=30):
@@ -48,7 +61,8 @@ def test_import_generated_asset_main_site_streaming_fallback(monkeypatch, tmp_pa
     def fake_get(url, stream=None, headers=None, timeout=None):
         return StreamResp(b"GLB-DATA")
 
-    monkeypatch.setattr(hyper3d.requests, "get", fake_get)
+    # Previously tests swapped get_session to a second dummy; the combined
+    # object above covers both behaviours so no further swap is necessary.
 
     res = hyper3d.import_generated_asset_main_site(api_key="k", task_uuid="t1", name="n")
     assert res.get("succeed") is True
@@ -60,7 +74,11 @@ def test_import_generated_asset_fal_ai_prefers_downloaders(monkeypatch, tmp_path
     def fake_get_meta(url, headers=None):
         return DummyResp(200, {"model_mesh": {"url": "https://example.com/m.glb"}})
 
-    monkeypatch.setattr(hyper3d.requests, "get", fake_get_meta)
+    class DummySession3:
+        def get(self, url, timeout=None, headers=None, **kwargs):
+            return fake_get_meta(url, headers=headers)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession3())
 
     called = {}
 
@@ -82,7 +100,11 @@ def test_poll_rodin_job_status_fal_ai_fallback(monkeypatch):
     def fake_poll(url, headers=None):
         return DummyResp(200, {"status": "done"})
 
-    monkeypatch.setattr(hyper3d.requests, "get", fake_poll)
+    class DummySession4:
+        def get(self, url, timeout=None, headers=None, **kwargs):
+            return fake_poll(url, headers=headers)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession4())
 
     res = hyper3d.poll_rodin_job_status_fal_ai(api_key="k", request_id="rid")
     assert isinstance(res, dict)

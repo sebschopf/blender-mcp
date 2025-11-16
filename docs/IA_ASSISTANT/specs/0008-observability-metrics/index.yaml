@@ -1,0 +1,43 @@
+id: 0008-observability-metrics
+path: openspec/changes/0008-observability-metrics
+files_present: []
+referenced_paths: []
+missing_refs:
+- '
+
+
+  Endpoints
+
+  ---------
+
+
+  - '
+- ' returns 200 when service is up and supervisor/process counts are within thresholds.
+
+  - '
+- ' returns Prometheus-format counters: '
+- ', '
+- /health
+- /metrics
+- GET /health
+- GET /metrics
+- action
+- decision
+- decision":"deny"
+- "json\n{\n \"timestamp\":\"ISO8601\",\n \"request_id\":\"string\",\n \"user\":\"\
+  string|null\",\n \"action\":\"string\",\n \"decision\":\"allow|deny|ask|null\",\n\
+  \ \"details\":{ }\n}\n"
+- reason
+- request_id
+- server.execute_command
+- server.py
+- spec.md
+- src/blender_mcp/audit.py
+- src/blender_mcp/audit.py`
+- src/blender_mcp/server.py`
+- tasks.md
+- tests/test_metrics.py
+- tests/test_metrics.py`.
+- timestamp
+spec_files:
+- openspec/changes/0008-observability-metrics/specs/observability/spec.md

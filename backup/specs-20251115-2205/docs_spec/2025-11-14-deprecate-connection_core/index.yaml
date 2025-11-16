@@ -1,0 +1,14 @@
+id: 2025-11-14-deprecate-connection_core
+path: openspec/changes/2025-11-14-deprecate-connection_core
+files_present: []
+referenced_paths: []
+missing_refs:
+- NetworkCore
+- Transport
+- connection_core.py
+- docs/TRANSPORT_PHASE_A.md`
+- services.connection
+- services.connection.NetworkCore
+- services.connection.network_core
+- src/blender_mcp/connection_core.py`
+spec_files: []

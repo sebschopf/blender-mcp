@@ -1,0 +1,50 @@
+id: 0004-archive-symbols
+path: openspec/changes/0004-archive-symbols
+files_present: []
+referenced_paths:
+- '- `openspec/changes/0004-archive-symbols/symbols/*` : per-symbol proposal files'
+- 3. If a symbol is to be ported, create a follow-up OpenSpec change under `openspec/changes/<next-id>/`
+  referencing this symbol.
+missing_refs:
+- '0004'
+- BlenderMCPServer
+- Dispatcher
+- _lazy_attr
+- '_lazy_attr(module: str, name: str)'
+- _process_bbox
+- addon.BlenderMCPServer -> src/blender_mcp/server.BlenderMCPServer
+- addon.register
+- addon.register()
+- addon.unregister()
+- bl_info
+- blender_mcp.blender_ui.register
+- blender_mcp.blender_ui.unregister
+- blender_mcp.server.BlenderMCPServer
+- bpy
+- execute_command
+- openspec validate
+- openspec validate --strict
+- openspec/changes/0004-archive-symbols/symbols/*
+- openspec/changes/0004-archive-symbols/symbols/*`
+- openspec/changes/<next-id>/
+- openspec/changes/<next-id>/`
+- python addon.py
+- register
+- register()
+- specs/archive/spec.md
+- src/`
+- src/blender_mcp/`
+- src/blender_mcp/`.
+- src/blender_mcp/server.BlenderMCPServer`
+- src/blender_mcp/server.py`
+- symbols/
+- tests/`
+- tests/test_addon_lazy_imports.py
+- tests/test_addon_lazy_imports.py`
+- tests/test_bbox.py`
+- tests/test_server.py`
+- unregister
+- unregister()
+- validators
+spec_files:
+- openspec/changes/0004-archive-symbols/specs/archive/spec.md

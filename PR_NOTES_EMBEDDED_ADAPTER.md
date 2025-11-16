@@ -1,7 +1,7 @@
 Summary of changes: Embedded server adapter + connection consolidation notes
 
 What I changed
-- Added `src/blender_mcp/embedded_server_adapter.py`: a small adapter to
+- Added `src/blender_mcp/servers/embedded_server_adapter.py`: a small adapter to
   start/stop an external server process. Defaults to the repo PowerShell
   helper on Windows when no command is provided.
 - Updated `src/blender_mcp/services/connection/network.py` to prefer the

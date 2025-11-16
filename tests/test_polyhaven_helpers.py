@@ -34,7 +34,11 @@ def test_fetch_files_data_success(monkeypatch):
         called["url"] = url
         return DummyResponse(200, {"color": {"1k": {"jpg": {"url": "https://example.com/c.jpg"}}}})
 
-    monkeypatch.setattr(poly.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, headers=headers, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     data = poly.fetch_files_data("asset123")
     assert "color" in data
     assert called["url"].endswith("/files/asset123")
@@ -63,7 +67,11 @@ def test_download_bytes(monkeypatch):
     def fake_get(url, timeout=None):
         return DummyResponse(200, b"abc")
 
-    monkeypatch.setattr(poly.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     b = poly.download_bytes("https://example.com/a.bin")
     assert b == b"abc"
 
@@ -102,7 +110,11 @@ def test_fetch_categories(monkeypatch):
         called["url"] = url
         return DummyResponse(200, {"hdris": 10, "textures": 20})
 
-    monkeypatch.setattr(poly.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, headers=headers, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     cats = poly.fetch_categories("hdris")
     assert isinstance(cats, dict)
     assert called["url"].endswith("/categories/hdris")
@@ -116,7 +128,11 @@ def test_search_assets(monkeypatch):
         called["params"] = params
         return DummyResponse(200, {"asset1": {"name": "A"}, "asset2": {"name": "B"}})
 
-    monkeypatch.setattr(poly.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, params=None, **kwargs):
+            return fake_get(url, params=params, headers=headers, timeout=timeout)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     res = poly.search_assets({"type": "hdris", "categories": "sky"})
     assert "asset1" in res
     assert called["params"]["type"] == "hdris"

@@ -1,0 +1,41 @@
+id: 2025-11-13-legacy-removal-timeline
+title: 2025-11-13-legacy-removal-timeline
+summary: ''
+owner: '@sebschopf'
+files: []
+referenced_paths: []
+acceptance_tests: []
+missing_refs:
+- DeprecationWarning
+- ModuleNotFoundError
+- blender_mcp.dispatchers.*
+- blender_mcp.polyhaven
+- blender_mcp.servers.*
+- blender_mcp.services.*
+- blender_mcp.services.polyhaven
+- blender_mcp.simple_dispatcher
+- blender_mcp/server.py
+- command_dispatcher.py
+- connection.py
+- connection_core
+- connection_core.py
+- dispatchers/dispatcher.py
+- docs/developer/ai_session_guide.md`
+- from blender_mcp.connection import BlenderConnection
+- from blender_mcp.dispatchers.dispatcher import Dispatcher
+- from blender_mcp.servers.server import start_server
+- from blender_mcp.simple_dispatcher import Dispatcher
+- hyper3d.py
+- polyhaven.py
+- server.py
+- server_shim.py
+- servers/shim.py
+- services/connection/network_core.py
+- services/hyper3d.py
+- services/polyhaven.py
+- services/sketchfab.py
+- simple_dispatcher.py
+- sketchfab.py
+- src/blender_mcp/servers/server.py`
+spec_files: []
+status: draft

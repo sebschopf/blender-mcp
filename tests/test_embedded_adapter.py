@@ -1,4 +1,37 @@
+import importlib
 import subprocess
+
+
+class DummyProc:
+    def __init__(self):
+        self.pid = 42424
+
+    def poll(self):
+        return None
+
+    def terminate(self):
+        return None
+
+    def wait(self, timeout=None):
+        return None
+
+
+def test_start_stop_adapter_monkeypatch(monkeypatch):
+    # Ensure we import the adapter from the servers package
+    mod = importlib.import_module("blender_mcp.servers.embedded_adapter")
+
+    # Patch subprocess.Popen to return a dummy process
+    def fake_popen(*args, **kwargs):
+        return DummyProc()
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+
+    proc = mod.start_server_process(command=["echo", "hello"], cwd=None)
+    assert hasattr(proc, "pid")
+    assert mod.is_running(proc) is True
+
+    # stop should not raise
+    mod.stop_server_process(proc, timeout=0.1)
 
 import pytest
 

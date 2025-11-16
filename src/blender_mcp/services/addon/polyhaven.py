@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional, cast
 
 import requests
 
-from ...http import get_session
+import blender_mcp.http as _http
+
 from .constants import REQ_HEADERS
 
 
@@ -32,8 +33,8 @@ def get_polyhaven_categories(asset_type: str, session: Optional[requests.Session
                 )
                 return {"categories": json.loads(data.decode("utf-8"))}
             except Exception:
-                getter = session.get if session is not None else get_session().get
-                response = getter(f"https://api.polyhaven.com/categories/{asset_type}", headers=REQ_HEADERS)
+                getter = session.get if session is not None else cast(Callable[..., Any], _http.get_session().get)
+                response = getter(f"https://api.polyhaven.com/categories/{asset_type}", headers=REQ_HEADERS)  # type: ignore[operator]
                 if response.status_code == 200:
                     return {"categories": response.json()}
                 return {"error": f"API request failed with status code {response.status_code}"}
@@ -69,8 +70,8 @@ def search_polyhaven_assets(
                 data = download_bytes(full_url, timeout=10, headers=REQ_HEADERS)
                 assets = json.loads(data.decode("utf-8"))
             except Exception:
-                getter = session.get if session is not None else get_session().get
-                response = getter("https://api.polyhaven.com/assets", params=params, headers=REQ_HEADERS)
+                getter = session.get if session is not None else cast(Callable[..., Any], _http.get_session().get)
+                response = getter("https://api.polyhaven.com/assets", params=params, headers=REQ_HEADERS)  # type: ignore[operator]
                 if response.status_code == 200:
                     assets = response.json()
                 else:
@@ -110,8 +111,8 @@ def download_polyhaven_asset(
             files_data = json.loads(data.decode("utf-8"))
         except Exception:
             try:
-                getter = session.get if session is not None else get_session().get
-                files_response = getter(f"https://api.polyhaven.com/files/{asset_id}", headers=REQ_HEADERS)
+                getter = session.get if session is not None else cast(Callable[..., Any], _http.get_session().get)
+                files_response = getter(f"https://api.polyhaven.com/files/{asset_id}", headers=REQ_HEADERS)  # type: ignore[operator]
                 if files_response.status_code != 200:
                     return {"error": f"Failed to get asset files: {files_response.status_code}"}
                 files_data = files_response.json()

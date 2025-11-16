@@ -1,0 +1,189 @@
+tests:
+  - file: tests/test_services_scene.py
+    area: services.scene
+    services:
+      - get_scene_info
+    purpose: "Unit tests for `get_scene_info` covering bpy presence/absence and expected structure."
+    run: "pytest -q tests/test_services_scene.py"
+
+  - file: tests/test_scene_service.py
+    area: services.scene
+    services:
+      - get_scene_info
+    purpose: "Additional integration-like tests for scene service used by dispatcher."
+    run: "pytest -q tests/test_scene_service.py"
+
+  - file: tests/test_services_get_object_info.py
+    area: services.object
+    services:
+      - get_object_info
+    purpose: "Validate object lookup logic and addon injection/mocks."
+    run: "pytest -q tests/test_services_get_object_info.py"
+
+  - file: tests/test_object_service.py
+    area: services.object
+    services:
+      - get_object_info
+    purpose: "High-level tests for object service (edge cases, exceptions)."
+    run: "pytest -q tests/test_object_service.py"
+
+  - file: tests/test_services_screenshot.py
+    area: services.screenshot
+    services:
+      - get_viewport_screenshot
+    purpose: "Tests screenshot service behavior with and without `bpy`."
+    run: "pytest -q tests/test_services_screenshot.py"
+
+  - file: tests/test_execute_service.py
+    area: services.execute
+    services:
+      - execute_blender_code
+    purpose: "Validate parameter checks and execution handling for `execute_blender_code`."
+    run: "pytest -q tests/test_execute_service.py"
+
+  - file: tests/test_services_execute.py
+    area: services.execute
+    services:
+      - execute_blender_code
+    purpose: "Additional service-level tests for code execution and network fallback."
+    run: "pytest -q tests/test_services_execute.py"
+
+  - file: tests/test_services_execute_dispatcher.py
+    area: dispatcher -> services.execute
+    services:
+      - execute_blender_code
+    purpose: "Dispatcher integration test for `execute_blender_code`."
+    run: "pytest -q tests/test_services_execute_dispatcher.py"
+
+  - file: tests/test_polyhaven_service.py
+    area: services.polyhaven
+    services:
+      - get_polyhaven_categories
+    purpose: "PolyHaven categories parsing and validation."
+    run: "pytest -q tests/test_polyhaven_service.py"
+
+  - file: tests/test_polyhaven_search_service.py
+    area: services.polyhaven
+    services:
+      - search_polyhaven_assets
+    purpose: "Search behavior and parameter validation."
+    run: "pytest -q tests/test_polyhaven_search_service.py"
+
+  - file: tests/test_polyhaven_download_service.py
+    area: services.polyhaven
+    services:
+      - download_polyhaven_asset
+    purpose: "Download logic, tmp files and error paths."
+    run: "pytest -q tests/test_polyhaven_download_service.py"
+
+  - file: tests/test_sketchfab.py
+    area: integrations.sketchfab
+    services:
+      - get_sketchfab_status
+    purpose: "Sketchfab low-level API client tests."
+    run: "pytest -q tests/test_sketchfab.py"
+
+  - file: tests/test_sketchfab_service_search_download.py
+    area: services.sketchfab
+    services:
+      - search_sketchfab_models
+      - download_sketchfab_model
+    purpose: "Service-level search/download tests requiring API key behavior."
+    run: "pytest -q tests/test_sketchfab_service_search_download.py"
+
+  - file: tests/test_hyper3d_services.py
+    area: services.hyper3d
+    services:
+      - generate_hyper3d_model_via_text
+      - generate_hyper3d_model_via_images
+      - poll_rodin_job_status
+      - import_generated_asset
+    purpose: "Hyper3D service flows, job polling and import behaviors."
+    run: "pytest -q tests/test_hyper3d_services.py"
+
+  - file: tests/test_hyper3d_extra.py
+    area: services.hyper3d
+    services:
+      - import_generated_asset
+      - poll_rodin_job_status
+    purpose: "Edge cases and streaming/fallback behaviors for Hyper3D imports."
+    run: "pytest -q tests/test_hyper3d_extra.py"
+
+  - file: tests/test_textures_service.py
+    area: services.textures
+    services:
+      - set_texture
+    purpose: "Apply textures and material results; validates various return shapes."
+    run: "pytest -q tests/test_textures_service.py"
+
+  - file: tests/test_services_registry.py
+    area: services.registry / dispatcher
+    services:
+      - get_polyhaven_categories
+      - search_sketchfab_models
+    purpose: "Registry discovery and dispatcher fallback to registry."
+    run: "pytest -q tests/test_services_registry.py"
+
+  - file: tests/test_services_registry_extra.py
+    area: services.registry
+    services:
+      - (multiple registered services)
+    purpose: "Extra assertions ensuring registry contains expected services."
+    run: "pytest -q tests/test_services_registry_extra.py"
+
+  - file: tests/test_endpoints.py
+    area: asgi / endpoints
+    services:
+      - execute_blender_code
+      - get_scene_info
+      - get_viewport_screenshot
+    purpose: "ASGI endpoints/tools listing and basic dispatch via endpoints."
+    run: "pytest -q tests/test_endpoints.py"
+
+  - file: tests/test_dispatcher.py
+    area: dispatcher
+    services:
+      - dispatcher core behaviors
+    purpose: "Dispatcher core unit tests (resolution, errors, timeouts)."
+    run: "pytest -q tests/test_dispatcher.py"
+
+  - file: tests/test_dispatcher_instrumentation.py
+    area: dispatcher.instrumentation
+    purpose: "Instrumentation hooks on dispatch lifecycle (start/success/error)."
+    run: "pytest -q tests/test_dispatcher_instrumentation.py"
+
+  - file: tests/test_dispatcher_strategies.py
+    area: dispatcher.strategies
+    purpose: "HandlerResolution / Policy / Instrumentation strategy behaviors."
+    run: "pytest -q tests/test_dispatcher_strategies.py"
+
+  - file: tests/test_asgi_tools.py
+    area: asgi
+    purpose: "ASGI `/tools` listing behavior and optional registry exposure."
+    run: "pytest -q tests/test_asgi_tools.py"
+
+  - file: tests/test_blender_connection.py
+    area: connection / transport
+    purpose: "Connection send_command semantics and response handling."
+    run: "pytest -q tests/test_blender_connection.py"
+
+  - file: tests/test_connection_reassembly.py
+    area: connection.reassembly
+    purpose: "Fragmented response handling / NDJSON reassembler tests."
+    run: "pytest -q tests/test_connection_reassembly.py"
+
+  - file: tests/test_transport_phase_a.py
+    area: services.connection.transport (Transport Phase A)
+    purpose: "Transport selection, timeouts and receiver behaviors for Phase A design."
+    run: "pytest -q tests/test_transport_phase_a.py"
+
+  - file: tests/test_tools.py
+    area: tools shim / compatibility
+    purpose: "Utility endpoints/tools behavior for CLI/ASGI adapters."
+    run: "pytest -q tests/test_tools.py"
+
+# Notes:
+# - This index focuses on tests that validate service behavior, dispatcher, connection
+#   and ASGI endpoints — the parts most useful to an AI assistant deciding which
+#   tests to run after a change.
+# - Add new entries when creating or porting services (keep mapping updated).

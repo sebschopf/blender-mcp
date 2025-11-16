@@ -28,7 +28,11 @@ def test_download_bytes_success(monkeypatch):
         called["ok"] = True
         return DummyResp(b"ok")
 
-    monkeypatch.setattr(downloaders.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, **kwargs):
+            return fake_get(url, timeout=timeout, headers=headers)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
 
     data = downloaders.download_bytes("https://example.com/foo", timeout=5)
     assert data == b"ok"
@@ -39,7 +43,11 @@ def test_download_bytes_raises_on_error(monkeypatch):
     def fake_get(url, timeout=None, headers=None):
         return DummyResp(b"", status=404)
 
-    monkeypatch.setattr(downloaders.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, **kwargs):
+            return fake_get(url, timeout=timeout, headers=headers)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
 
     with pytest.raises(RuntimeError):
         downloaders.download_bytes("https://example.com/missing")

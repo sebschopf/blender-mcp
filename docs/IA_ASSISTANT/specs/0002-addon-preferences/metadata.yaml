@@ -1,0 +1,65 @@
+```yaml
+id: 0002-addon-preferences
+title: "# 0002 - Addon preference: allow_ui_start_server"
+summary: "# Proposal: 0002 - Addon preferences"
+owner: '@sebschopf'
+files:
+  - openspec/changes/0002-addon-preferences
+  - openspec/changes/0002-addon-preferences/specs/addon/spec.md
+  - src/blender_mcp/blender_ui.py
+  - tests/test_addon_prefs.py
+referenced_paths:
+  - AddonPreferences
+  - AddonPreferences.allow_ui_start_server
+  - BLENDERMCP_OT_StartServer
+  - allow_ui_start_server: BoolProperty
+acceptance_tests: []
+missing_refs: []
+spec_files:
+  - openspec/changes/0002-addon-preferences/specs/addon/spec.md
+status: draft
+```
+id: 0002-addon-preferences
+title: '# 0002 - Addon preference: allow_ui_start_server'
+summary: '# Proposal: 0002 - Addon preferences'
+owner: '@sebschopf'
+files: []
+referenced_paths:
+- '- Ajoutez ce dossier `openspec/changes/0002-addon-preferences` à la PR et exécutez
+  :'
+acceptance_tests: []
+missing_refs:
+- '
+
+
+  Notes
+
+  -----
+
+  - L''implémentation défensive permet d''importer le module hors de Blender (tests)
+  même si '
+- '
+
+  # depuis la racine du repo
+
+  openspec validate --strict
+
+  '
+- AddonPreferences
+- AddonPreferences.allow_ui_start_server
+- BLENDERMCP_AddonPreferences
+- BLENDERMCP_OT_StartServer
+- CANCELLED
+- 'False'
+- allow_ui_start_server
+- 'allow_ui_start_server: BoolProperty'
+- openspec/changes/0002-addon-preferences`
+- src/blender_mcp/blender_ui.py
+- src/blender_mcp/blender_ui.py`
+- tests/test_addon_preferences.py
+- tests/test_addon_preferences.py`
+- tests/test_addon_prefs.py`
+- tests/test_addon_server_ui.py`
+spec_files:
+- openspec/changes/0002-addon-preferences/specs/addon/spec.md
+status: draft

@@ -1,0 +1,10 @@
+id: 0014-adapter-supervisor
+path: openspec/changes/0014-adapter-supervisor
+files_present: []
+referenced_paths: []
+missing_refs:
+- adapter_supervisor
+- src/blender_mcp/adapter_supervisor.py
+- src/blender_mcp/adapter_supervisor.py`
+spec_files:
+- openspec/changes/0014-adapter-supervisor/specs/supervisor/spec.md

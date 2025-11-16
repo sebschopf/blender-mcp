@@ -1,0 +1,58 @@
+github_ci:
+  workflow_file: .github/workflows/ci.yml
+  triggers:
+    - push: { branches: [ main ] }
+    - pull_request: { branches: [ '**' ] }
+  jobs_summary:
+    ruff:
+      purpose: Lint Python code with ruff
+      runner: ubuntu-latest
+      matrix_python: [3.11, 3.12]
+    mypy:
+      purpose: Type checking with mypy
+      runner: ubuntu-latest
+      matrix_python: [3.11, 3.12]
+    pytest:
+      purpose: Run full test suite (Pytest). Installs ASGI deps for relevant tests.
+      runner: ubuntu-latest
+      matrix_python: [3.11, 3.12]
+      env:
+        PYTHONPATH: 'src:.'
+    generate_ia_metadata:
+      purpose: Generate draft `services_metadata_full_draft.yaml` from registry
+      runner: ubuntu-latest
+      runs_on_pr_only: true
+      notes: "Uploads artifact 'services-metadata-draft' to the PR for reviewer consumption."
+    ia_docs_sync:
+      purpose: Validate that changes touching services/endpoints/tests are accompanied by IA docs updates
+      runner: ubuntu-latest
+      runs_on_pr_only: true
+      behavior: |
+        - runs `scripts/check_ia_docs_sync.ps1` (PowerShell)
+        - uploads `artifacts/ia_docs_sync.json` as artifact
+        - posts a PR comment with machine-readable report when validation fails
+        - fails the job if check fails
+      requirements:
+        - checkout with `fetch-depth: 0` (ensure git refs available for git diff)
+        - python + `pyyaml` + `jsonschema` for content validation
+    ia_docs_consistency_test:
+      purpose: Run the pytest consistency test that asserts registry ↔ IA YAML parity
+      runner: ubuntu-latest
+      runs_on_pr_only: true
+  artifacts:
+    - pytest: pytest-report.xml
+    - ia_docs_sync: artifacts/ia_docs_sync.json
+    - generated_services_metadata: docs/IA_ASSISTANT/services_metadata_full_draft.yaml
+  reproduce_locally:
+    - Ensure venv active and `PYTHONPATH='src'` set for tests.
+    - Install the same tool versions as CI (see `ai_session_guide.yaml` -> `versions.recommended`).
+    - To simulate the generator + validation flow locally:
+      - Run: `python scripts/generate_services_metadata.py -o docs/IA_ASSISTANT/services_metadata_full_draft.yaml`
+      - Run: `python scripts/validate_ia_yaml.py`
+      - Run consistency test: `$Env:PYTHONPATH='src'; pytest -q tests/test_ia_docs_consistency.py`
+  guidance_for_ia:
+    - When proposing a PR that changes services/endpoints/tests, run the local generator and validator and include the updated IA YAML files in the PR.
+    - The CI will post a clear comment if IA docs are missing or invalid; fix locally and push the correction.
+  notes:
+    - The `ia_docs_sync` job purposefully posts a PR comment with the machine-readable report before failing the job so the author/AI receives actionable instructions.
+    - If you want automatic in-PR updates of IA YAML, discuss a conservative policy: autogeneration should create drafts only; final update requires human review.

@@ -16,6 +16,8 @@ from typing import Any, Dict, Optional
 
 import requests
 
+import blender_mcp.http as _http
+
 _warnings.warn(
     "blender_mcp.polyhaven est déprécié; utiliser blender_mcp.services.polyhaven à la place.",
     DeprecationWarning,
@@ -42,8 +44,8 @@ def fetch_files_data(
     """
     url = f"https://api.polyhaven.com/files/{asset_id}"
     if session is None:
-        # maintain test- and backwards-compatibility (tests monkeypatch poly.requests.get)
-        resp = requests.get(url, headers=_REQ_HEADERS, timeout=timeout)
+        # maintain test- and backwards-compatibility (tests monkeypatch `blender_mcp.http.get_session`)
+        resp = _http.get_session().get(url, headers=_REQ_HEADERS, timeout=timeout)
     else:
         sess = session
         # merge headers so caller-provided session headers take precedence
@@ -64,7 +66,7 @@ def fetch_categories(
     """
     url = f"https://api.polyhaven.com/categories/{asset_type}"
     if session is None:
-        resp = requests.get(url, headers=_REQ_HEADERS, timeout=timeout)
+        resp = _http.get_session().get(url, headers=_REQ_HEADERS, timeout=timeout)
     else:
         sess = session
         headers = dict(_REQ_HEADERS)
@@ -85,7 +87,7 @@ def search_assets(
     """
     url = "https://api.polyhaven.com/assets"
     if session is None:
-        resp = requests.get(url, params=params, headers=_REQ_HEADERS, timeout=timeout)
+        resp = _http.get_session().get(url, params=params, headers=_REQ_HEADERS, timeout=timeout)
     else:
         sess = session
         headers = dict(_REQ_HEADERS)
@@ -145,7 +147,7 @@ def download_bytes(url: str, *, timeout: int = 30, session: Optional[requests.se
     connection reuse. Falls back to the shared `get_session()`.
     """
     if session is None:
-        resp = requests.get(url, timeout=timeout)
+        resp = _http.get_session().get(url, timeout=timeout)
     else:
         sess = session
         resp = sess.get(url, timeout=timeout)

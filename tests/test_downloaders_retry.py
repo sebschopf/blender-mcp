@@ -23,7 +23,12 @@ def test_download_bytes_retries_success(monkeypatch):
 
     # Patch sleep to avoid test delay, and requests.get to simulate timeouts
     monkeypatch.setattr(downloaders, "time", type("T", (), {"sleep": lambda *_: None}))
-    monkeypatch.setattr(downloaders.requests, "get", fake_get)
+
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, **kwargs):
+            return fake_get(url, timeout=timeout, headers=headers)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
 
     res = downloaders.download_bytes("http://example.com/a.bin", max_retries=4, backoff_factor=0.01)
     assert res == b"OK"
@@ -70,7 +75,11 @@ def test_download_bytes_no_retry_on_4xx(monkeypatch):
         calls["n"] += 1
         return Resp404()
 
-    monkeypatch.setattr(downloaders.requests, "get", fake_get)
+    class DummySession:
+        def get(self, url, timeout=None, headers=None, **kwargs):
+            return fake_get(url, timeout=timeout, headers=headers)
+
+    monkeypatch.setattr("blender_mcp.http.get_session", lambda: DummySession())
     # Patch sleep to avoid delay if retry attempted
     monkeypatch.setattr(downloaders, "time", type("T", (), {"sleep": lambda *_: None}))
 

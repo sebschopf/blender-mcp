@@ -1,0 +1,144 @@
+services:
+  - name: get_scene_info
+    module: blender_mcp.services.scene
+    callable: get_scene_info
+    tests:
+      - tests/test_services_scene.py
+      - tests/test_scene_service.py
+      - tests/test_endpoints.py
+      - tests/test_blender_connection.py
+    description: "Return scene metadata; lazy import of bpy; raises on invalid params."
+
+  - name: get_object_info
+    module: blender_mcp.services.object
+    callable: get_object_info
+    tests:
+      - tests/test_services_get_object_info.py
+      - tests/test_object_service.py
+      - tests/test_object_location.py
+    description: "Lookup object by name in scene or data; raises if missing params."
+
+  - name: get_viewport_screenshot
+    module: blender_mcp.services.screenshot
+    callable: get_viewport_screenshot
+    tests:
+      - tests/test_services_screenshot.py
+      - tests/test_screenshot_service.py
+      - tests/test_endpoints.py
+    description: "Capture viewport screenshot; returns image bytes or raises."
+
+  - name: execute_blender_code
+    module: blender_mcp.services.execute
+    callable: execute_blender_code
+    tests:
+      - tests/test_execute_service.py
+      - tests/test_services_execute.py
+      - tests/test_services_execute_dispatcher.py
+      - tests/test_endpoints.py
+    description: "Execute Python snippet in Blender environment (lazy bpy); validates params."
+
+  - name: get_polyhaven_categories
+    module: blender_mcp.services.polyhaven
+    callable: get_polyhaven_categories
+    tests:
+      - tests/test_polyhaven_service.py
+      - tests/test_polyhaven_search_service.py
+      - tests/test_services_registry.py
+    description: "List PolyHaven categories via network; wrapped for safe exceptions."
+
+  - name: search_polyhaven_assets
+    module: blender_mcp.services.polyhaven
+    callable: search_polyhaven_assets
+    tests:
+      - tests/test_polyhaven_search_service.py
+      - tests/test_services_registry.py
+    description: "Search assets on PolyHaven; accepts paging and filters."
+
+  - name: download_polyhaven_asset
+    module: blender_mcp.services.polyhaven
+    callable: download_polyhaven_asset
+    tests:
+      - tests/test_polyhaven_download_service.py
+    description: "Download an asset from PolyHaven; returns local path or raises."
+
+  - name: get_sketchfab_status
+    module: blender_mcp.services.sketchfab
+    callable: get_sketchfab_status_service
+    tests:
+      - tests/test_sketchfab_service_status.py
+      - tests/test_sketchfab.py
+      - tests/test_services_registry.py
+    description: "Check Sketchfab API status; requires API key or env var."
+
+  - name: search_sketchfab_models
+    module: blender_mcp.services.sketchfab
+    callable: search_sketchfab_models
+    tests:
+      - tests/test_sketchfab_service_search_download.py
+      - tests/test_services_registry.py
+    description: "Search Sketchfab models; supports query, count, filters."
+
+  - name: download_sketchfab_model
+    module: blender_mcp.services.sketchfab
+    callable: download_sketchfab_model
+    tests:
+      - tests/test_sketchfab_service_search_download.py
+    description: "Download Sketchfab model by UID; validates API key and UID."
+
+  - name: set_texture
+    module: blender_mcp.services.textures
+    callable: set_texture
+    tests:
+      - tests/test_textures_service.py
+    description: "Apply texture to object or material; validates params and reports result."
+
+  - name: get_polyhaven_status
+    module: blender_mcp.services.polyhaven_status
+    callable: get_polyhaven_status_service
+    tests:
+      - tests/test_status_services.py
+    description: "Service reporting PolyHaven integration status."
+
+  - name: get_hyper3d_status
+    module: blender_mcp.services.hyper3d_status
+    callable: get_hyper3d_status_service
+    tests:
+      - tests/test_status_services.py
+    description: "Hyper3D integration status (API connectivity checks)."
+
+  - name: generate_hyper3d_model_via_text
+    module: blender_mcp.services.hyper3d
+    callable: generate_hyper3d_model_via_text
+    tests:
+      - tests/test_hyper3d_services.py
+    description: "Generate 3D model from text prompt (Hyper3D integration)."
+
+  - name: generate_hyper3d_model_via_images
+    module: blender_mcp.services.hyper3d
+    callable: generate_hyper3d_model_via_images
+    tests:
+      - tests/test_hyper3d_services.py
+    description: "Generate 3D model from images (Hyper3D integration)."
+
+  - name: poll_rodin_job_status
+    module: blender_mcp.services.hyper3d
+    callable: poll_rodin_job_status
+    tests:
+      - tests/test_hyper3d_services.py
+      - tests/test_hyper3d_extra.py
+    description: "Poll job status from Hyper3D / Rodin endpoints."
+
+  - name: import_generated_asset
+    module: blender_mcp.services.hyper3d
+    callable: import_generated_asset
+    tests:
+      - tests/test_hyper3d_services.py
+      - tests/test_hyper3d_extra.py
+    description: "Import generated asset into project (download, convert, place)."
+
+  - name: asset_creation_strategy
+    module: blender_mcp.prompts
+    callable: asset_creation_strategy
+    tests:
+      - tests/test_prompt_service.py
+    description: "Prompt helper/service for asset creation strategy; no params expected." 

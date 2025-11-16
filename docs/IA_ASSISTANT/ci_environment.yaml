@@ -1,0 +1,48 @@
+ci_environment:
+  description: "CI environment snapshot used by GitHub Actions `CI` workflow (see .github/workflows/ci.yml). Use this to reproduce CI locally when debugging differences."
+  github_actions_job:
+    workflow: ".github/workflows/ci.yml"
+    jobs:
+      - ruff
+      - mypy
+      - pytest
+    matrix_python:
+      - '3.11'
+      - '3.12'
+  env_vars:
+    - name: PYTHONPATH
+      ci_value: 'src:.'
+      note: "CI sets PYTHONPATH to 'src:.' (POSIX-style). On Windows PowerShell, use 'src' or 'src;.' if requiring '.' as well."
+    - name: MCP_BASE
+      ci_value: null
+      note: "Optional env var used by scripts/bridge when testing integration; set locally only when needed."
+    - name: SKETCHFAB_API_KEY
+      ci_value: null
+      note: "Optional; some tests read this. Keep empty in CI unless integration tests run."
+    - name: BLENDER_MCP_EXPOSE_REGISTRY_TOOLS
+      ci_value: '0'
+      note: "Feature flag to include registry tools in `/tools`. Default off in CI."
+  tool_versions:
+    ruff: '0.12.4'
+    mypy: '1.11.0'
+    pytest: '7.4.2'
+    fastapi: '0.95'
+    httpx: '0.24'
+  ci_commands:
+    - "ruff check --exclude \"src/blender_mcp/archive/**\" src tests"
+    - "mypy src --exclude \"src/blender_mcp/archive/.*\""
+    - "pytest -q --junitxml=pytest-report.xml"
+  reproduce_locally_notes:
+    - "On Windows PowerShell, prefer: `$Env:PYTHONPATH='src'` for local runs, or `$Env:PYTHONPATH='src;.'` when you need '.' included."
+    - "Ensure local tool versions match `tool_versions` (use virtualenv and `pip install ruff==0.12.4 mypy==1.11.0 pytest==7.4.2`)."
+    - "CI runs `PYTHONPATH='src:.'` in Linux; to replicate exact behavior consider running tests in WSL or a Linux container."
+  logs_and_artifacts:
+    - ruff: ruff_out.txt
+    - mypy: mypy_out.txt
+    - pytest: pytest_out.txt
+    - pytest_junit: pytest-report.xml
+    - pip_freeze: pip_freeze.txt
+  notes_for_ai:
+    - "When comparing local vs CI failures, capture the outputs listed in `logs_and_artifacts` and compare with the CI job logs."
+    - "If CI uses different Python minor version (3.11 vs 3.12) run the matching local interpreter to reproduce failures."
+    - "If tests read env vars (API keys), do not set them in public runs; use a local secrets file for manual runs only."

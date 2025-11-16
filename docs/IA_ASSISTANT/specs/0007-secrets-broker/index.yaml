@@ -1,0 +1,23 @@
+id: 0007-secrets-broker
+path: openspec/changes/0007-secrets-broker
+files_present: []
+referenced_paths: []
+missing_refs:
+- '
+
+
+  Response:
+
+
+  '
+- "json\n{\n  \"service\": \"sketchfab\",\n  \"operation\": \"download_metadata\"\
+  ,\n  \"params\": {\"uid\":\"abc123\"},\n  \"request_id\": \"...\"\n}\n"
+- "json\n{\n  \"status\":\"ok\",\n  \"result\": { ... }\n}\n"
+- service=sketchfab operation=download_metadata
+- spec.md
+- src/blender_mcp/secrets_broker.py
+- src/blender_mcp/secrets_broker.py`.
+- tasks.md
+- uid
+spec_files:
+- openspec/changes/0007-secrets-broker/specs/secrets/spec.md
